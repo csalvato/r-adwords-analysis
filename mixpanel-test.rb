@@ -29,17 +29,42 @@ output_filename = "completed_orders.csv"
 CSV.open(output_filename, "wb", {:encoding => "utf-8", force_quotes: false }) do |csv|
   csv << ["mixpanel_event_timestamp", 
           "mixpanel_event_readable_timestamp",
-          "user_id",  
-          "latest_ad_search"]
+          "user_id",
+          "operating_system",
+          "order_id",
+          "latest_ad_utm_campaign",
+          "latest_ad_utm_source",
+          "latest_ad_utm_medium",
+          "latest_ad_awcreativeid",
+          "latest_ad_awkeyword",
+          "latest_ad_awmatchtype",
+          "latest_ad_awnetwork",
+          "latest_ad_awposition",
+          "latest_ad_device",
+          "latest_ad_psgeo",
+          "latest_ad_search"
+        ]
 
   mixpanel_data.each do |completed_order|
     completed_order_properties = completed_order['properties']
     csv << [completed_order_properties['time'],
             readable_time = Time.at( completed_order_properties['time'] ).strftime("%Y-%m-%dT%H:%M:%S %z"), # "2015-12-27T11:16:17"
             completed_order_properties['id'],
+            completed_order_properties['$os'],
+            completed_order_properties['orderId'],
+            completed_order_properties['latest_ad_utm_campaign'],
+            completed_order_properties['latest_ad_utm_source'],
+            completed_order_properties['latest_ad_utm_medium'],
+            completed_order_properties['latest_ad_awcreativeid'],
+            completed_order_properties['latest_ad_awkeyword'],
+            completed_order_properties['latest_ad_awmatchtype'],
+            completed_order_properties['latest_ad_awnetwork'],
+            completed_order_properties['latest_ad_awposition'],
+            completed_order_properties['latest_ad_device'],
+            completed_order_properties['latest_ad_psgeo'],
             completed_order_properties['latest_ad_search']
            ]
-
+    #puts JSON.pretty_generate( JSON.parse(completed_order_properties.to_json))
   end
 
 end
