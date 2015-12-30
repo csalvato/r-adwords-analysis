@@ -1,8 +1,11 @@
 require 'mixpanel_client'
 require 'json'
 require 'csv'
+require 'google/api_client'
+require 'google_drive'
 
 puts 'Starting Script...'
+
 
 MIXPANEL_API_KEY = "ce370ab09a166e168d448080b55715f6"
 MIXPANEL_API_SECRET = "af3b32cc21c7b6e91b71f7c0417735d2"
@@ -24,6 +27,9 @@ mixpanel_data = client.request('export',
                                 event: ["Completed Order"],
                                 where: "(properties[\"latest_ad_search\"])")
 
+
+session = GoogleDrive.saved_session("config.json")
+mixpanel_sheet = session.file_by_title("Mixpanel Completed Order Data")
                       
 output_filename = "completed_orders.csv"
 CSV.open(output_filename, "wb", {:encoding => "utf-8", force_quotes: false }) do |csv|
@@ -69,8 +75,10 @@ CSV.open(output_filename, "wb", {:encoding => "utf-8", force_quotes: false }) do
 
 end
 
+mixpanel_sheet.update_from_file(output_filename)
+
 puts 'File accessible through: '
 puts
-puts "#{output_filename}"
+puts mixpanel_sheet.worksheets_feed_url
 puts
 puts 'All Done!'
