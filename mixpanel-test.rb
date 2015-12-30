@@ -20,7 +20,7 @@ api_secret: MIXPANEL_API_SECRET
 
 mixpanel_data = client.request('export', 
                                 from_date: "2015-12-17",
-                                to_date: "2015-12-28",
+                                to_date: Time.now.strftime("%Y-%m-%d"),
                                 event: ["Completed Order"],
                                 where: "(properties[\"latest_ad_search\"])")
 
