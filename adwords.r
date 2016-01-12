@@ -4,12 +4,21 @@ library(dplyr)
 library(tidyr)
 library(GetoptLong)
 
-# Pull in adwords campaign data
+# Set reporting parameters
+start_date = '2015-12-18'
+end_date = toString(Sys.Date())#'2016-1-4'
+
+# Pull in adwords campaign data and format for use
 adwords_data <- read.csv(text=readLines('Campaign Performance Report.csv')[-(1:1)], header=TRUE)
 adwords_data <- head(adwords_data, -4)
-View(adwords_data)
+adwords_data$Day <- as.Date(adwords_data$Day, "%Y-%m-%d") # Change Day to date type for date searching/filtering
+adwords_data$Campaign.ID <- as.integer(as.character(adwords_data$Campaign.ID)) # Make sure campaign IDs are integers for future joins
+adwords_data <- filter(adwords_data, Day >= as.Date(start_date, "%Y-%m-%d"), Day <= as.Date(end_date, "%Y-%m-%d"))
 
-transactions <- load_data("~/Development/Data Analysis/Power Supply/LTV")
+# Create a join table of campaign names and IDs
+campaigns_lookup <- adwords_data %>% 
+                      group_by(Campaign.ID)%>% 
+                      summarize(Campaign.Name = first(Campaign))
 
 # Retrieve revenue data
 pgsql <- JDBC("org.postgresql.Driver", "../database_drivers/postgresql-9.2-1004.jdbc4.jar", "`")
@@ -30,8 +39,6 @@ datawarehouse_db <- dbConnect(pgsql, "jdbc:postgresql://127.0.0.1:5438/mps_oltp?
 # Transaction values can be a bit confusing, because they include system credits
 # and discounts.  The price field is generally == list price of the meal plan, but there
 # are situations where it can get nuked for older data.
-start_date = '12/1/2015'
-end_date = '1/31/2016'
 query <- qq("
 select
     t.created_at
@@ -70,7 +77,6 @@ where
   t.created_at between '@{start_date}' and '@{end_date}'
 order by 1 desc")
 db_transactions <- dbGetQuery(datawarehouse_db, query)
-View(db_transactions)
 
 # Notes from John: 
 # The data from this query will be updated nightly.  
@@ -103,14 +109,20 @@ View(db_transactions)
 # dbDisconnect(heroku_db)
 dbDisconnect(datawarehouse_db)
 
+# Make sure campaign IDs are integers for future joins
+db_transactions$latest_ad_utm_campaign <- as.integer(db_transactions$latest_ad_utm_campaign)
+
+# Join with Campaign ID lookup table.
+db_transactions <- left_join(db_transactions, campaigns_lookup, by=c(latest_ad_utm_campaign = "Campaign.ID"))
+
 # Create a table showing total value by campaign
 grouped_data1 <- db_transactions %>% 
-                  group_by(latest_ad_utm_campaign, latest_ad_device) %>% 
+                  group_by(Campaign.Name, latest_ad_device) %>% 
                   summarize(Earnings = sum(list_price))
 View(grouped_data1)
 
 grouped_data2 <- db_transactions %>% 
-                  group_by(latest_ad_utm_campaign) %>% 
+                  group_by(Campaign.Name) %>% 
                   summarize(Earnings = sum(list_price))
 View(grouped_data2)
 
