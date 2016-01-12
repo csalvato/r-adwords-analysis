@@ -4,6 +4,14 @@ library(dplyr)
 library(tidyr)
 library(GetoptLong)
 
+# Pull in adwords campaign data
+adwords_data <- read.csv(text=readLines('Campaign Performance Report.csv')[-(1:1)], header=TRUE)
+adwords_data <- head(adwords_data, -4)
+View(adwords_data)
+
+transactions <- load_data("~/Development/Data Analysis/Power Supply/LTV")
+
+# Retrieve revenue data
 pgsql <- JDBC("org.postgresql.Driver", "../database_drivers/postgresql-9.2-1004.jdbc4.jar", "`")
 #heroku_db <- dbConnect(pgsql, "jdbc:postgresql://ec2-54-221-203-136.compute-1.amazonaws.com:5502/dfh97e63ls7ag8?user=u1gg5j81iss15&password=p1g2km19noav948l6q7net768vu&ssl=true&sslfactory=org.postgresql.ssl.NonValidatingFactory")
 datawarehouse_db <- dbConnect(pgsql, "jdbc:postgresql://127.0.0.1:5438/mps_oltp?user=oltp_reader&password=0Ltpr33@donly")
@@ -22,7 +30,7 @@ datawarehouse_db <- dbConnect(pgsql, "jdbc:postgresql://127.0.0.1:5438/mps_oltp?
 # Transaction values can be a bit confusing, because they include system credits
 # and discounts.  The price field is generally == list price of the meal plan, but there
 # are situations where it can get nuked for older data.
-start_date = '1/1/2016'
+start_date = '12/1/2015'
 end_date = '1/31/2016'
 query <- qq("
 select
@@ -80,17 +88,17 @@ View(db_transactions)
 # It is not the same as the created_at field above, which 
 # is a record creation timestamp. 
 
-query <- "select 
- * 
-from 
-  fact_orders 
-    inner join 
-  vw_stage_mixpanel_orders vw on fact_orders.user_id = vw.user_id 
-    inner join 
-  dim_users du on fact_orders.user_id = du.user_id 
--- where 
---   not fo.cancelled"
-unknown_data <- dbGetQuery(datawarehouse_db, query)
+# query <- "select 
+#  * 
+# from 
+#   fact_orders 
+#     inner join 
+#   vw_stage_mixpanel_orders vw on fact_orders.user_id = vw.user_id 
+#     inner join 
+#   dim_users du on fact_orders.user_id = du.user_id 
+# -- where 
+# --   not fo.cancelled"
+# unknown_data <- dbGetQuery(datawarehouse_db, query)
   
 # dbDisconnect(heroku_db)
 dbDisconnect(datawarehouse_db)
