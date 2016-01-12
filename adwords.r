@@ -2,6 +2,7 @@ library(RPostgreSQL)
 library(RJDBC)
 library(dplyr)
 library(tidyr)
+library(GetoptLong)
 
 pgsql <- JDBC("org.postgresql.Driver", "../database_drivers/postgresql-9.2-1004.jdbc4.jar", "`")
 #heroku_db <- dbConnect(pgsql, "jdbc:postgresql://ec2-54-221-203-136.compute-1.amazonaws.com:5502/dfh97e63ls7ag8?user=u1gg5j81iss15&password=p1g2km19noav948l6q7net768vu&ssl=true&sslfactory=org.postgresql.ssl.NonValidatingFactory")
@@ -21,41 +22,47 @@ datawarehouse_db <- dbConnect(pgsql, "jdbc:postgresql://127.0.0.1:5438/mps_oltp?
 # Transaction values can be a bit confusing, because they include system credits
 # and discounts.  The price field is generally == list price of the meal plan, but there
 # are situations where it can get nuked for older data.
-query <- "select
+start_date = '1/1/2016'
+end_date = '1/31/2016'
+query <- qq("
+select
     t.created_at
-, du.name
--- , du.first_order_week
---  , du.last_order_week
---  , du.lifetime_transaction_value
---  , du.avg_transaction_value
---  , t.amount as current_transaction_amount
-, t.refunded
---  , t.discount_amount
-, d.type
-, d.amount
-, ti.name as meal_plan
-, ti.price as list_price
-, ti.recurring
---  , l.name
---  , l.city
---  , l.state
---  , l.store_front_id
---  , l.home_delivery
-, vw.*
+    , du.name
+    -- , du.first_order_week
+    --  , du.last_order_week
+    --  , du.lifetime_transaction_value
+    --  , du.avg_transaction_value
+    --  , t.amount as current_transaction_amount
+    , t.refunded
+    --  , t.discount_amount
+    , d.type
+    , d.amount
+    , ti.name as meal_plan
+    , ti.price as list_price
+    , ti.recurring
+    --  , l.name
+    --  , l.city
+    --  , l.state
+    --  , l.store_front_id
+    --  , l.home_delivery
+    , vw.*
 from
-transactions t 
+  transactions t 
 inner join
-vw_stage_mixpanel_orders vw on t.user_id = vw.user_id
+  vw_stage_mixpanel_orders vw on t.user_id = vw.user_id
 inner join
-transaction_items ti on t.id = ti.transaction_id
+  transaction_items ti on t.id = ti.transaction_id
 inner join
-dim_users du on t.user_id = du.user_id
+  dim_users du on t.user_id = du.user_id
 left outer join
-locations l on ti.location_id = l.id
+  locations l on ti.location_id = l.id
 left outer join
-discounts d on ti.discount_id = d.id
-order by 1 desc"
+  discounts d on ti.discount_id = d.id
+where
+  t.created_at between '@{start_date}' and '@{end_date}'
+order by 1 desc")
 db_transactions <- dbGetQuery(datawarehouse_db, query)
+View(db_transactions)
 
 # Notes from John: 
 # The data from this query will be updated nightly.  
