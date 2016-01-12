@@ -13,12 +13,15 @@ adwords_data <- read.csv(text=readLines('Campaign Performance Report.csv')[-(1:1
 adwords_data <- head(adwords_data, -4)
 adwords_data$Day <- as.Date(adwords_data$Day, "%Y-%m-%d") # Change Day to date type for date searching/filtering
 adwords_data$Campaign.ID <- as.integer(as.character(adwords_data$Campaign.ID)) # Make sure campaign IDs are integers for future joins
+adwords_data$Cost <- as.numeric(as.character(adwords_data$Cost)) # Make sure cost is a float for totaling
 adwords_data <- filter(adwords_data, Day >= as.Date(start_date, "%Y-%m-%d"), Day <= as.Date(end_date, "%Y-%m-%d"))
 
 # Create a join table of campaign names and IDs
-campaigns_lookup <- adwords_data %>% 
+campaigns_table <- adwords_data %>% 
                       group_by(Campaign.ID)%>% 
                       summarize(Campaign.Name = first(Campaign))
+
+View(campaigns_table)
 
 # Retrieve revenue data
 pgsql <- JDBC("org.postgresql.Driver", "../database_drivers/postgresql-9.2-1004.jdbc4.jar", "`")
@@ -113,7 +116,7 @@ dbDisconnect(datawarehouse_db)
 db_transactions$latest_ad_utm_campaign <- as.integer(db_transactions$latest_ad_utm_campaign)
 
 # Join with Campaign ID lookup table.
-db_transactions <- left_join(db_transactions, campaigns_lookup, by=c(latest_ad_utm_campaign = "Campaign.ID"))
+db_transactions <- left_join(db_transactions, campaigns_table, by=c(latest_ad_utm_campaign = "Campaign.ID"))
 
 # Create a table showing total value by campaign
 grouped_data1 <- db_transactions %>% 
