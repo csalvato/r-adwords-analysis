@@ -44,28 +44,32 @@ datawarehouse_db <- dbConnect(pgsql, "jdbc:postgresql://127.0.0.1:5438/mps_oltp?
 # are situations where it can get nuked for older data.
 query <- qq("
 select
-    t.created_at
-    , du.name
-    -- , du.first_order_week
-    --  , du.last_order_week
-    --  , du.lifetime_transaction_value
-    --  , du.avg_transaction_value
-    --  , t.amount as current_transaction_amount
-    , t.refunded
-    --  , t.discount_amount
-    , d.type
-    , d.amount
-    , ti.name as meal_plan
-    , ti.price as list_price
-    , ti.recurring
-    --  , l.name
-    --  , l.city
-    --  , l.state
-    --  , l.store_front_id
-    --  , l.home_delivery
-    , vw.*
+  t.created_at
+  , ti.transaction_id
+  , ti.order_id
+  , du.name
+  -- , du.first_order_week
+  --  , du.last_order_week
+  --  , du.lifetime_transaction_value
+  --  , du.avg_transaction_value
+  --  , t.amount as current_transaction_amount
+  , t.refunded
+  --  , t.discount_amount
+  --  , ti.credit_used
+  --  , t.sales_tax_amount 
+  , d.type
+  , d.amount
+  , ti.name as meal_plan
+  , ti.price as list_price
+  , ti.recurring
+  --  , l.name
+  --  , l.city
+  --  , l.state
+  --  , l.store_front_id
+  --  , l.home_delivery
+  , vw.*
 from
-  transactions t 
+  transactions t
 inner join
   vw_stage_mixpanel_orders vw on t.user_id = vw.user_id
 inner join
