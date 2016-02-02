@@ -5,7 +5,7 @@ library(tidyr)
 library(GetoptLong)
 
 # Set reporting parameters
-start_date = '2015-12-18'
+start_date = '2015-12-17'
 end_date = toString(Sys.Date())#'2016-1-4'
 
 # Pull in adwords campaign data and format for use
@@ -46,7 +46,6 @@ query <- qq("
 select
   t.created_at
   , ti.transaction_id
-  , ti.order_id
   , du.name
   -- , du.first_order_week
   --  , du.last_order_week
@@ -83,6 +82,13 @@ left outer join
 where
   t.created_at between '@{start_date}' and '@{end_date}'
 order by 1 desc")
+
+#********************************************************************************
+#TODO: This includes the list price, but does not subtract out a discount 
+#      (e.g. first order discount, credit from previous refun applied).  
+#      Will need to figure out a way to subtract out discounts they receive 
+#      on an order.
+#********************************************************************************
 db_transactions <- dbGetQuery(datawarehouse_db, query)
 
 # Notes from John: 
