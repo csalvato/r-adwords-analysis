@@ -70,7 +70,7 @@ select
 from
   transactions t
 inner join
-  vw_stage_mixpanel_orders vw on t.user_id = vw.user_id
+  stage.gs_mixpanel vw on t.user_id = vw.user_id
 inner join
   transaction_items ti on t.id = ti.transaction_id
 inner join
@@ -112,7 +112,7 @@ db_transactions <- dbGetQuery(datawarehouse_db, query)
 # from 
 #   fact_orders 
 #     inner join 
-#   vw_stage_mixpanel_orders vw on fact_orders.user_id = vw.user_id 
+#   stage.gs_mixpanel vw on fact_orders.user_id = vw.user_id 
 #     inner join 
 #   dim_users du on fact_orders.user_id = du.user_id 
 # -- where 
