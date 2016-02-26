@@ -6,7 +6,7 @@ library(GetoptLong)
 
 # Set reporting parameters
 start_date = '2015-12-17'
-end_date = toString(Sys.Date())#'2016-1-4'
+end_date = toString(Sys.Date())
 
 # Pull in adwords campaign data and format for use
 adwords_data <- read.csv(text=readLines('Campaign Performance Report.csv')[-(1:1)], header=TRUE)
@@ -20,8 +20,6 @@ adwords_data <- filter(adwords_data, Day >= as.Date(start_date, "%Y-%m-%d"), Day
 campaigns_table <- adwords_data %>% 
                       group_by(Campaign.ID)%>% 
                       summarize(Campaign.Name = first(Campaign))
-
-View(campaigns_table)
 
 # Retrieve revenue data
 pgsql <- JDBC("org.postgresql.Driver", "../database_drivers/postgresql-9.2-1004.jdbc4.jar", "`")
@@ -42,46 +40,87 @@ datawarehouse_db <- dbConnect(pgsql, "jdbc:postgresql://127.0.0.1:5438/mps_oltp?
 # Transaction values can be a bit confusing, because they include system credits
 # and discounts.  The price field is generally == list price of the meal plan, but there
 # are situations where it can get nuked for older data.
+# query <- qq("
+# select
+#      du.name
+# --    , du.user_id
+#     , du.lifetime_transaction_value
+#     , du.lifetime_orders
+#     , du.first_order_week
+#     , dl.store_front_id
+#     , gsm.*
+# from 
+#   stage.gs_mixpanel gsm
+# inner join
+#   dim_users du on gsm.user_id = du.user_id
+# left outer join
+#   dim_locations dl on dl.location_id = du.loc_primary
+# order by 1")
 query <- qq("
 select
-  t.created_at
-  , ti.transaction_id
-  , du.name
-  -- , du.first_order_week
-  --  , du.last_order_week
-  --  , du.lifetime_transaction_value
-  --  , du.avg_transaction_value
-  --  , t.amount as current_transaction_amount
-  , t.refunded
-  --  , t.discount_amount
-  --  , ti.credit_used
-  --  , t.sales_tax_amount 
-  , d.type
-  , d.amount
-  , ti.name as meal_plan
-  , ti.price as list_price
-  , ti.recurring
+  t.created_at as transaction_date
+  , du.name as user_name
+  , t.discount_amount
+  , ti.credit_used
+  , t.sales_tax_amount
+  , (CASE t.refunded
+  WHEN 't' THEN
+  ti.price
+  ELSE
+  0
+  END) as refund_amount
+  , (CASE 
+  WHEN d.type = 'GiftCard'
+  THEN d.amount
+  ELSE
+  ti.price - t.sales_tax_amount + t.discount_amount
+  END) as retail_price
+  , (CASE t.refunded
+  WHEN 't' THEN
+  0
+  ELSE
+  ti.price - ti.credit_used
+  END) as money_in_the_bank_paid_to_us
+  , (CASE
+  WHEN d.type = 'GiftCard'
+  THEN 'Gift Card'
+  WHEN ti.recurring = 't'
+  THEN 'Recurring Food Purchase'
+  ELSE 
+  'One-Time Meal Purchase'
+  END
+  ) as purchase_type
+  --, ti.name as meal_plan
+  --, ti.recurring
   --  , l.name
   --  , l.city
   --  , l.state
   --  , l.store_front_id
   --  , l.home_delivery
-  , vw.*
-from
+  , mp.*
+  from
   transactions t
-inner join
-  stage.gs_mixpanel vw on t.user_id = vw.user_id
-inner join
+  inner join
   transaction_items ti on t.id = ti.transaction_id
-inner join
+  inner join
   dim_users du on t.user_id = du.user_id
-left outer join
-  locations l on ti.location_id = l.id
-left outer join
+  inner join
+  (
+  select distinct on (gsm.user_id)
+  gsm.*
+  from
+  stage.gs_mixpanel gsm
+  order by gsm.user_id, mixpanel_event_timestamp
+  ) mp on du.user_id = mp.user_id
+  --left outer join
+  --  locations l on ti.location_id = l.id
+  left outer join
   discounts d on ti.discount_id = d.id
 where
   t.created_at between '@{start_date}' and '@{end_date}'
-order by 1 desc")
+--  AND
+--  t.refunded IS NOT TRUE
+order by t.created_at desc")
 
 #********************************************************************************
 #TODO: This includes the list price, but does not subtract out a discount 
@@ -90,6 +129,7 @@ order by 1 desc")
 #      on an order.
 #********************************************************************************
 db_transactions <- dbGetQuery(datawarehouse_db, query)
+View(db_transactions)
 
 # Notes from John: 
 # The data from this query will be updated nightly.  
@@ -131,21 +171,25 @@ db_transactions <- left_join(db_transactions, campaigns_table, by=c(latest_ad_ut
 # Create a table showing total value by campaign
 grouped_data1 <- db_transactions %>% 
                   group_by(Campaign.Name, latest_ad_device) %>% 
-                  summarize(Earnings = sum(list_price))
+                  summarize(Earnings = sum(money_in_the_bank_paid_to_us))
 View(grouped_data1)
 
 grouped_data2 <- db_transactions %>% 
                   group_by(Campaign.Name) %>% 
-                  summarize(Earnings = sum(list_price))
+                  summarize(Earnings = sum(money_in_the_bank_paid_to_us))
 View(grouped_data2)
 
 grouped_data3 <- db_transactions %>% 
                   group_by(user_id) %>% 
-                  summarize(name = first(name), num_transactions=length(created_at), earnings = sum(list_price))
+                  summarize(name = first(user_name), num_transactions=length(transaction_date), earnings = sum(money_in_the_bank_paid_to_us))
 View(grouped_data3)
 
 grouped_data4 <- db_transactions %>% 
                   group_by(latest_ad_awkeyword) %>% 
-                  summarize(num_transactions=length(created_at), num_users=n_distinct(user_id), Earnings = sum(list_price))
+                  summarize(num_users=n_distinct(user_id), num_transactions=length(transaction_date), Earnings = sum(money_in_the_bank_paid_to_us))
 View(grouped_data4)
+
+grouped_data5 <- db_transactions %>%
+                summarize(earnings=sum(money_in_the_bank_paid_to_us))
+View(grouped_data5)
 ########################
