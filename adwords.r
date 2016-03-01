@@ -97,6 +97,9 @@ dbDisconnect(datawarehouse_db)
 db_adwords_campaigns$campaign_id <- as.integer(db_adwords_campaigns$campaign_id)
 db_adwords_campaigns$cost <- db_adwords_campaigns$cost/1000000
 db_adwords_campaigns$budget <- db_adwords_campaigns$budget/1000000
+db_adwords_campaigns$device <- gsub("Computers", "dt", db_adwords_campaigns$device)
+db_adwords_campaigns$device <- gsub("Tablets with full browsers", "dt", db_adwords_campaigns$device)
+db_adwords_campaigns$device <- gsub("Mobile devices with full browsers", "mb", db_adwords_campaigns$device)
 
 # Create a join table of campaign names and IDs
 campaigns_table <- db_adwords_campaigns %>% 
@@ -109,28 +112,47 @@ db_transactions$latest_ad_utm_campaign <- as.integer(db_transactions$latest_ad_u
 # Join with Campaign ID lookup table.
 db_transactions <- left_join(db_transactions, campaigns_table, by=c(latest_ad_utm_campaign = "campaign_id"))
 
-# Create a table showing total value by campaign
+# Create a table showing total value by campaign and device.
+adwords_metrics_by_campaign_device <- db_adwords_campaigns %>%
+                                      group_by(campaign_name, device) %>%
+                                      summarize(cost = sum(cost),
+                                                impressions = sum(impressions),
+                                                clicks = sum(clicks),
+                                                ctr = clicks/impressions,
+                                                cpc = cost/clicks)
+View(adwords_metrics_by_campaign_device)
+
 grouped_data1 <- db_transactions %>% 
                   group_by(campaign_name, latest_ad_device) %>% 
-                  summarize(Earnings = sum(money_in_the_bank_paid_to_us))
+                  summarize(earnings = sum(money_in_the_bank_paid_to_us),
+                            contribution = sum(money_in_the_bank_paid_to_us) *.25,
+                            num_acquisitions = length(unique(user_id))) %>% 
+                  left_join(adwords_metrics_by_campaign_device, by=c(campaign_name = "campaign_name",
+                                                                      latest_ad_device = "device"))
+grouped_data1$epc <- grouped_data1$earnings / grouped_data1$clicks
+grouped_data1$contibution_pc <- grouped_data1$contribution / grouped_data1$clicks
+grouped_data1$cpa <- grouped_data1$cost / grouped_data1$num_acquisitions
 View(grouped_data1)
 
-adwords_cost_by_campaign <- db_adwords_campaigns %>%
-                                group_by(campaign_name) %>%
-                                summarize(cost = sum(cost),
-                                          impressions = sum(impressions),
-                                          clicks = sum(clicks),
-                                          ctr = clicks/impressions,
-                                          cpc = cost/clicks)
-View(adwords_cost_by_campaign)
+# Create a table showing total value by campaign
+adwords_metrics_by_campaign <- db_adwords_campaigns %>%
+  group_by(campaign_name) %>%
+  summarize(cost = sum(cost),
+            impressions = sum(impressions),
+            clicks = sum(clicks),
+            ctr = clicks/impressions,
+            cpc = cost/clicks)
+View(adwords_metrics_by_campaign)
 
 grouped_data2 <- db_transactions %>% 
                   group_by(campaign_name) %>% 
                   summarize(earnings = sum(money_in_the_bank_paid_to_us),
-                            contribution = sum(money_in_the_bank_paid_to_us) *.25) %>% 
-                  left_join(adwords_cost_by_campaign, by=c(campaign_name = "campaign_name"))
+                            contribution = sum(money_in_the_bank_paid_to_us) *.25,
+                            num_acquisitions = length(unique(user_id))) %>% 
+                  left_join(adwords_metrics_by_campaign, by=c(campaign_name = "campaign_name"))
 grouped_data2$epc <- grouped_data2$earnings / grouped_data2$clicks
-grouped_data2$contibution_pc <- grouped_data2$contribution / grouped_data2$clicks
+grouped_data2$contibution2pc <- grouped_data2$contribution / grouped_data2$clicks
+grouped_data1$cpa <- grouped_data1$cost / grouped_data1$num_acquisitions
 View(grouped_data2)
 
 
