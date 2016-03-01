@@ -159,7 +159,10 @@ View(grouped_data2)
 # Note, number of transactions is NOT the same as number of orders
 grouped_data3 <- db_transactions %>% 
                   group_by(user_id) %>% 
-                  summarize(name = first(user_name), num_transactions=length(transaction_date), earnings = sum(money_in_the_bank_paid_to_us))
+                  summarize(name = first(user_name), 
+                            num_transactions=length(transaction_date), 
+                            earnings = sum(money_in_the_bank_paid_to_us),
+                            campaign_name = first(campaign_name))
 View(grouped_data3)
 
 grouped_data4 <- db_transactions %>% 
