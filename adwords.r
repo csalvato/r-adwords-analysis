@@ -8,14 +8,6 @@ library(GetoptLong)
 start_date = '2015-12-17'
 end_date = toString(Sys.Date())
 
-# Pull in adwords campaign data and format for use
-adwords_data <- read.csv(text=readLines('Campaign Performance Report.csv')[-(1:1)], header=TRUE)
-adwords_data <- head(adwords_data, -4)
-adwords_data$Day <- as.Date(adwords_data$Day, "%Y-%m-%d") # Change Day to date type for date searching/filtering
-adwords_data$Campaign.ID <- as.integer(as.character(adwords_data$Campaign.ID)) # Make sure campaign IDs are integers for future joins
-adwords_data$Cost <- as.numeric(as.character(adwords_data$Cost)) # Make sure cost is a float for totaling
-adwords_data <- filter(adwords_data, Day >= as.Date(start_date, "%Y-%m-%d"), Day <= as.Date(end_date, "%Y-%m-%d"))
-
 # Retrieve revenue data
 pgsql <- JDBC("org.postgresql.Driver", "../database_drivers/postgresql-9.2-1004.jdbc4.jar", "`")
 #heroku_db <- dbConnect(pgsql, "jdbc:postgresql://ec2-54-221-203-136.compute-1.amazonaws.com:5502/dfh97e63ls7ag8?user=u1gg5j81iss15&password=p1g2km19noav948l6q7net768vu&ssl=true&sslfactory=org.postgresql.ssl.NonValidatingFactory")
@@ -99,13 +91,12 @@ order by awc.date desc")
 db_adwords_campaigns <- dbGetQuery(datawarehouse_db, adwords_campaigns_query)
 db_transactions <- dbGetQuery(datawarehouse_db, purchases_query)
 
-View(db_adwords_campaigns)
-View(db_transactions)
-
 dbDisconnect(datawarehouse_db)
 
 # Format AdWords data appropriately
 db_adwords_campaigns$campaign_id <- as.integer(db_adwords_campaigns$campaign_id)
+db_adwords_campaigns$cost <- db_adwords_campaigns$cost/1000000
+db_adwords_campaigns$budget <- db_adwords_campaigns$budget/1000000
 
 # Create a join table of campaign names and IDs
 campaigns_table <- db_adwords_campaigns %>% 
@@ -116,19 +107,34 @@ campaigns_table <- db_adwords_campaigns %>%
 db_transactions$latest_ad_utm_campaign <- as.integer(db_transactions$latest_ad_utm_campaign)
 
 # Join with Campaign ID lookup table.
-db_transactions <- left_join(db_transactions, campaigns_table, by=c(latest_ad_utm_campaign = "Campaign.ID"))
+db_transactions <- left_join(db_transactions, campaigns_table, by=c(latest_ad_utm_campaign = "campaign_id"))
 
 # Create a table showing total value by campaign
 grouped_data1 <- db_transactions %>% 
-                  group_by(Campaign.Name, latest_ad_device) %>% 
+                  group_by(campaign_name, latest_ad_device) %>% 
                   summarize(Earnings = sum(money_in_the_bank_paid_to_us))
 View(grouped_data1)
 
+adwords_cost_by_campaign <- db_adwords_campaigns %>%
+                                group_by(campaign_name) %>%
+                                summarize(cost = sum(cost),
+                                          impressions = sum(impressions),
+                                          clicks = sum(clicks),
+                                          ctr = clicks/impressions,
+                                          cpc = cost/clicks)
+View(adwords_cost_by_campaign)
+
 grouped_data2 <- db_transactions %>% 
-                  group_by(Campaign.Name) %>% 
-                  summarize(Earnings = sum(money_in_the_bank_paid_to_us))
+                  group_by(campaign_name) %>% 
+                  summarize(earnings = sum(money_in_the_bank_paid_to_us),
+                            contribution = sum(money_in_the_bank_paid_to_us) *.25) %>% 
+                  left_join(adwords_cost_by_campaign, by=c(campaign_name = "campaign_name"))
+grouped_data2$epc <- grouped_data2$earnings / grouped_data2$clicks
+grouped_data2$contibution_pc <- grouped_data2$contribution / grouped_data2$clicks
 View(grouped_data2)
 
+
+# Note, number of transactions is NOT the same as number of orders
 grouped_data3 <- db_transactions %>% 
                   group_by(user_id) %>% 
                   summarize(name = first(user_name), num_transactions=length(transaction_date), earnings = sum(money_in_the_bank_paid_to_us))
