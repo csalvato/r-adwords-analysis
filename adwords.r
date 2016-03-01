@@ -3,7 +3,8 @@ library(RJDBC)
 library(dplyr)
 library(tidyr)
 library(GetoptLong)
-
+library(gridExtra)
+gr
 # Set reporting parameters
 start_date = '2015-12-17'
 end_date = toString(Sys.Date())
@@ -120,7 +121,6 @@ adwords_metrics_by_campaign_device <- db_adwords_campaigns %>%
                                                 clicks = sum(clicks),
                                                 ctr = clicks/impressions,
                                                 cpc = cost/clicks)
-View(adwords_metrics_by_campaign_device)
 
 grouped_data1 <- db_transactions %>% 
                   group_by(campaign_name, latest_ad_device) %>% 
@@ -129,6 +129,18 @@ grouped_data1 <- db_transactions %>%
                             num_acquisitions = length(unique(user_id))) %>% 
                   left_join(adwords_metrics_by_campaign_device, by=c(campaign_name = "campaign_name",
                                                                       latest_ad_device = "device"))
+grouped_data1$epc <- grouped_data1$earnings / grouped_data1$clicks
+grouped_data1$contibution_pc <- grouped_data1$contribution / grouped_data1$clicks
+grouped_data1$cpa <- grouped_data1$cost / grouped_data1$num_acquisitions
+View(grouped_data1)
+
+grouped_data1 <- db_transactions %>% 
+  group_by(campaign_name, latest_ad_device) %>% 
+  summarize(earnings = sum(money_in_the_bank_paid_to_us),
+            contribution = sum(money_in_the_bank_paid_to_us) *.25,
+            num_acquisitions = length(unique(user_id))) %>% 
+  left_join(adwords_metrics_by_campaign_device, by=c(campaign_name = "campaign_name",
+                                                     latest_ad_device = "device"))
 grouped_data1$epc <- grouped_data1$earnings / grouped_data1$clicks
 grouped_data1$contibution_pc <- grouped_data1$contribution / grouped_data1$clicks
 grouped_data1$cpa <- grouped_data1$cost / grouped_data1$num_acquisitions
@@ -151,7 +163,7 @@ grouped_data2 <- db_transactions %>%
                             num_acquisitions = length(unique(user_id))) %>% 
                   left_join(adwords_metrics_by_campaign, by=c(campaign_name = "campaign_name"))
 grouped_data2$epc <- grouped_data2$earnings / grouped_data2$clicks
-grouped_data2$contibution2pc <- grouped_data2$contribution / grouped_data2$clicks
+grouped_data2$contibution_pc <- grouped_data2$contribution / grouped_data2$clicks
 grouped_data1$cpa <- grouped_data1$cost / grouped_data1$num_acquisitions
 View(grouped_data2)
 
@@ -167,10 +179,14 @@ View(grouped_data3)
 
 grouped_data4 <- db_transactions %>% 
                   group_by(latest_ad_awkeyword) %>% 
-                  summarize(num_users=n_distinct(user_id), num_transactions=length(transaction_date), Earnings = sum(money_in_the_bank_paid_to_us))
+                  summarize(num_users=n_distinct(user_id), 
+                            num_transactions=length(transaction_date), 
+                            earnings = sum(money_in_the_bank_paid_to_us))
 View(grouped_data4)
 
 grouped_data5 <- db_transactions %>%
-                summarize(earnings=sum(money_in_the_bank_paid_to_us))
+                summarize(earnings=sum(money_in_the_bank_paid_to_us),
+                          contribution = earnings *.25)
+grouped_data5$cost <- sum(db_adwords_campaigns$cost)
 View(grouped_data5)
 ########################
