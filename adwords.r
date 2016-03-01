@@ -16,11 +16,6 @@ adwords_data$Campaign.ID <- as.integer(as.character(adwords_data$Campaign.ID)) #
 adwords_data$Cost <- as.numeric(as.character(adwords_data$Cost)) # Make sure cost is a float for totaling
 adwords_data <- filter(adwords_data, Day >= as.Date(start_date, "%Y-%m-%d"), Day <= as.Date(end_date, "%Y-%m-%d"))
 
-# Create a join table of campaign names and IDs
-campaigns_table <- adwords_data %>% 
-                      group_by(Campaign.ID)%>% 
-                      summarize(Campaign.Name = first(Campaign))
-
 # Retrieve revenue data
 pgsql <- JDBC("org.postgresql.Driver", "../database_drivers/postgresql-9.2-1004.jdbc4.jar", "`")
 #heroku_db <- dbConnect(pgsql, "jdbc:postgresql://ec2-54-221-203-136.compute-1.amazonaws.com:5502/dfh97e63ls7ag8?user=u1gg5j81iss15&password=p1g2km19noav948l6q7net768vu&ssl=true&sslfactory=org.postgresql.ssl.NonValidatingFactory")
@@ -98,7 +93,7 @@ select
 from 
   stage.gs_adwords_campaigns awc
 where 
-  awc.date between '2015-12-17' and '2016-03-01'
+  awc.date between '@{start_date}' and '@{end_date}'
 order by awc.date desc")
 
 db_adwords_campaigns <- dbGetQuery(datawarehouse_db, adwords_campaigns_query)
@@ -108,6 +103,14 @@ View(db_adwords_campaigns)
 View(db_transactions)
 
 dbDisconnect(datawarehouse_db)
+
+# Format AdWords data appropriately
+db_adwords_campaigns$campaign_id <- as.integer(db_adwords_campaigns$campaign_id)
+
+# Create a join table of campaign names and IDs
+campaigns_table <- db_adwords_campaigns %>% 
+                  group_by(campaign_id)%>% 
+                  summarize(campaign_name = first(campaign_name))
 
 # Make sure campaign IDs are integers for future joins
 db_transactions$latest_ad_utm_campaign <- as.integer(db_transactions$latest_ad_utm_campaign)
