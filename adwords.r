@@ -7,6 +7,7 @@ library(dplyr)
 library(tidyr)
 library(GetoptLong)
 library(gridExtra)
+library(lubridate) 
 # Set reporting parameters
 start_date = '2015-12-17'
 end_date = toString(Sys.Date())
@@ -118,7 +119,11 @@ db_transactions <- db_adwords_campaigns %>%
                    summarize(campaign_name = first(campaign_name)) %>%
                    right_join(db_transactions, by=c(campaign_id = "campaign_id"))
 
+
+# Create elog
 elog <- rbind.fill(db_transactions, db_adwords_campaigns)
+# add week start dates
+elog$week <- floor_date(elog$date, "week") - days(1)
 
 campaign_overview <- elog %>%
                       group_by(campaign_name) %>%
@@ -132,7 +137,8 @@ campaign_overview <- elog %>%
                                 num_acquisitions = n_distinct(user_id, na.rm = TRUE),
                                 earnings_per_click = earnings/clicks,
                                 contribution_per_click= contribution/clicks,
-                                cpa = ifelse(num_acquisitions==0, cost, cost/num_acquisitions)) %>%
+                                cpa = ifelse(num_acquisitions==0, cost, cost/num_acquisitions),
+                                ROAS = (contribution-cost)/cost) %>%
                       arrange(desc(earnings))
 View(campaign_overview)
 
@@ -148,7 +154,8 @@ campaign_device_overview <- elog %>%
                                       num_acquisitions = n_distinct(user_id, na.rm = TRUE),
                                       earnings_per_click = earnings/clicks,
                                       contribution_per_click= contribution/clicks,
-                                      cpa = ifelse(num_acquisitions==0, cost, cost/num_acquisitions)) %>%
+                                      cpa = ifelse(num_acquisitions==0, cost, cost/num_acquisitions),
+                                      ROAS = (contribution-cost)/cost) %>%
                             ungroup() %>% # Required to sort properly after multiple grouping.
                             arrange(desc(earnings))
 View(campaign_device_overview)
@@ -165,7 +172,8 @@ device_overview <- elog %>%
                               num_acquisitions = n_distinct(user_id, na.rm = TRUE),
                               earnings_per_click = earnings/clicks,
                               contribution_per_click= contribution/clicks,
-                              cpa = ifelse(num_acquisitions==0, cost, cost/num_acquisitions)) %>%
+                              cpa = ifelse(num_acquisitions==0, cost, cost/num_acquisitions),
+                              ROAS = (contribution-cost)/cost) %>%
                     arrange(desc(earnings))
 View(device_overview)
 
@@ -185,12 +193,14 @@ keyword_overview <- elog %>%
                       group_by(latest_ad_awkeyword) %>% 
                       summarize(num_users=n_distinct(user_id), 
                                 num_transactions=length(transaction_date), 
-                                earnings = sum(money_in_the_bank_paid_to_us))
+                                earnings = sum(money_in_the_bank_paid_to_us),
+                                contribution = earnings *.25)
 View(keyword_overview)
 
 summary_overview <- elog %>%
                     summarize(cost = sum(cost, na.rm=TRUE),
                               earnings=sum(money_in_the_bank_paid_to_us, na.rm=TRUE),
-                              contribution = earnings *.25)
+                              contribution = earnings *.25,
+                              ROAS = (contribution-cost)/cost)
 View(summary_overview)
 ########################
