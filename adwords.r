@@ -1,5 +1,8 @@
+library(utils)
+library(graphics)
 library(RPostgreSQL)
 library(RJDBC)
+library(plyr)
 library(dplyr)
 library(tidyr)
 library(GetoptLong)
@@ -93,98 +96,101 @@ db_transactions <- dbGetQuery(datawarehouse_db, purchases_query)
 
 dbDisconnect(datawarehouse_db)
 
-# Format AdWords data appropriately
+# Format AdWords data for future use
 db_adwords_campaigns$campaign_id <- as.integer(db_adwords_campaigns$campaign_id)
 db_adwords_campaigns$cost <- db_adwords_campaigns$cost/1000000
 db_adwords_campaigns$budget <- db_adwords_campaigns$budget/1000000
+db_adwords_campaigns$date <- as.Date(db_adwords_campaigns$date, format="%Y-%m-%d")
 db_adwords_campaigns$device <- gsub("Computers", "dt", db_adwords_campaigns$device)
 db_adwords_campaigns$device <- gsub("Tablets with full browsers", "dt", db_adwords_campaigns$device)
 db_adwords_campaigns$device <- gsub("Mobile devices with full browsers", "mb", db_adwords_campaigns$device)
 
-# Create a join table of campaign names and IDs
-campaigns_table <- db_adwords_campaigns %>% 
-                  group_by(campaign_id)%>% 
-                  summarize(campaign_name = first(campaign_name))
-
-# Make sure campaign IDs are integers for future joins
+# Format database transactions for future use
 db_transactions$latest_ad_utm_campaign <- as.integer(db_transactions$latest_ad_utm_campaign)
+db_transactions$date <- as.Date(db_transactions$transaction_date, format="%Y-%m-%d")
+db_transactions$day_of_week <- weekdays(as.Date(db_transactions$date,'%Y-%m-%d'))
+db_transactions <- rename(db_transactions, device=latest_ad_device, 
+                          campaign_id=latest_ad_utm_campaign)
 
-# Join with Campaign ID lookup table.
-db_transactions <- left_join(db_transactions, campaigns_table, by=c(latest_ad_utm_campaign = "campaign_id"))
+# Join Campaign names with db transactions to populate campaign name
+db_transactions <- db_adwords_campaigns %>% 
+                   group_by(campaign_id)%>% 
+                   summarize(campaign_name = first(campaign_name)) %>%
+                   right_join(db_transactions, by=c(campaign_id = "campaign_id"))
 
-# Create a table showing total value by campaign and device.
-adwords_metrics_by_campaign_device <- db_adwords_campaigns %>%
-                                      group_by(campaign_name, device) %>%
-                                      summarize(cost = sum(cost),
-                                                impressions = sum(impressions),
-                                                clicks = sum(clicks),
-                                                ctr = clicks/impressions,
-                                                cpc = cost/clicks)
+elog <- rbind.fill(db_transactions, db_adwords_campaigns)
 
-grouped_data1 <- db_transactions %>% 
-                  group_by(campaign_name, latest_ad_device) %>% 
-                  summarize(earnings = sum(money_in_the_bank_paid_to_us),
-                            contribution = sum(money_in_the_bank_paid_to_us) *.25,
-                            num_acquisitions = length(unique(user_id))) %>% 
-                  left_join(adwords_metrics_by_campaign_device, by=c(campaign_name = "campaign_name",
-                                                                      latest_ad_device = "device"))
-grouped_data1$epc <- grouped_data1$earnings / grouped_data1$clicks
-grouped_data1$contibution_pc <- grouped_data1$contribution / grouped_data1$clicks
-grouped_data1$cpa <- grouped_data1$cost / grouped_data1$num_acquisitions
-View(grouped_data1)
+campaign_overview <- elog %>%
+                      group_by(campaign_name) %>%
+                      summarize(cost = sum(cost, na.rm = TRUE),
+                                impressions = sum(impressions, na.rm = TRUE),
+                                clicks = sum(clicks, na.rm = TRUE),
+                                click_through_rate = clicks/impressions,
+                                cost_per_click = cost/clicks,
+                                earnings = sum(money_in_the_bank_paid_to_us, na.rm = TRUE),
+                                contribution = earnings *.25,
+                                num_acquisitions = n_distinct(user_id, na.rm = TRUE),
+                                earnings_per_click = earnings/clicks,
+                                contribution_per_click= contribution/clicks,
+                                cpa = ifelse(num_acquisitions==0, cost, cost/num_acquisitions)) %>%
+                      arrange(desc(earnings))
+View(campaign_overview)
 
-grouped_data1 <- db_transactions %>% 
-  group_by(campaign_name, latest_ad_device) %>% 
-  summarize(earnings = sum(money_in_the_bank_paid_to_us),
-            contribution = sum(money_in_the_bank_paid_to_us) *.25,
-            num_acquisitions = length(unique(user_id))) %>% 
-  left_join(adwords_metrics_by_campaign_device, by=c(campaign_name = "campaign_name",
-                                                     latest_ad_device = "device"))
-grouped_data1$epc <- grouped_data1$earnings / grouped_data1$clicks
-grouped_data1$contibution_pc <- grouped_data1$contribution / grouped_data1$clicks
-grouped_data1$cpa <- grouped_data1$cost / grouped_data1$num_acquisitions
-View(grouped_data1)
+campaign_device_overview <- elog %>%
+                            group_by(device, campaign_name) %>%
+                            summarize(cost = sum(cost, na.rm = TRUE),
+                                      impressions = sum(impressions, na.rm = TRUE),
+                                      clicks = sum(clicks, na.rm = TRUE),
+                                      click_through_rate = clicks/impressions,
+                                      cost_per_click = cost/clicks,
+                                      earnings = sum(money_in_the_bank_paid_to_us, na.rm = TRUE),
+                                      contribution = earnings *.25,
+                                      num_acquisitions = n_distinct(user_id, na.rm = TRUE),
+                                      earnings_per_click = earnings/clicks,
+                                      contribution_per_click= contribution/clicks,
+                                      cpa = ifelse(num_acquisitions==0, cost, cost/num_acquisitions)) %>%
+                            ungroup() %>% # Required to sort properly after multiple grouping.
+                            arrange(desc(earnings))
+View(campaign_device_overview)
 
-# Create a table showing total value by campaign
-adwords_metrics_by_campaign <- db_adwords_campaigns %>%
-  group_by(campaign_name) %>%
-  summarize(cost = sum(cost),
-            impressions = sum(impressions),
-            clicks = sum(clicks),
-            ctr = clicks/impressions,
-            cpc = cost/clicks)
-
-grouped_data2 <- db_transactions %>% 
-                  group_by(campaign_name) %>% 
-                  summarize(earnings = sum(money_in_the_bank_paid_to_us),
-                            contribution = sum(money_in_the_bank_paid_to_us) *.25,
-                            num_acquisitions = length(unique(user_id))) %>% 
-                  left_join(adwords_metrics_by_campaign, by=c(campaign_name = "campaign_name"))
-grouped_data2$epc <- grouped_data2$earnings / grouped_data2$clicks
-grouped_data2$contibution_pc <- grouped_data2$contribution / grouped_data2$clicks
-grouped_data1$cpa <- grouped_data1$cost / grouped_data1$num_acquisitions
-View(grouped_data2)
+device_overview <- elog %>%
+                    group_by(device) %>%
+                    summarize(cost = sum(cost, na.rm = TRUE),
+                              impressions = sum(impressions, na.rm = TRUE),
+                              clicks = sum(clicks, na.rm = TRUE),
+                              click_through_rate = clicks/impressions,
+                              cost_per_click = cost/clicks,
+                              earnings = sum(money_in_the_bank_paid_to_us, na.rm = TRUE),
+                              contribution = earnings *.25,
+                              num_acquisitions = n_distinct(user_id, na.rm = TRUE),
+                              earnings_per_click = earnings/clicks,
+                              contribution_per_click= contribution/clicks,
+                              cpa = ifelse(num_acquisitions==0, cost, cost/num_acquisitions)) %>%
+                    arrange(desc(earnings))
+View(device_overview)
 
 
 # Note, number of transactions is NOT the same as number of orders
-grouped_data3 <- db_transactions %>% 
-                  group_by(user_id) %>% 
+user_overview <- elog %>% 
+                  filter(!is.na(user_id)) %>% #Remove NA user_ids (which means they are not monetary transactions)
+                  group_by(user_id) %>%
                   summarize(name = first(user_name), 
                             num_transactions=length(transaction_date), 
                             earnings = sum(money_in_the_bank_paid_to_us),
                             campaign_name = first(campaign_name))
-View(grouped_data3)
+View(user_overview)
 
-grouped_data4 <- db_transactions %>% 
-                  group_by(latest_ad_awkeyword) %>% 
-                  summarize(num_users=n_distinct(user_id), 
-                            num_transactions=length(transaction_date), 
-                            earnings = sum(money_in_the_bank_paid_to_us))
-View(grouped_data4)
+keyword_overview <- elog %>% 
+                      filter(!is.na(latest_ad_awkeyword)) %>%
+                      group_by(latest_ad_awkeyword) %>% 
+                      summarize(num_users=n_distinct(user_id), 
+                                num_transactions=length(transaction_date), 
+                                earnings = sum(money_in_the_bank_paid_to_us))
+View(keyword_overview)
 
-grouped_data5 <- db_transactions %>%
-                summarize(earnings=sum(money_in_the_bank_paid_to_us),
-                          contribution = earnings *.25)
-grouped_data5$cost <- sum(db_adwords_campaigns$cost)
-View(grouped_data5)
+summary_overview <- elog %>%
+                    summarize(cost = sum(cost, na.rm=TRUE),
+                              earnings=sum(money_in_the_bank_paid_to_us, na.rm=TRUE),
+                              contribution = earnings *.25)
+View(summary_overview)
 ########################
