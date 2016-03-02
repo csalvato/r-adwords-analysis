@@ -4,7 +4,6 @@ library(dplyr)
 library(tidyr)
 library(GetoptLong)
 library(gridExtra)
-gr
 # Set reporting parameters
 start_date = '2015-12-17'
 end_date = toString(Sys.Date())
@@ -154,7 +153,6 @@ adwords_metrics_by_campaign <- db_adwords_campaigns %>%
             clicks = sum(clicks),
             ctr = clicks/impressions,
             cpc = cost/clicks)
-View(adwords_metrics_by_campaign)
 
 grouped_data2 <- db_transactions %>% 
                   group_by(campaign_name) %>% 
