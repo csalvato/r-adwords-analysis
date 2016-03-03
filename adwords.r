@@ -97,7 +97,15 @@ db_transactions <- dbGetQuery(datawarehouse_db, purchases_query)
 
 dbDisconnect(datawarehouse_db)
 
-# Format AdWords data for future use
+# Get Keywords data from CSV
+db_adwords_keywords <- read.csv(file="keyword_performance_report.csv",head=TRUE,sep=",")
+View(db_adwords_keywords)
+
+# Format AdWords keyword data for future use
+
+
+
+# Format AdWords campaign data for future use
 db_adwords_campaigns$campaign_id <- as.integer(db_adwords_campaigns$campaign_id)
 db_adwords_campaigns$cost <- db_adwords_campaigns$cost/1000000
 db_adwords_campaigns$budget <- db_adwords_campaigns$budget/1000000
@@ -118,7 +126,6 @@ db_transactions <- db_adwords_campaigns %>%
                    group_by(campaign_id)%>% 
                    summarize(campaign_name = first(campaign_name)) %>%
                    right_join(db_transactions, by=c(campaign_id = "campaign_id"))
-
 
 # Create elog
 elog <- rbind.fill(db_transactions, db_adwords_campaigns)
@@ -186,6 +193,7 @@ user_overview <- elog %>%
                             num_transactions=length(transaction_date), 
                             earnings = sum(money_in_the_bank_paid_to_us),
                             campaign_name = first(campaign_name))
+summary(user_overview)
 View(user_overview)
 
 keyword_overview <- elog %>% 
@@ -201,6 +209,9 @@ summary_overview <- elog %>%
                     summarize(cost = sum(cost, na.rm=TRUE),
                               earnings=sum(money_in_the_bank_paid_to_us, na.rm=TRUE),
                               contribution = earnings *.25,
-                              ROAS = (contribution-cost)/cost)
+                              ROAS_to_date = (contribution-cost)/cost,
+                              num_acquisitions=n_distinct(user_id, na.rm = TRUE),
+                              estimated_ltv = num_acquisitions*10*70*.25,
+                              estimated_lifetime_ROAS=(estimated_ltv-cost)/cost)
 View(summary_overview)
 ########################
