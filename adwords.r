@@ -6,8 +6,9 @@ library(plyr)
 library(dplyr)
 library(tidyr)
 library(GetoptLong)
-library(gridExtra)
+library(ggplot2)
 library(lubridate) 
+library(Rmisc)
 
 # User defined functions
 as.impression_share <- function(impression_share_vector) {
@@ -30,6 +31,10 @@ as.device <- function(device_vector) {
   return(device_vector)
 }
 
+as.week <- function(date_vector){
+  floor_date(date_vector, "week") + days(1)
+}
+
 # Set reporting parameters
 start_date = '2015-12-17'
 end_date = toString(Sys.Date())
@@ -39,7 +44,7 @@ pgsql <- JDBC("org.postgresql.Driver", "../database_drivers/postgresql-9.2-1004.
 #heroku_db <- dbConnect(pgsql, "jdbc:postgresql://ec2-54-221-203-136.compute-1.amazonaws.com:5502/dfh97e63ls7ag8?user=u1gg5j81iss15&password=p1g2km19noav948l6q7net768vu&ssl=true&sslfactory=org.postgresql.ssl.NonValidatingFactory")
 datawarehouse_db <- dbConnect(pgsql, "jdbc:postgresql://127.0.0.1:5438/mps_oltp?user=oltp_reader&password=0Ltpr33@donly")
 
-purchases_query <- qq("
+purchases_query <- GetoptLong::qq("
 select
   t.created_at as transaction_date
   , du.name as user_name
@@ -105,7 +110,7 @@ where
 --  t.refunded IS NOT TRUE
 order by t.created_at desc")
 
-adwords_campaigns_query <- qq("
+adwords_campaigns_query <- GetoptLong::qq("
 select
   *
 from 
@@ -113,6 +118,15 @@ from
 where 
   awc.date between '@{start_date}' and '@{end_date}'
 order by awc.date desc")
+
+influencer_metrics_query <- GetoptLong::qq("
+select
+  *
+from 
+ fact_influencer_metrics fim
+")
+
+db_influencer_metrics <- dbGetQuery(datawarehouse_db, influencer_metrics_query)
 
 db_adwords_campaigns <- dbGetQuery(datawarehouse_db, adwords_campaigns_query)
 db_transactions <- dbGetQuery(datawarehouse_db, purchases_query)
@@ -166,7 +180,7 @@ keywords_transactions <- db_adwords_keywords %>%
 
 # Create keywords elog
 keywords_elog <- rbind.fill(keywords_transactions, db_adwords_keywords)
-keywords_elog$week <- floor_date(keywords_elog$date, "week") - days(1)
+keywords_elog$week <- as.week(keywords_elog$date)
 
 keywords_overview <- keywords_elog %>%
                       group_by(keyword, campaign_name) %>%
@@ -189,6 +203,47 @@ keywords_overview <- keywords_elog %>%
                       arrange(desc(earnings))
 View(keywords_overview)
 
+
+# Plot all Keywords over time
+all_keyword_ROAS_over_time <- keywords_elog %>%
+                                group_by(week) %>%
+                                summarize(cost= sum(cost, na.rm = TRUE),
+                                          contribution = sum(money_in_the_bank_paid_to_us,na.rm=TRUE) *.25) %>%
+                                mutate(cum_contribution = cumsum(contribution),
+                                       cum_cost = cumsum(cost))
+
+keywords_overview_plot <- ggplot(gather(all_keyword_ROAS_over_time,type,value,cum_cost,cum_contribution), 
+                                 aes(week,value,group=type,col=type,fill=type)) + 
+                          geom_line()
+plot(keywords_overview_plot)
+
+
+# Plot most important keywords over time
+#####LEFT OFF HERE#########################################################################################################
+#####LEFT OFF HERE#########################################################################################################
+#####LEFT OFF HERE#########################################################################################################
+# Trying to get cumulative cost and earnings by keyword group - existing implementation not working.
+#############################################################################################################################
+
+keywords_with_earnings <- keywords_overview %>% 
+                            filter(earnings > 0)
+keywords_over_time <- keywords_elog %>%
+                      filter(keyword %in% keywords_with_earnings$keyword) %>%
+                      group_by(week, keyword) %>%
+                      summarize(cost= sum(cost, na.rm = TRUE),
+                                contribution = sum(money_in_the_bank_paid_to_us,na.rm=TRUE) *.25) %>%
+                      mutate(cum_contribution = cumsum(contribution), cum_cost = cumsum(cost)) #Not working.
+                  
+      
+keywords_over_time <- gather(keywords_over_time,type,value,cum_cost,cum_contribution)
+
+plot.new()
+frame()
+plot(ggplot(keywords_over_time, aes(week,value,group=type,col=type,fill=type)) + 
+       geom_line() + 
+       ggtitle("Keyword Trends") + 
+       facet_wrap(~keyword))
+
 # Join Campaign names with db transactions to populate campaign name
 campaigns_transactions <- db_adwords_campaigns %>% 
                           group_by(campaign_id)%>% 
@@ -198,7 +253,7 @@ campaigns_transactions <- db_adwords_campaigns %>%
 # Create campaigns elog
 campaigns_elog <- rbind.fill(campaigns_transactions, db_adwords_campaigns)
 # add week start dates
-campaigns_elog$week <- floor_date(campaigns_elog$date, "week") - days(1)
+campaigns_elog$week <- as.week(campaigns_elog$date)
 
 campaign_overview <- campaigns_elog %>%
                       group_by(campaign_name) %>%
@@ -253,20 +308,42 @@ device_overview <- campaigns_elog %>%
 View(device_overview)
 
 
-# Note, number of transactions is NOT the same as number of orders
+# Create join table for user_id and the keyword of first purchase
 user_keywords <- keywords_elog %>%
                   group_by(user_id) %>%
                   summarize(keyword = first(keyword))
 
+# Pull in friend referral data
+user_influencer_metrics <- db_influencer_metrics %>%
+                            group_by(influencer_id) %>%
+                            summarize(referred_users=sum(new_referred_users, na.rm=TRUE),
+                                      referred_earnings=sum(referred_users_transaction_amount,na.rm=TRUE))
+
+# Note, number of transactions is NOT the same as number of orders
 user_overview <- campaigns_elog %>% 
                   filter(!is.na(user_id)) %>% #Remove NA user_ids (which means they are not monetary transactions)
                   group_by(user_id) %>%
                   summarize(name = first(user_name), 
                             num_transactions=length(transaction_date), 
                             earnings = sum(money_in_the_bank_paid_to_us),
+                            contribution = earnings*.25,
                             campaign_name = first(campaign_name)) %>%
-                  left_join(user_keywords, by=c(user_id="user_id"))
+                  left_join(user_keywords, by=c(user_id="user_id")) %>%
+                  left_join(user_influencer_metrics, by=c(user_id="influencer_id")) %>%
+                  replace(is.na(.), 0)
+
+user_overview$referred_contribution = user_overview$referred_earnings * .25
+user_overview$total_earnings = user_overview$earnings + user_overview$referred_earnings
+user_overview$total_contribution = user_overview$contribution + user_overview$referred_contribution
 View(user_overview)
+
+consolidated_user_overview  <- select(user_overview, name,
+                                                     keyword, 
+                                                     contribution,
+                                                     referred_contribution,
+                                                     total_contribution)
+                 
+                          
 
 summary_overview <- campaigns_elog %>%
                     summarize(cost = sum(cost, na.rm=TRUE),
