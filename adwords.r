@@ -35,7 +35,7 @@ as.week <- function(date_vector){
   floor_date(date_vector, "week") + days(1)
 }
 
-query_from_file <- function(file_name){
+string_from_file <- function(file_name){
   GetoptLong::qq(scan(file_name, character()))
 }
 
@@ -46,11 +46,11 @@ end_date = toString(Sys.Date())
 # Retrieve revenue data
 pgsql <- JDBC("org.postgresql.Driver", "../database_drivers/postgresql-9.2-1004.jdbc4.jar", "`")
 #heroku_db <- dbConnect(pgsql, "jdbc:postgresql://ec2-54-221-203-136.compute-1.amazonaws.com:5502/dfh97e63ls7ag8?user=u1gg5j81iss15&password=p1g2km19noav948l6q7net768vu&ssl=true&sslfactory=org.postgresql.ssl.NonValidatingFactory")
-datawarehouse_db <- dbConnect(pgsql, "jdbc:postgresql://127.0.0.1:5438/mps_oltp?user=oltp_reader&password=0Ltpr33@donly")
+datawarehouse_db <- dbConnect(pgsql, string_from_file("jdbc_string.txt"))
 
-transactions_query <- query_from_file("transactions_query.sql")
-adwords_campaigns_query <- query_from_file("adwords_campaigns_query.sql")
-influencer_metrics_query <- query_from_file("influencer_metrics_query.sql")
+transactions_query <- string_from_file("transactions_query.sql")
+adwords_campaigns_query <- string_from_file("adwords_campaigns_query.sql")
+influencer_metrics_query <- string_from_file("influencer_metrics_query.sql")
 
 db_influencer_metrics <- dbGetQuery(datawarehouse_db, influencer_metrics_query)
 db_adwords_campaigns <- dbGetQuery(datawarehouse_db, adwords_campaigns_query)
