@@ -97,22 +97,42 @@ db_transactions <- rename(db_transactions, device=latest_ad_device,
 # This is NOT a sustainable solution.
 db_transactions$keyword <- ifelse(substr(db_transactions$keyword, 1, 1) == '+', db_transactions$keyword, paste('+',db_transactions$keyword, sep="")) 
 
-# Join Campaign names with db transactions to populate campaign name
-keywords_transactions <- db_adwords_keywords %>% 
-                          group_by(campaign_id)%>% 
-                          summarize(campaign_name = first(campaign_name)) %>%
-                          right_join(db_transactions, by=c(campaign_id = "campaign_id"))
+# Add campaign names to db_transactions log
+db_transactions <- db_adwords_campaigns %>% 
+                     group_by(campaign_id)%>% 
+                     summarize(campaign_name = first(campaign_name)) %>%
+                     right_join(db_transactions, by=c(campaign_id = "campaign_id"))
 
-# Join Campaign names with db transactions to populate campaign name
-campaigns_transactions <- db_adwords_campaigns %>% 
-                          group_by(campaign_id)%>% 
-                          summarize(campaign_name = first(campaign_name)) %>%
-                          right_join(db_transactions, by=c(campaign_id = "campaign_id"))
 
+###################################### CREATE ELOGS ################################################
 # Create campaigns elog
-campaigns_elog <- rbind.fill(campaigns_transactions, db_adwords_campaigns)
-# add week start dates
+campaigns_elog <- rbind.fill(db_transactions, db_adwords_campaigns)
+campaigns_elog <- campaigns_elog %>% arrange(date)
 campaigns_elog$week <- as.week(campaigns_elog$date)
+
+# Create keywords elog
+keywords_elog <- rbind.fill(db_transactions, db_adwords_keywords)
+keywords_elog <- keywords_elog %>% arrange(date)
+keywords_elog$week <- as.week(keywords_elog$date)
+
+# Create join table for user_id and the keyword and campaign_name of first purchase
+user_first_acquisition_metrics <- keywords_elog %>%
+  group_by(user_id) %>%
+  summarize(keyword = first(keyword),
+            campaign_name=first(campaign_name),
+            campaign_id=first(campaign_id))
+
+#Add influencer metrics to the event log
+influencer_metrics_with_user_data <- db_influencer_metrics %>%
+                                    rename(week=week_start,
+                                           user_id=influencer_id) %>%
+                                    mutate(week = as.Date(week, format = '%Y-%m-%d')) %>%
+                                    inner_join(user_first_acquisition_metrics, by=c(user_id="user_id"))
+
+keywords_elog <- rbind.fill(keywords_elog, influencer_metrics_with_user_data)
+campaigns_elog <- rbind.fill(campaigns_elog, influencer_metrics_with_user_data)
+
+###################################### END CREATE ELOGS ################################################
 
 campaign_overview <- campaigns_elog %>%
                       group_by(campaign_name) %>%
@@ -166,28 +186,6 @@ device_overview <- campaigns_elog %>%
                     arrange(desc(earnings))
 View(device_overview)
 
-# Create keywords elog
-keywords_elog <- rbind.fill(keywords_transactions, db_adwords_keywords)
-keywords_elog <- keywords_elog %>% arrange(date)
-keywords_elog$week <- as.week(keywords_elog$date)
-
-# Create join table for user_id and the keyword and campaign_name of first purchase
-user_first_acquisition_metrics <- keywords_elog %>%
-                                  group_by(user_id) %>%
-                                  summarize(keyword = first(keyword),
-                                            campaign_name=first(campaign_name),
-                                            campaign_id=first(campaign_id))
-
-#Add influencer metrics to the event log
-influencer_metrics_with_user_data <- db_influencer_metrics %>%
-                                      rename(week=week_start,
-                                             user_id=influencer_id) %>%
-                                      mutate(week = as.Date(week, format = '%Y-%m-%d')) %>%
-                                      inner_join(user_first_acquisition_metrics, by=c(user_id="user_id"))
-
-keywords_elog <- rbind.fill(keywords_elog, influencer_metrics_with_user_data)
-campaigns_elog <- rbind.fill(campaigns_elog, influencer_metrics_with_user_data)
-
 # Pull in friend referral data
 user_influencer_metrics <- db_influencer_metrics %>%
                             group_by(influencer_id) %>%
@@ -206,7 +204,6 @@ user_overview <- campaigns_elog %>%
                   left_join(user_keywords, by=c(user_id="user_id")) %>%
                   left_join(user_influencer_metrics, by=c(user_id="influencer_id")) %>%
                   replace(is.na(.), 0)
-
 user_overview$referred_contribution = user_overview$referred_earnings * .25
 user_overview$total_earnings = user_overview$earnings + user_overview$referred_earnings
 user_overview$total_contribution = user_overview$contribution + user_overview$referred_contribution
