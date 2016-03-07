@@ -3,4 +3,4 @@
 .Rproj.user
 .RData
 .Rhistory
-jdbc_string.txt
+jdbc_*.txt

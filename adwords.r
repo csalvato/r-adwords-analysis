@@ -45,8 +45,8 @@ end_date = toString(Sys.Date())
 
 # Retrieve revenue data
 pgsql <- JDBC("org.postgresql.Driver", "../database_drivers/postgresql-9.2-1004.jdbc4.jar", "`")
-#heroku_db <- dbConnect(pgsql, "jdbc:postgresql://ec2-54-221-203-136.compute-1.amazonaws.com:5502/dfh97e63ls7ag8?user=u1gg5j81iss15&password=p1g2km19noav948l6q7net768vu&ssl=true&sslfactory=org.postgresql.ssl.NonValidatingFactory")
-datawarehouse_db <- dbConnect(pgsql, string_from_file("jdbc_string.txt"))
+#heroku_db <- dbConnect(pgsql, string_from_file("jdbc_heroku_string.txt"))
+datawarehouse_db <- dbConnect(pgsql, string_from_file("jdbc_datawarehouse_string.txt"))
 
 transactions_query <- string_from_file("transactions_query.sql")
 adwords_campaigns_query <- string_from_file("adwords_campaigns_query.sql")
