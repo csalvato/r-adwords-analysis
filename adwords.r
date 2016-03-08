@@ -221,11 +221,13 @@ keywords_overview <- keywords_elog %>%
                       summarize_adwords_elog %>%
                       arrange(desc(earnings))
 
-keywords_weekly <- keywords_elog %>%
-                    group_by(keyword, campaign_name, week) %>%
-                    summarize_adwords_elog %>%
-                    filter(grepl("Geo 1|Geo 2|Geo 3",campaign_name)) %>%
-                    arrange(desc(earnings))
+keywords_weekly_conversion_metrics <- keywords_elog %>%
+                        group_by(keyword, campaign_name, week) %>%
+                        summarize_adwords_elog %>%
+                        filter(grepl("Geo 1|Geo 2|Geo 3",campaign_name)) %>%
+                        ungroup %>%
+                        arrange(keyword, campaign_name, week) %>%
+                        select(keyword, campaign_name, week, impressions, clicks, num_acquisitions, click_through_rate, conversion_rate)
 
 all_keyword_ROAS_over_time <- keywords_elog %>%
                                 group_by(week) %>%
