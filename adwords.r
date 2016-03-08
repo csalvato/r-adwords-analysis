@@ -161,167 +161,72 @@ campaigns_elog <- rbind.fill(campaigns_elog, influencer_metrics_with_user_data)
 
 ###################################### END CREATE ELOGS ################################################
 
+
+###################################### CREATE DATA FRAMES ##############################################
 campaign_overview <- campaigns_elog %>%
                       group_by(campaign_name) %>%
-                      summarize(cost = sum(cost, na.rm = TRUE),
-                                impressions = sum(impressions, na.rm = TRUE),
-                                clicks = sum(clicks, na.rm = TRUE),
-                                click_through_rate = clicks/impressions,
-                                cost_per_click = cost/clicks,
-                                earnings = sum(money_in_the_bank_paid_to_us, na.rm = TRUE),
-                                contribution = earnings *.25,
-                                num_acquisitions = n_distinct(user_id, na.rm = TRUE),
-                                earnings_per_click = earnings/clicks,
-                                contribution_per_click= contribution/clicks,
-                                cpa = ifelse(num_acquisitions==0, cost, cost/num_acquisitions),
-                                ROAS = (contribution-cost)/cost) %>%
+                      summarize_adwords_elog %>%
                       arrange(desc(earnings))
-View(campaign_overview)
 
 campaign_device_overview <- campaigns_elog %>%
                             group_by(device, campaign_name) %>%
-                            summarize(cost = sum(cost, na.rm = TRUE),
-                                      impressions = sum(impressions, na.rm = TRUE),
-                                      clicks = sum(clicks, na.rm = TRUE),
-                                      click_through_rate = clicks/impressions,
-                                      cost_per_click = cost/clicks,
-                                      earnings = sum(money_in_the_bank_paid_to_us, na.rm = TRUE),
-                                      contribution = earnings *.25,
-                                      num_acquisitions = n_distinct(user_id, na.rm = TRUE),
-                                      earnings_per_click = earnings/clicks,
-                                      contribution_per_click= contribution/clicks,
-                                      cpa = ifelse(num_acquisitions==0, cost, cost/num_acquisitions),
-                                      ROAS = (contribution-cost)/cost) %>%
+                            summarize_adwords_elog %>%
                             ungroup() %>% # Required to sort properly after multiple grouping.
                             arrange(desc(earnings))
-View(campaign_device_overview)
 
 device_overview <- campaigns_elog %>%
                     group_by(device) %>%
-                    summarize(cost = sum(cost, na.rm = TRUE),
-                              impressions = sum(impressions, na.rm = TRUE),
-                              clicks = sum(clicks, na.rm = TRUE),
-                              click_through_rate = clicks/impressions,
-                              cost_per_click = cost/clicks,
-                              earnings = sum(money_in_the_bank_paid_to_us, na.rm = TRUE),
-                              contribution = earnings *.25,
-                              num_acquisitions = n_distinct(user_id, na.rm = TRUE),
-                              earnings_per_click = earnings/clicks,
-                              contribution_per_click= contribution/clicks,
-                              cpa = ifelse(num_acquisitions==0, cost, cost/num_acquisitions),
-                              ROAS = (contribution-cost)/cost) %>%
+                    summarize_adwords_elog%>%
                     arrange(desc(earnings))
-View(device_overview)
-
-# Pull in friend referral data
-user_influencer_metrics <- db_influencer_metrics %>%
-                            group_by(influencer_id) %>%
-                            summarize(referred_users=sum(new_referred_users, na.rm=TRUE),
-                                      referred_earnings=sum(referred_users_transaction_amount,na.rm=TRUE))
 
 # Note, number of transactions is NOT the same as number of orders
-user_overview <- campaigns_elog %>% 
+user_overview <- keywords_elog %>% 
                   filter(!is.na(user_id)) %>% #Remove NA user_ids (which means they are not monetary transactions)
                   group_by(user_id) %>%
                   summarize(name = first(user_name), 
                             num_transactions=length(transaction_date), 
-                            earnings = sum(money_in_the_bank_paid_to_us),
+                            earnings = sum(money_in_the_bank_paid_to_us, na.rm=TRUE),
                             contribution = earnings*.25,
-                            campaign_name = first(campaign_name)) %>%
-                  left_join(user_keywords, by=c(user_id="user_id")) %>%
-                  left_join(user_influencer_metrics, by=c(user_id="influencer_id")) %>%
-                  replace(is.na(.), 0)
-user_overview$referred_contribution = user_overview$referred_earnings * .25
-user_overview$total_earnings = user_overview$earnings + user_overview$referred_earnings
-user_overview$total_contribution = user_overview$contribution + user_overview$referred_contribution
-View(user_overview)
+                            campaign_name = first(campaign_name),
+                            keyword=first(keyword),
+                            referred_users=sum(new_referred_users, na.rm=TRUE),
+                            referred_earnings=sum(referred_users_transaction_amount,na.rm=TRUE),
+                            referred_contribution = referred_earnings * .25,
+                            total_earnings = earnings + referred_earnings,
+                            total_contribution = contribution + referred_contribution)
 
-consolidated_user_overview  <- select(user_overview, name,
-                                                     keyword, 
-                                                     campaign_name,
-                                                     contribution,
-                                                     referred_contribution,
-                                                     total_contribution)
+consolidated_user_overview  <- user_overview %>% select(name,
+                                                        keyword, 
+                                                        campaign_name,
+                                                        contribution,
+                                                        referred_contribution,
+                                                        total_contribution)
 
 keywords_campaign_overview <- keywords_elog %>%
                               group_by(keyword, campaign_name) %>%
-                              summarize(cost = sum(cost, na.rm = TRUE),
-                                        estimated_impressions = floor(sum(impressions/est_search_impression_share, na.rm=TRUE)),
-                                        #average_position=(impressions*avg_position)
-                                        impressions = sum(impressions, na.rm = TRUE),
-                                        est_search_impression_share = impressions/estimated_impressions,
-                                        clicks = sum(clicks, na.rm = TRUE),
-                                        click_through_rate = clicks/impressions,
-                                        num_acquisitions = n_distinct(user_id, na.rm = TRUE),
-                                        conversion_rate = num_acquisitions/clicks,
-                                        cost_per_click = cost/clicks,
-                                        earnings = sum(money_in_the_bank_paid_to_us, na.rm = TRUE),
-                                        contribution = earnings *.25,
-                                        earnings_per_click = earnings/clicks,
-                                        contribution_per_click= contribution/clicks,
-                                        cpa = ifelse(num_acquisitions==0, cost, cost/num_acquisitions),
-                                        ROAS = (contribution-cost)/cost,
-                                        referred_users=sum(new_referred_users, na.rm=TRUE),
-                                        referred_earnings=sum(referred_users_transaction_amount,na.rm=TRUE)) %>%
-                              ungroup() %>%
+                              summarize_adwords_elog %>%
+                              ungroup %>%
                               arrange(desc(earnings))
-View(keywords_campaign_overview)
 
 keywords_overview <- keywords_elog %>%
                       group_by(keyword) %>%
-                      summarize(cost = sum(cost, na.rm = TRUE),
-                                estimated_impressions = floor(sum(impressions/est_search_impression_share, na.rm=TRUE)),
-                                #average_position=(impressions*avg_position)
-                                impressions = sum(impressions, na.rm = TRUE),
-                                est_search_impression_share = impressions/estimated_impressions,
-                                clicks = sum(clicks, na.rm = TRUE),
-                                click_through_rate = clicks/impressions,
-                                num_acquisitions = n_distinct(user_id, na.rm = TRUE),
-                                conversion_rate = num_acquisitions/clicks,
-                                cost_per_click = cost/clicks,
-                                earnings = sum(money_in_the_bank_paid_to_us, na.rm = TRUE),
-                                contribution = earnings *.25,
-                                earnings_per_click = earnings/clicks,
-                                contribution_per_click= contribution/clicks,
-                                cpa = ifelse(num_acquisitions==0, cost, cost/num_acquisitions),
-                                ROAS = (contribution-cost)/cost,
-                                referred_users=sum(new_referred_users, na.rm=TRUE),
-                                referred_earnings=sum(referred_users_transaction_amount,na.rm=TRUE)) %>%
-                      ungroup() %>%
+                      summarize_adwords_elog %>%
                       arrange(desc(earnings))
-View(keywords_overview)
 
+keywords_weekly <- keywords_elog %>%
+                    group_by(keyword, campaign_name, week) %>%
+                    summarize_adwords_elog %>%
+                    filter(grepl("Geo 1|Geo 2|Geo 3",campaign_name)) %>%
+                    arrange(desc(earnings))
 
-# Plot all Keywords over time
 all_keyword_ROAS_over_time <- keywords_elog %>%
                                 group_by(week) %>%
-                                summarize(cost= sum(cost, na.rm = TRUE),
-                                          contribution = sum(money_in_the_bank_paid_to_us,na.rm=TRUE) *.25) %>%
+                                summarize_adwords_elog %>%
                                 mutate(cum_contribution = cumsum(contribution),
                                        cum_cost = cumsum(cost))
 
-keywords_overview_plot <- ggplot(gather(all_keyword_ROAS_over_time,type,value,cum_cost,cum_contribution), 
-                                 aes(week,value,group=type,col=type,fill=type)) + 
-                          geom_line()
-plot(keywords_overview_plot)
-
-keywords_with_earnings <- keywords_overview %>% 
-                          filter(earnings > 0)
-keywords_over_time <- keywords_elog %>%
-                      filter(keyword %in% keywords_with_earnings$keyword) %>%
-                      group_by(keyword,week) %>%
-                      summarize(cost= sum(cost, na.rm = TRUE),
-                                contribution = sum(money_in_the_bank_paid_to_us,na.rm=TRUE) *.25) %>%
-                      mutate(cum_contribution = cumsum(contribution), cum_cost = cumsum(cost))
-
-keywords_over_time <- gather(keywords_over_time,type,value,cum_cost,cum_contribution)
-
-plot(ggplot(keywords_over_time, aes(week,value,group=type,col=type,fill=type)) + 
-       geom_line() + 
-       ggtitle("Keyword Trends") + 
-       facet_wrap(~keyword))
-
 summary_overview <- campaigns_elog %>%
+                    summarize_adwords_elog
                     summarize(cost = sum(cost, na.rm=TRUE),
                               earnings=sum(money_in_the_bank_paid_to_us, na.rm=TRUE),
                               contribution = earnings *.25,
@@ -329,5 +234,37 @@ summary_overview <- campaigns_elog %>%
                               num_acquisitions=n_distinct(user_id, na.rm = TRUE),
                               estimated_ltv = num_acquisitions*10*70*.25,
                               estimated_lifetime_ROAS=(estimated_ltv-cost)/cost)
+
+######################## View data frames ########################
+View(campaign_overview)
+View(campaign_device_overview)
+View(device_overview)
+View(user_overview)
+View(keywords_campaign_overview)
+View(keywords_overview)
+View(keywords_weekly)
 View(summary_overview)
-########################
+
+######################## Create Plots ######################## 
+keywords_overview_plot <- ggplot(gather(all_keyword_ROAS_over_time,type,value,cum_cost,cum_contribution), 
+                                 aes(week,value,group=type,col=type,fill=type)) + 
+                          geom_line()
+plot(keywords_overview_plot)
+
+keywords_with_earnings <- keywords_overview %>% 
+  filter(earnings > 0)
+keywords_over_time <- keywords_elog %>%
+  filter(keyword %in% keywords_with_earnings$keyword) %>%
+  group_by(keyword,week) %>%
+  summarize(cost = sum(cost, na.rm = TRUE),
+            contribution = sum(money_in_the_bank_paid_to_us,na.rm=TRUE) *.25) %>%
+  mutate(cum_contribution = cumsum(contribution), 
+         cum_cost = cumsum(cost),
+         cum_ROI = cum_contribution - cum_cost)
+
+keywords_over_time <- gather(keywords_over_time,type,value,cum_cost,cum_contribution,cum_ROI)
+
+plot(ggplot(keywords_over_time, aes(week,value,group=type,col=type,fill=type)) + 
+       geom_line() + 
+       ggtitle("Keyword Trends") + 
+       facet_wrap(~keyword))
