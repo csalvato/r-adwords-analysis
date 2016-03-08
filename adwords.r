@@ -39,6 +39,29 @@ string_from_file <- function(file_name){
   GetoptLong::qq(scan(file_name, character()))
 }
 
+summarize_adwords_elog <- function(elog_data_frame){
+  return (summarize(elog_data_frame, cost = sum(cost, na.rm = TRUE),
+                    estimated_impressions = floor(sum(impressions/est_search_impression_share, na.rm=TRUE)),
+                    #average_position=(impressions*avg_position)
+                    impressions = sum(impressions, na.rm = TRUE),
+                    est_search_impression_share = impressions/estimated_impressions,
+                    clicks = sum(clicks, na.rm = TRUE),
+                    click_through_rate = clicks/impressions,
+                    num_acquisitions = n_distinct(user_id, na.rm = TRUE),
+                    conversion_rate = num_acquisitions/clicks,
+                    cost_per_click = cost/clicks,
+                    earnings = sum(money_in_the_bank_paid_to_us, na.rm = TRUE),
+                    contribution = earnings *.25,
+                    earnings_per_click = earnings/clicks,
+                    contribution_per_click= contribution/clicks,
+                    cpa = ifelse(num_acquisitions==0, cost, cost/num_acquisitions),
+                    ROAS = (contribution-cost)/cost,
+                    referred_users=sum(new_referred_users, na.rm=TRUE),
+                    referred_earnings=sum(referred_users_transaction_amount,na.rm=TRUE))
+          
+  )
+}
+
 # Set reporting parameters
 start_date = '2015-12-17'
 end_date = toString(Sys.Date())
