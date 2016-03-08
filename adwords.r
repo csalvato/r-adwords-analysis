@@ -10,6 +10,11 @@ library(ggplot2)
 library(lubridate) 
 library(Rmisc)
 
+
+MARGIN <- 0.25
+AVG_VALUE_PER_ORDER <- 70
+AVG_NUM_ORDERS_IN_LIFETIME <- 10
+
 # User defined functions
 as.impression_share <- function(impression_share_vector) {
   impression_share_vector <- gsub("< ", "", impression_share_vector)
@@ -51,15 +56,18 @@ summarize_adwords_elog <- function(elog_data_frame){
                     conversion_rate = num_acquisitions/clicks,
                     cost_per_click = cost/clicks,
                     earnings = sum(money_in_the_bank_paid_to_us, na.rm = TRUE),
-                    contribution = earnings *.25,
+                    contribution = earnings * MARGIN,
                     earnings_per_click = earnings/clicks,
                     contribution_per_click= contribution/clicks,
                     cpa = ifelse(num_acquisitions==0, cost, cost/num_acquisitions),
-                    ROAS = (contribution-cost)/cost,
                     referred_users=sum(new_referred_users, na.rm=TRUE),
-                    referred_earnings=sum(referred_users_transaction_amount,na.rm=TRUE))
-          
-  )
+                    referred_earnings=sum(referred_users_transaction_amount,na.rm=TRUE),
+                    estimated_ltv = num_acquisitions*AVG_NUM_ORDERS_IN_LIFETIME*AVG_VALUE_PER_ORDER*MARGIN,
+                    estimated_lifetime_ROAS=(estimated_ltv-cost)/cost,
+                    total_earnings = earnings + referred_earnings,
+                    total_contribution = total_earnings * MARGIN,
+                    actual_ROAS = (total_contribution-cost)/cost)
+          )
 }
 
 # Set reporting parameters
@@ -132,13 +140,13 @@ db_transactions <- db_adwords_campaigns %>%
 ###################################### CREATE ELOGS ################################################
 # Create campaigns elog
 campaigns_elog <- rbind.fill(db_transactions, db_adwords_campaigns)
-campaigns_elog <- campaigns_elog %>% arrange(date)
 campaigns_elog$week <- as.week(campaigns_elog$date)
+campaigns_elog <- campaigns_elog %>% arrange(week)
 
 # Create keywords elog
 keywords_elog <- rbind.fill(db_transactions, db_adwords_keywords)
-keywords_elog <- keywords_elog %>% arrange(date)
 keywords_elog$week <- as.week(keywords_elog$date)
+keywords_elog <- keywords_elog %>% arrange(week)
 
 # Create join table for user_id and the keyword and campaign_name of first purchase
 user_first_acquisition_metrics <- keywords_elog %>%
