@@ -107,6 +107,8 @@ db_adwords_campaigns$cost <- as.money(db_adwords_campaigns$cost)
 db_adwords_campaigns$budget <- as.money(db_adwords_campaigns$budget)
 db_adwords_campaigns$date <- as.Date(db_adwords_campaigns$date, format="%Y-%m-%d")
 db_adwords_campaigns$device <- as.device(db_adwords_campaigns$device)
+db_adwords_campaigns$est_search_impression_share <- as.impression_share(db_adwords_campaigns$search_impression_share)
+
 
 # Format database transactions for future use
 db_transactions$latest_ad_utm_campaign <- as.integer(db_transactions$latest_ad_utm_campaign)
