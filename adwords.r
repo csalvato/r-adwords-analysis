@@ -10,19 +10,26 @@ library(ggplot2)
 library(lubridate) 
 library(Rmisc)
 
-
 MARGIN <- 0.25
 AVG_VALUE_PER_ORDER <- 70
 AVG_NUM_ORDERS_IN_LIFETIME <- 10
 
 # User defined functions
 as.impression_share <- function(impression_share_vector) {
-  impression_share_vector <- gsub("< ", "", impression_share_vector)
-  impression_share_vector <- gsub("> ", "", impression_share_vector)
+  impression_share_vector <- gsub("< 10%", "1%", impression_share_vector)
   impression_share_vector <- gsub("%", "", impression_share_vector)
   impression_share_vector <- gsub("--", NA, impression_share_vector)
   impression_share_vector <- as.numeric(impression_share_vector)/100
   return(impression_share_vector)
+}
+
+# User defined functions
+as.lost_impression_share <- function(lost_impression_share_vector) {
+  lost_impression_share_vector <- gsub("> 90%", "90%", lost_impression_share_vector)
+  lost_impression_share_vector <- gsub("%", "", lost_impression_share_vector)
+  lost_impression_share_vector <- gsub("--", NA, lost_impression_share_vector)
+  lost_impression_share_vector <- as.numeric(lost_impression_share_vector)/100
+  return(lost_impression_share_vector)
 }
 
 as.money <- function(money_vector){
@@ -46,9 +53,11 @@ string_from_file <- function(file_name){
 
 summarize_adwords_elog <- function(elog_data_frame){
   return (summarize(elog_data_frame, cost = sum(cost, na.rm = TRUE),
-                    estimated_impressions = floor(sum(impressions/est_search_impression_share, na.rm=TRUE)),
+                    estimated_impressions = sum(impressions/est_search_impression_share, na.rm=TRUE),
                     #average_position=(impressions*avg_position)
                     impressions = sum(impressions, na.rm = TRUE),
+                    # imp share is not wholly accurate because of the way the numbers are reported, but close enough. 
+                    # May result in 100%+ when impressions are very low 
                     est_search_impression_share = impressions/estimated_impressions,
                     clicks = sum(clicks, na.rm = TRUE),
                     click_through_rate = clicks/impressions,
@@ -105,7 +114,7 @@ db_adwords_keywords$cost <- as.money(db_adwords_keywords$cost)
 db_adwords_keywords$date <- as.Date(db_adwords_keywords$date, format="%Y-%m-%d")
 db_adwords_keywords$device <- as.device(db_adwords_keywords$device)
 db_adwords_keywords$est_search_impression_share <- as.impression_share(db_adwords_keywords$est_search_impression_share)
-db_adwords_keywords$est_search_impression_share_lost_rank <- as.impression_share(db_adwords_keywords$est_search_impression_share_lost_rank)
+db_adwords_keywords$est_search_impression_share_lost_rank <- as.lost_impression_share(db_adwords_keywords$est_search_impression_share_lost_rank)
 db_adwords_keywords$keyword <- tolower(db_adwords_keywords$keyword)
 
 
@@ -116,6 +125,8 @@ db_adwords_campaigns$budget <- as.money(db_adwords_campaigns$budget)
 db_adwords_campaigns$date <- as.Date(db_adwords_campaigns$date, format="%Y-%m-%d")
 db_adwords_campaigns$device <- as.device(db_adwords_campaigns$device)
 db_adwords_campaigns$est_search_impression_share <- as.impression_share(db_adwords_campaigns$search_impression_share)
+db_adwords_campaigns$search_lost_impression_share_budget <- as.lost_impression_share(db_adwords_campaigns$search_lost_impression_share_budget)
+db_adwords_campaigns$search_lost_impression_share_rank <- as.lost_impression_share(db_adwords_campaigns$search_lost_impression_share_rank)
 
 
 # Format database transactions for future use
@@ -225,9 +236,10 @@ keywords_weekly_conversion_metrics <- keywords_elog %>%
                         group_by(keyword, campaign_name, week) %>%
                         summarize_adwords_elog %>%
                         filter(grepl("Geo 1|Geo 2|Geo 3",campaign_name)) %>%
+                        mutate(est_search_impression_share = ifelse(est_search_impression_share >= 1.0, 0, est_search_impression_share  )) %>%
                         ungroup %>%
                         arrange(keyword, campaign_name, week) %>%
-                        select(keyword, campaign_name, week, impressions, clicks, num_acquisitions, click_through_rate, conversion_rate)
+                        select(keyword, campaign_name, week, est_search_impression_share, impressions, clicks, num_acquisitions, click_through_rate, conversion_rate)
 
 all_keyword_ROAS_over_time <- keywords_elog %>%
                                 group_by(week) %>%
