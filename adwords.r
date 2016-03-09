@@ -249,23 +249,16 @@ all_keyword_ROAS_over_time <- keywords_elog %>%
 
 summary_overview <- campaigns_elog %>%
                     summarize_adwords_elog
-                    summarize(cost = sum(cost, na.rm=TRUE),
-                              earnings=sum(money_in_the_bank_paid_to_us, na.rm=TRUE),
-                              contribution = earnings *.25,
-                              ROAS_to_date = (contribution-cost)/cost,
-                              num_acquisitions=n_distinct(user_id, na.rm = TRUE),
-                              estimated_ltv = num_acquisitions*10*70*.25,
-                              estimated_lifetime_ROAS=(estimated_ltv-cost)/cost)
 
 ######################## View data frames ########################
-View(campaign_overview)
-View(campaign_device_overview)
-View(device_overview)
-View(user_overview)
-View(keywords_campaign_overview)
-View(keywords_overview)
-View(keywords_weekly)
-View(summary_overview)
+# View(campaign_overview)
+# View(campaign_device_overview)
+# View(device_overview)
+# View(user_overview)
+# View(keywords_campaign_overview)
+# View(keywords_overview)
+View(keywords_weekly_conversion_metrics)
+# View(summary_overview)
 
 ######################## Create Plots ######################## 
 keywords_overview_plot <- ggplot(gather(all_keyword_ROAS_over_time,type,value,cum_cost,cum_contribution), 
