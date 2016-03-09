@@ -1,6 +1,6 @@
 .DS_Store
 *.csv
-.Rproj.user
+*.Rproj*
 .RData
 .Rhistory
 jdbc_*.txt
