@@ -54,7 +54,7 @@ string_from_file <- function(file_name){
 summarize_adwords_elog <- function(elog_data_frame){
   return (summarize(elog_data_frame, cost = sum(cost, na.rm = TRUE),
                     estimated_impressions = sum(impressions/est_search_impression_share, na.rm=TRUE),
-                    #average_position=(impressions*avg_position)
+                    average_position = weighted.mean(average_position,impressions, na.rm=TRUE),
                     impressions = sum(impressions, na.rm = TRUE),
                     # imp share is not wholly accurate because of the way the numbers are reported, but close enough. 
                     # May result in 100%+ when impressions are very low 
@@ -109,7 +109,7 @@ db_adwords_keywords <- rename(db_adwords_keywords,date=day,
                                                   campaign_name=campaign,
                                                   est_search_impression_share=search.impr..share,
                                                   est_search_impression_share_lost_rank=search.lost.is..rank.,
-                                                  avg_position=avg..position,
+                                                  average_position=avg..position,
                                                   ad_group_id=ad.group.id,
                                                   ad_group_name=ad.group)
 db_adwords_keywords$cost <- as.money(db_adwords_keywords$cost)
@@ -118,7 +118,7 @@ db_adwords_keywords$device <- as.device(db_adwords_keywords$device)
 db_adwords_keywords$est_search_impression_share <- as.impression_share(db_adwords_keywords$est_search_impression_share)
 db_adwords_keywords$est_search_impression_share_lost_rank <- as.lost_impression_share(db_adwords_keywords$est_search_impression_share_lost_rank)
 db_adwords_keywords$keyword <- tolower(db_adwords_keywords$keyword)
-
+db_adwords_keywords$position_weight <- db_adwords_keywords$impressions * db_adwords_keywords$average_position
 
 # Format AdWords campaign data for future use
 db_adwords_campaigns$campaign_id <- as.integer(db_adwords_campaigns$campaign_id)
@@ -129,6 +129,7 @@ db_adwords_campaigns$device <- as.device(db_adwords_campaigns$device)
 db_adwords_campaigns$est_search_impression_share <- as.impression_share(db_adwords_campaigns$search_impression_share)
 db_adwords_campaigns$search_lost_impression_share_budget <- as.lost_impression_share(db_adwords_campaigns$search_lost_impression_share_budget)
 db_adwords_campaigns$search_lost_impression_share_rank <- as.lost_impression_share(db_adwords_campaigns$search_lost_impression_share_rank)
+db_adwords_campaigns$position_weight <- db_adwords_campaigns$impressions * db_adwords_campaigns$average_position
 
 
 # Format database transactions for future use
@@ -271,6 +272,7 @@ plot(keywords_overview_plot)
 
 keywords_with_earnings <- keywords_overview %>% 
   filter(earnings > 0)
+
 keywords_over_time <- keywords_elog %>%
   filter(keyword %in% keywords_with_earnings$keyword) %>%
   group_by(keyword,week) %>%
