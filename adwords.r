@@ -278,15 +278,32 @@ keywords_over_time <- keywords_elog %>%
             contribution = sum(money_in_the_bank_paid_to_us,na.rm=TRUE) *.25) %>%
   mutate(cum_contribution = cumsum(contribution), 
          cum_cost = cumsum(cost),
-         cum_ROI = cum_contribution - cum_cost)
+         cum_ROI = cum_contribution - cum_cost) %>%
+  gather(type,value,cum_cost,cum_contribution,cum_ROI)
 
-keywords_over_time <- gather(keywords_over_time,type,value,cum_cost,cum_contribution,cum_ROI)
+keywords_campaigns_over_time <- keywords_elog %>%
+  filter(keyword %in% keywords_with_earnings$keyword) %>%
+  filter(grepl("Geo 1|Geo 2|Geo 3",campaign_name)) %>%
+  group_by(keyword, campaign_name, week) %>%
+  summarize(cost = sum(cost, na.rm = TRUE),
+            contribution = sum(money_in_the_bank_paid_to_us,na.rm=TRUE) *.25) %>%
+  mutate(cum_contribution = cumsum(contribution), 
+         cum_cost = cumsum(cost),
+         cum_ROI = cum_contribution - cum_cost) %>%
+  gather(type,value,cum_cost,cum_contribution,cum_ROI)
 
-#Profits over time
+#Profits over time by keyword
 plot(ggplot(keywords_over_time, aes(week,value,group=type,col=type,fill=type)) + 
        geom_line() + 
        ggtitle("Keyword Trends") + 
        facet_wrap(~keyword))
+
+#Profits over time by keyword and campaign
+plot(ggplot(keywords_campaigns_over_time %>% filter(keyword == "+paleo +meals"), aes(week,value,group=type,col=type,fill=type)) + 
+       geom_line() + 
+       ggtitle("Keyword Trends by Campaign") + 
+       facet_wrap(~keyword + campaign_name, ncol=2))
+
 
 #All keywords impression share
 plot( 
