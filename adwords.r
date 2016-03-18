@@ -354,7 +354,7 @@ plot(ggplot(devices_over_time %>%
               filter(device == "mb"), 
             aes(week,value,group=type,col=type,fill=type)) + 
              geom_line() + 
-             ggtitle("Keyword Trends on Desktop") + 
+             ggtitle("Keyword Trends on Mobile") + 
              ylim(-1000,1500) +
              facet_wrap(~keyword + device, ncol=3))
 
@@ -363,7 +363,7 @@ plot(ggplot(devices_over_time %>%
               filter(device == "dt"), 
             aes(week,value,group=type,col=type,fill=type)) + 
        geom_line() + 
-       ggtitle("Keyword Trends on Mobile") + 
+       ggtitle("Keyword Trends on Desktop") + 
        ylim(-1000,1500) +
        facet_wrap(~keyword + device, ncol=3))
 
