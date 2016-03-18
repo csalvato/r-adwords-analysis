@@ -293,6 +293,8 @@ summary_overview <- keywords_elog %>%
 # View(keywords_overview)
 # View(keywords_weekly_conversion_metrics)
 # View(summary_overview)
+# View(keywords_campaign_matchtype_overview)
+# View(keywords_campaign_device_matchtype_overview)
 
 ######################## Create Plots ######################## 
 keywords_with_earnings <- keywords_overview %>% 
