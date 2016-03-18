@@ -79,6 +79,15 @@ summarize_adwords_elog <- function(elog_data_frame){
           )
 }
 
+write.adwords.csv <- function(data_frame, file){
+  write.csv( data_frame %>% mutate(keyword = ifelse(grepl("\\+(.+)",keyword),
+                                                    paste0(".",keyword),
+                                                    keyword)),
+             file=file,
+             eol = "\r\n", 
+             row.names=FALSE)
+}
+
 # Set reporting parameters
 start_date = '2015-12-17'
 end_date = toString(Sys.Date())
@@ -346,10 +355,11 @@ plot(
 
 
 ############################## Write to file ####################################
-# write.csv(db_transactions, file ="ad_transactions_and_referrals.csv", eol = "\r\n", row.names=FALSE)
-# write.csv(campaign_overview, file ="campaign_overview.csv", eol = "\r\n", row.names=FALSE)
-# write.csv(campaigns_elog, file ="full_campaigns_event_log.csv", eol = "\r\n", row.names=FALSE)
-# write.csv(keywords_elog, file ="full_keywords_event_log.csv", eol = "\r\n", row.names=FALSE)
-# write.csv(keywords_overview, file ="keywords_overview.csv", eol = "\r\n", row.names=FALSE)
-# write.csv(keywords_weekly_conversion_metrics, file ="keywords_weekly_conversion_metrics.csv", eol = "\r\n", row.names=FALSE)
-# write.csv(user_overview, file ="user_overview.csv", eol = "\r\n", row.names=FALSE)
+# write.adwords.csv(db_transactions, file ="ad_transactions_and_referrals.csv")
+# write.adwords.csv(campaign_overview, file ="campaign_overview.csv")
+# write.adwords.csv(campaigns_elog, file ="full_campaigns_event_log.csv")
+# write.adwords.csv(keywords_elog, file ="full_keywords_event_log.csv")
+# write.adwords.csv(keywords_overview, file ="keywords_overview.csv")
+# write.adwords.csv(keywords_campaign_overview, file ="keywords_campaign_overview.csv")
+# write.adwords.csv(keywords_weekly_conversion_metrics, file ="keywords_weekly_conversion_metrics.csv")
+# write.adwords.csv(user_overview, file ="user_overview.csv")
