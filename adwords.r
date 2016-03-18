@@ -75,7 +75,8 @@ summarize_adwords_elog <- function(elog_data_frame){
                     estimated_lifetime_ROAS=(estimated_ltv-cost)/cost,
                     total_earnings = earnings + referred_earnings,
                     total_contribution = total_earnings * MARGIN,
-                    actual_ROAS = (total_contribution-cost)/cost)
+                    actual_ROAS = (total_contribution-cost)/cost,
+                    average_quality_score=mean(quality_score, na.rm=TRUE))
           )
 }
 
@@ -120,7 +121,8 @@ db_adwords_keywords <- rename(db_adwords_keywords,date=day,
                                                   est_search_impression_share_lost_rank=search.lost.is..rank.,
                                                   average_position=avg..position,
                                                   ad_group_id=ad.group.id,
-                                                  ad_group_name=ad.group)
+                                                  ad_group_name=ad.group,
+                                                  quality_score=quality.score)
 db_adwords_keywords$cost <- as.money(db_adwords_keywords$cost)
 db_adwords_keywords$date <- as.Date(db_adwords_keywords$date, format="%Y-%m-%d")
 db_adwords_keywords$device <- as.device(db_adwords_keywords$device)
@@ -137,7 +139,6 @@ db_adwords_campaigns$device <- as.device(db_adwords_campaigns$device)
 db_adwords_campaigns$est_search_impression_share <- as.impression_share(db_adwords_campaigns$search_impression_share)
 db_adwords_campaigns$search_lost_impression_share_budget <- as.lost_impression_share(db_adwords_campaigns$search_lost_impression_share_budget)
 db_adwords_campaigns$search_lost_impression_share_rank <- as.lost_impression_share(db_adwords_campaigns$search_lost_impression_share_rank)
-
 
 # Format database transactions for future use
 db_transactions$latest_ad_utm_campaign <- as.integer(db_transactions$latest_ad_utm_campaign)
@@ -160,11 +161,6 @@ db_transactions <- db_adwords_campaigns %>%
 
 
 ###################################### CREATE ELOGS ################################################
-# Create campaigns elog
-campaigns_elog <- rbind.fill(db_transactions, db_adwords_campaigns)
-campaigns_elog$week <- as.week(campaigns_elog$date)
-campaigns_elog <- campaigns_elog %>% arrange(week)
-
 # Create keywords elog
 keywords_elog <- rbind.fill(db_transactions, db_adwords_keywords)
 keywords_elog$week <- as.week(keywords_elog$date)
