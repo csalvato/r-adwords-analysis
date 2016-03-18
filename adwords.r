@@ -276,7 +276,10 @@ all_keyword_ROAS_over_time <- keywords_elog %>%
                               group_by(week) %>%
                               summarize_adwords_elog %>%
                               mutate(cum_contribution = cumsum(contribution),
-                                     cum_cost = cumsum(cost))
+                                     cum_cost = cumsum(cost),
+                                     cum_ROI = cum_contribution - cum_cost) %>%
+                              gather(type,value,cum_cost,cum_contribution, cum_ROI)
+                              
 
 summary_overview <- keywords_elog %>%
                     summarize_adwords_elog
@@ -292,11 +295,6 @@ summary_overview <- keywords_elog %>%
 # View(summary_overview)
 
 ######################## Create Plots ######################## 
-keywords_overview_plot <- ggplot(gather(all_keyword_ROAS_over_time,type,value,cum_cost,cum_contribution), 
-                                 aes(week,value,group=type,col=type,fill=type)) + 
-                          geom_line()
-plot(keywords_overview_plot)
-
 keywords_with_earnings <- keywords_overview %>% 
   filter(earnings > 0)
 
@@ -329,6 +327,12 @@ keywords_campaigns_over_time <- keywords_elog %>%
          cum_cost = cumsum(cost),
          cum_ROI = cum_contribution - cum_cost) %>%
   gather(type,value,cum_cost,cum_contribution,cum_ROI)
+
+#Overall profits over time
+plot(ggplot(all_keyword_ROAS_over_time, 
+            aes(week,value,group=type,col=type,fill=type)) + 
+     geom_line()
+    )
 
 #Profits over time by keyword
 plot(ggplot(keywords_over_time, aes(week,value,group=type,col=type,fill=type)) + 
