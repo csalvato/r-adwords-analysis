@@ -118,7 +118,6 @@ db_adwords_keywords$device <- as.device(db_adwords_keywords$device)
 db_adwords_keywords$est_search_impression_share <- as.impression_share(db_adwords_keywords$est_search_impression_share)
 db_adwords_keywords$est_search_impression_share_lost_rank <- as.lost_impression_share(db_adwords_keywords$est_search_impression_share_lost_rank)
 db_adwords_keywords$keyword <- tolower(db_adwords_keywords$keyword)
-db_adwords_keywords$position_weight <- db_adwords_keywords$impressions * db_adwords_keywords$average_position
 
 # Format AdWords campaign data for future use
 db_adwords_campaigns$campaign_id <- as.integer(db_adwords_campaigns$campaign_id)
@@ -129,7 +128,6 @@ db_adwords_campaigns$device <- as.device(db_adwords_campaigns$device)
 db_adwords_campaigns$est_search_impression_share <- as.impression_share(db_adwords_campaigns$search_impression_share)
 db_adwords_campaigns$search_lost_impression_share_budget <- as.lost_impression_share(db_adwords_campaigns$search_lost_impression_share_budget)
 db_adwords_campaigns$search_lost_impression_share_rank <- as.lost_impression_share(db_adwords_campaigns$search_lost_impression_share_rank)
-db_adwords_campaigns$position_weight <- db_adwords_campaigns$impressions * db_adwords_campaigns$average_position
 
 
 # Format database transactions for future use
