@@ -326,3 +326,13 @@ plot(
     ylim(0, 1) +
     facet_wrap(~keyword + campaign_name, ncol=2)
 )
+
+
+############################## Write to file ####################################
+# write.csv(db_transactions, file ="ad_transactions_and_referrals.csv", eol = "\r\n", row.names=FALSE)
+# write.csv(campaign_overview, file ="campaign_overview.csv", eol = "\r\n", row.names=FALSE)
+# write.csv(campaigns_elog, file ="full_campaigns_event_log.csv", eol = "\r\n", row.names=FALSE)
+# write.csv(keywords_elog, file ="full_keywords_event_log.csv", eol = "\r\n", row.names=FALSE)
+# write.csv(keywords_overview, file ="keywords_overview.csv", eol = "\r\n", row.names=FALSE)
+# write.csv(keywords_weekly_conversion_metrics, file ="keywords_weekly_conversion_metrics.csv", eol = "\r\n", row.names=FALSE)
+# write.csv(user_overview, file ="user_overview.csv", eol = "\r\n", row.names=FALSE)
