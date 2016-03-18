@@ -275,6 +275,15 @@ plot(keywords_overview_plot)
 keywords_with_earnings <- keywords_overview %>% 
   filter(earnings > 0)
 
+devices_over_time <- keywords_elog %>%
+                      group_by(keyword,device,week) %>%
+                      summarize(cost = sum(cost, na.rm = TRUE),
+                                contribution = sum(money_in_the_bank_paid_to_us,na.rm=TRUE) *.25) %>%
+                      mutate(cum_contribution = cumsum(contribution), 
+                             cum_cost = cumsum(cost),
+                             cum_ROI = cum_contribution - cum_cost) %>%
+                      gather(type,value,cum_cost,cum_contribution,cum_ROI)
+
 keywords_over_time <- keywords_elog %>%
   filter(keyword %in% keywords_with_earnings$keyword) %>%
   group_by(keyword,week) %>%
@@ -307,6 +316,25 @@ plot(ggplot(keywords_campaigns_over_time %>% filter(keyword == "+paleo +meals"),
        geom_line() + 
        ggtitle("Keyword Trends by Campaign") + 
        facet_wrap(~keyword + campaign_name, ncol=2))
+
+#Profits over time by keyword and device
+plot(ggplot(devices_over_time %>% 
+              filter(keyword %in% keywords_with_earnings$keyword) %>% 
+              filter(device == "mb"), 
+            aes(week,value,group=type,col=type,fill=type)) + 
+             geom_line() + 
+             ggtitle("Keyword Trends on Desktop") + 
+             ylim(-1000,1500) +
+             facet_wrap(~keyword + device, ncol=3))
+
+plot(ggplot(devices_over_time %>% 
+              filter(keyword %in% keywords_with_earnings$keyword) %>% 
+              filter(device == "dt"), 
+            aes(week,value,group=type,col=type,fill=type)) + 
+       geom_line() + 
+       ggtitle("Keyword Trends on Mobile") + 
+       ylim(-1000,1500) +
+       facet_wrap(~keyword + device, ncol=3))
 
 
 #All keywords impression share
