@@ -245,10 +245,10 @@ keywords_weekly_conversion_metrics <- keywords_elog %>%
                         select(keyword, campaign_name, week, est_search_impression_share, impressions, clicks, num_acquisitions, click_through_rate, conversion_rate)
 
 all_keyword_ROAS_over_time <- keywords_elog %>%
-                                group_by(week) %>%
-                                summarize_adwords_elog %>%
-                                mutate(cum_contribution = cumsum(contribution),
-                                       cum_cost = cumsum(cost))
+                              group_by(week) %>%
+                              summarize_adwords_elog %>%
+                              mutate(cum_contribution = cumsum(contribution),
+                                     cum_cost = cumsum(cost))
 
 summary_overview <- campaigns_elog %>%
                     summarize_adwords_elog
@@ -260,7 +260,7 @@ summary_overview <- campaigns_elog %>%
 # View(user_overview)
 # View(keywords_campaign_overview)
 # View(keywords_overview)
-View(keywords_weekly_conversion_metrics)
+# View(keywords_weekly_conversion_metrics)
 # View(summary_overview)
 
 ######################## Create Plots ######################## 
