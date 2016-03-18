@@ -301,7 +301,7 @@ plot(
     facet_wrap(~keyword, ncol=2)
   )
 
-#All keywords impression share
+#All keywords Clickthrough Rate
 plot( 
   ggplot(
     keywords_weekly_conversion_metrics %>% 
