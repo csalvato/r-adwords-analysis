@@ -183,24 +183,23 @@ influencer_metrics_with_user_data <- db_influencer_metrics %>%
                                     inner_join(user_first_acquisition_metrics, by=c(user_id="user_id"))
 
 keywords_elog <- rbind.fill(keywords_elog, influencer_metrics_with_user_data)
-campaigns_elog <- rbind.fill(campaigns_elog, influencer_metrics_with_user_data)
 
 ###################################### END CREATE ELOGS ################################################
 
 
 ###################################### CREATE DATA FRAMES ##############################################
-campaign_overview <- campaigns_elog %>%
+campaign_overview <- keywords_elog %>%
                       group_by(campaign_name) %>%
                       summarize_adwords_elog %>%
                       arrange(desc(earnings))
 
-campaign_device_overview <- campaigns_elog %>%
+campaign_device_overview <- keywords_elog %>%
                             group_by(device, campaign_name) %>%
                             summarize_adwords_elog %>%
                             ungroup() %>% # Required to sort properly after multiple grouping.
                             arrange(desc(earnings))
 
-device_overview <- campaigns_elog %>%
+device_overview <- keywords_elog %>%
                     group_by(device) %>%
                     summarize_adwords_elog%>%
                     arrange(desc(earnings))
@@ -254,7 +253,7 @@ all_keyword_ROAS_over_time <- keywords_elog %>%
                               mutate(cum_contribution = cumsum(contribution),
                                      cum_cost = cumsum(cost))
 
-summary_overview <- campaigns_elog %>%
+summary_overview <- keywords_elog %>%
                     summarize_adwords_elog
 
 ######################## View data frames ########################
@@ -353,7 +352,6 @@ plot(
 ############################## Write to file ####################################
 # write.adwords.csv(db_transactions, file ="ad_transactions_and_referrals.csv")
 # write.adwords.csv(campaign_overview, file ="campaign_overview.csv")
-# write.adwords.csv(campaigns_elog, file ="full_campaigns_event_log.csv")
 # write.adwords.csv(keywords_elog, file ="full_keywords_event_log.csv")
 # write.adwords.csv(keywords_overview, file ="keywords_overview.csv")
 # write.adwords.csv(keywords_campaign_overview, file ="keywords_campaign_overview.csv")
