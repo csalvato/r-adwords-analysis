@@ -5,3 +5,4 @@
 .Rhistory
 jdbc_*.txt
 .Rproj.user
+*.png
