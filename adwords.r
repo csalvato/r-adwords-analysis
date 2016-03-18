@@ -32,6 +32,13 @@ as.lost_impression_share <- function(lost_impression_share_vector) {
   return(lost_impression_share_vector)
 }
 
+as.match_type <- function(valuetrak_match_type_vector) {
+  valuetrak_match_type_vector <- gsub("b", "Broad", valuetrak_match_type_vector)
+  valuetrak_match_type_vector <- gsub("e", "Exact", valuetrak_match_type_vector)
+  valuetrak_match_type_vector <- gsub("p", "Phrase", valuetrak_match_type_vector)
+  return(valuetrak_match_type_vector)
+}
+
 as.money <- function(money_vector){
   return(money_vector/1000000)
 }
@@ -122,7 +129,8 @@ db_adwords_keywords <- rename(db_adwords_keywords,date=day,
                                                   average_position=avg..position,
                                                   ad_group_id=ad.group.id,
                                                   ad_group_name=ad.group,
-                                                  quality_score=quality.score)
+                                                  quality_score=quality.score,
+                                                  match_type=match.type)
 db_adwords_keywords$cost <- as.money(db_adwords_keywords$cost)
 db_adwords_keywords$date <- as.Date(db_adwords_keywords$date, format="%Y-%m-%d")
 db_adwords_keywords$device <- as.device(db_adwords_keywords$device)
@@ -141,13 +149,16 @@ db_adwords_campaigns$search_lost_impression_share_budget <- as.lost_impression_s
 db_adwords_campaigns$search_lost_impression_share_rank <- as.lost_impression_share(db_adwords_campaigns$search_lost_impression_share_rank)
 
 # Format database transactions for future use
-db_transactions$latest_ad_utm_campaign <- as.integer(db_transactions$latest_ad_utm_campaign)
+db_transactions <- rename(db_transactions, device=latest_ad_device, 
+                          campaign_id=latest_ad_utm_campaign,
+                          keyword=latest_ad_awkeyword,
+                          ad_group_id=latest_ad_awadgroupid,
+                          match_type=latest_ad_awmatchtype)
+db_transactions$campaign_id <- as.integer(db_transactions$campaign_id)
 db_transactions$date <- as.Date(db_transactions$transaction_date, format="%Y-%m-%d")
 db_transactions$day_of_week <- weekdays(as.Date(db_transactions$date,'%Y-%m-%d'))
-db_transactions <- rename(db_transactions, device=latest_ad_device, 
-                                           campaign_id=latest_ad_utm_campaign,
-                                           keyword=latest_ad_awkeyword,
-                                           ad_group_id=latest_ad_awadgroupid)
+db_transactions$match_type <- as.match_type(db_transactions$match_type)
+
 
 # Handles Tag Manager not properly parsing the + in the keyword (by manually inserting it to all entries)
 # This is NOT a sustainable solution.
@@ -232,6 +243,20 @@ keywords_campaign_overview <- keywords_elog %>%
                               summarize_adwords_elog %>%
                               ungroup %>%
                               arrange(desc(earnings))
+
+keywords_campaign_device_matchtype_overview <- keywords_elog %>%
+                                                group_by(keyword, campaign_name, device, match_type) %>%
+                                                summarize_adwords_elog %>%
+                                                ungroup %>%
+                                                arrange(desc(earnings))
+
+
+keywords_campaign_matchtype_overview <- keywords_elog %>%
+                                        group_by(keyword, campaign_name, match_type) %>%
+                                        summarize_adwords_elog %>%
+                                        ungroup %>%
+                                        arrange(desc(earnings))
+
 
 keywords_overview <- keywords_elog %>%
                       group_by(keyword) %>%
@@ -385,3 +410,5 @@ plot(
 # write.adwords.csv(keywords_campaign_overview, file ="keywords_campaign_overview.csv")
 # write.adwords.csv(keywords_weekly_conversion_metrics, file ="keywords_weekly_conversion_metrics.csv")
 # write.adwords.csv(user_overview, file ="user_overview.csv")
+# write.adwords.csv(keywords_campaign_matchtype_overview, file ="keywords_campaign_matchtype_overview.csv")
+write.adwords.csv(keywords_campaign_device_matchtype_overview, file ="keywords_campaign_device_matchtype_overview.csv")
