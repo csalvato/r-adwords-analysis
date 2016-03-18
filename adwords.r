@@ -109,7 +109,9 @@ db_adwords_keywords <- rename(db_adwords_keywords,date=day,
                                                   campaign_name=campaign,
                                                   est_search_impression_share=search.impr..share,
                                                   est_search_impression_share_lost_rank=search.lost.is..rank.,
-                                                  avg_position=avg..position)
+                                                  avg_position=avg..position,
+                                                  ad_group_id=ad.group.id,
+                                                  ad_group_name=ad.group)
 db_adwords_keywords$cost <- as.money(db_adwords_keywords$cost)
 db_adwords_keywords$date <- as.Date(db_adwords_keywords$date, format="%Y-%m-%d")
 db_adwords_keywords$device <- as.device(db_adwords_keywords$device)
@@ -135,7 +137,8 @@ db_transactions$date <- as.Date(db_transactions$transaction_date, format="%Y-%m-
 db_transactions$day_of_week <- weekdays(as.Date(db_transactions$date,'%Y-%m-%d'))
 db_transactions <- rename(db_transactions, device=latest_ad_device, 
                                            campaign_id=latest_ad_utm_campaign,
-                                           keyword=latest_ad_awkeyword)
+                                           keyword=latest_ad_awkeyword,
+                                           ad_group_id=latest_ad_awadgroupid)
 
 # Handles Tag Manager not properly parsing the + in the keyword (by manually inserting it to all entries)
 # This is NOT a sustainable solution.
