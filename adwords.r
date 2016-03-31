@@ -101,6 +101,10 @@ write.adwords.csv <- function(data_frame, file){
              row.names=FALSE)
 }
 
+date_filter <- function(data_frame, start_date, end_date) {
+  return(data_frame %>% filter(date >= start_date, date <= end_date))
+}
+
 # Set reporting parameters
 start_date = '2015-12-17'
 end_date = toString(Sys.Date())
@@ -142,6 +146,7 @@ db_adwords_keywords$device <- as.device(db_adwords_keywords$device)
 db_adwords_keywords$est_search_impression_share <- as.impression_share(db_adwords_keywords$est_search_impression_share)
 db_adwords_keywords$est_search_impression_share_lost_rank <- as.lost_impression_share(db_adwords_keywords$est_search_impression_share_lost_rank)
 db_adwords_keywords$keyword <- tolower(db_adwords_keywords$keyword)
+db_adwords_keywords <- db_adwords_keywords %>% date_filter(start_date, end_date)
 
 # Format AdWords campaign data for future use
 db_adwords_campaigns$campaign_id <- as.integer(db_adwords_campaigns$campaign_id)
@@ -152,6 +157,7 @@ db_adwords_campaigns$device <- as.device(db_adwords_campaigns$device)
 db_adwords_campaigns$est_search_impression_share <- as.impression_share(db_adwords_campaigns$search_impression_share)
 db_adwords_campaigns$search_lost_impression_share_budget <- as.lost_impression_share(db_adwords_campaigns$search_lost_impression_share_budget)
 db_adwords_campaigns$search_lost_impression_share_rank <- as.lost_impression_share(db_adwords_campaigns$search_lost_impression_share_rank)
+db_adwords_campaigns <- db_adwords_campaigns %>% date_filter(start_date, end_date)
 
 # Format database transactions for future use
 db_transactions <- rename(db_transactions, device=latest_ad_device, 
@@ -163,7 +169,7 @@ db_transactions$campaign_id <- as.integer(db_transactions$campaign_id)
 db_transactions$date <- as.Date(db_transactions$transaction_date, format="%Y-%m-%d")
 db_transactions$day_of_week <- weekdays(as.Date(db_transactions$date,'%Y-%m-%d'))
 db_transactions$match_type <- as.match_type(db_transactions$match_type)
-
+db_transactions <- db_transactions %>% date_filter(start_date, end_date)
 
 # Handles Tag Manager not properly parsing the + in the keyword (by manually inserting it to all entries)
 # This is NOT a sustainable solution.
