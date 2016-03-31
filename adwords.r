@@ -429,3 +429,4 @@ plot(
 # write.adwords.csv(user_overview, file ="user_overview.csv")
 # write.adwords.csv(keywords_campaign_matchtype_overview, file ="keywords_campaign_matchtype_overview.csv")
 write.adwords.csv(keywords_campaign_device_matchtype_overview, file ="keywords_campaign_device_matchtype_overview.csv")
+# write.adwords.csv(summary_overview, file ="summary_overview.csv")
