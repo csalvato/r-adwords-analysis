@@ -88,9 +88,14 @@ summarize_adwords_elog <- function(elog_data_frame){
 }
 
 write.adwords.csv <- function(data_frame, file){
-  write.csv( data_frame %>% mutate(keyword = ifelse(grepl("\\+(.+)",keyword),
-                                                    paste0(".",keyword),
-                                                    keyword)),
+  if("keyword" %in% colnames(data_frame))
+  {
+    data_frame = data_frame %>% mutate(keyword = ifelse(grepl("\\+(.+)",keyword),
+                                                 paste0(".",keyword),
+                                                 keyword))
+  }
+  
+  write.csv( data_frame,
              file=file,
              eol = "\r\n", 
              row.names=FALSE)
