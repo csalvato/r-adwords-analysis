@@ -215,7 +215,8 @@ influencer_metrics_with_user_data <- db_influencer_metrics %>%
                                     rename(week=week_start,
                                            user_id=influencer_id) %>%
                                     mutate(week = as.Date(week, format = '%Y-%m-%d')) %>%
-                                    inner_join(user_first_acquisition_metrics, by=c(user_id="user_id"))
+                                    inner_join(user_first_acquisition_metrics, by=c(user_id="user_id")) %>% 
+                                    filter(week >= start_date, week <= end_date)
 
 keywords_elog <- rbind.fill(keywords_elog, influencer_metrics_with_user_data)
 
