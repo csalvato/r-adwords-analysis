@@ -121,10 +121,11 @@ date_filter <- function(data_frame, start_date, end_date) {
 # Set reporting parameters
 start_date = '2015-12-17'
 end_date = toString(Sys.Date())
+# start_date = '2016-01-01'
+# end_date = '2016-01-31'
 
 # Retrieve revenue data
-pgsql <- JDBC("org.postgresql.Driver", "../database_drivers/postgresql-9.4.1208.jre6", "`")
-#heroku_db <- dbConnect(pgsql, string_from_file("jdbc_heroku_string.txt"))
+pgsql <- JDBC("org.postgresql.Driver", "../database_drivers/postgresql-9.4.1208.jre6.jar", "`")
 datawarehouse_db <- dbConnect(pgsql, string_from_file("jdbc_datawarehouse_string.txt"))
 
 transactions_query <- string_from_file("transactions_query.sql")
