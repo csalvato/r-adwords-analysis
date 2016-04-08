@@ -120,9 +120,9 @@ date_filter <- function(data_frame, start_date, end_date) {
 
 # Set reporting parameters
 start_date = '2015-12-17'
-end_date = toString(Sys.Date())
-# start_date = '2016-01-01'
-# end_date = '2016-01-31'
+end_date = toString(Sys.Date() - days(1)) #yesterday
+# start_date = toString(Sys.Date() - days(8))
+# end_date = toString(Sys.Date() - days(1))
 
 # Retrieve revenue data
 pgsql <- JDBC("org.postgresql.Driver", "../database_drivers/postgresql-9.4.1208.jre6.jar", "`")
@@ -207,14 +207,16 @@ user_first_acquisition_metrics <- keywords_elog %>%
                                   summarize(keyword = first(keyword),
                                             campaign_name=first(campaign_name),
                                             campaign_id=first(campaign_id),
-                                            device=first(device))
+                                            device=first(device),
+                                            match_type=first(match_type))
 
 #Add influencer metrics to the event log
 influencer_metrics_with_user_data <- db_influencer_metrics %>%
                                     rename(week=week_start,
                                            user_id=influencer_id) %>%
                                     mutate(week = as.Date(week, format = '%Y-%m-%d')) %>%
-                                    inner_join(user_first_acquisition_metrics, by=c(user_id="user_id"))
+                                    inner_join(user_first_acquisition_metrics, by=c(user_id="user_id")) %>% 
+                                    filter(week >= start_date, week <= end_date)
 
 keywords_elog <- rbind.fill(keywords_elog, influencer_metrics_with_user_data)
 
@@ -289,8 +291,8 @@ keywords_overview <- keywords_elog %>%
 keywords_weekly_conversion_metrics <- keywords_elog %>%
                         group_by(keyword, campaign_name, week) %>%
                         summarize_adwords_elog %>%
-                        filter(grepl("Geo 1|Geo 2|Geo 3",campaign_name)) %>%
-                        mutate(est_search_impression_share = ifelse(est_search_impression_share >= 1.0, 0, est_search_impression_share  )) %>%
+                        filter(grepl("Paleo Performers",campaign_name)) %>%
+                        mutate(est_search_impression_share = ifelse(!is.na(est_search_impression_share) & est_search_impression_share >= 1.0, 1.0, est_search_impression_share)) %>%
                         ungroup %>%
                         arrange(keyword, campaign_name, week) %>%
                         select(keyword, campaign_name, week, est_search_impression_share, impressions, clicks, num_acquisitions, click_through_rate, conversion_rate)
@@ -344,7 +346,7 @@ keywords_over_time <- keywords_elog %>%
 
 keywords_campaigns_over_time <- keywords_elog %>%
   filter(keyword %in% keywords_with_earnings$keyword) %>%
-  filter(grepl("Geo 1|Geo 2|Geo 3",campaign_name)) %>%
+  filter(grepl("Paleo Performers",campaign_name)) %>%
   group_by(keyword, campaign_name, week) %>%
   summarize(cost = sum(cost, na.rm = TRUE),
             contribution = sum(money_in_the_bank_paid_to_us,na.rm=TRUE) *.25) %>%
@@ -366,7 +368,7 @@ plot(ggplot(keywords_over_time, aes(week,value,group=type,col=type,fill=type)) +
        facet_wrap(~keyword))
 
 #Profits over time by keyword and campaign
-plot(ggplot(keywords_campaigns_over_time %>% filter(keyword == "+paleo +meals"), aes(week,value,group=type,col=type,fill=type)) + 
+plot(ggplot(keywords_campaigns_over_time %>% filter(keyword == "paleo meals"), aes(week,value,group=type,col=type,fill=type)) + 
        geom_line() + 
        ggtitle("Keyword Trends by Campaign") + 
        facet_wrap(~keyword + campaign_name, ncol=2))
@@ -422,7 +424,7 @@ plot(
   ggplot(
     keywords_weekly_conversion_metrics %>% 
       # Filter by a single keyword, and only include the previous 4 weeks of data.
-      filter(keyword == "+paleo +meals", week >= Sys.Date() - weeks(4), week <= Sys.Date()), 
+      filter(keyword == "paleo meals", week >= Sys.Date() - weeks(4), week <= Sys.Date()), 
     aes(x=week, y=est_search_impression_share)) +
     geom_bar(stat="identity") +
     ggtitle("Weekly Impression Share by Geo") + 
