@@ -50,6 +50,19 @@ as.device <- function(device_vector) {
   return(device_vector)
 }
 
+as.adwords.keyword <- function(keyword_vector) {
+  keyword_vector <- tolower(keyword_vector)
+  keyword_vector <- gsub("\\+","",keyword_vector)
+  # Handles Tag Manager not properly parsing the + in the keyword (by manually inserting it to all entries)
+  # This is NOT a sustainable solution.
+  # If the keyword field contains a plus, assume the first keyword is also broad match, and prepend a +
+  keyword_vector <- ifelse(grepl("\\+", keyword_vector), paste('+',keyword_vector, sep=""), keyword_vector) 
+  # Replace double spaces that started appearing in data.  
+  #Not sure where they come from, so this monkey patches/hardcodes a fix.
+  keyword_vector <- gsub("  ", " ", keyword_vector)
+  return(keyword_vector)
+}
+
 as.week <- function(date_vector){
   floor_date(date_vector, "week") + days(1)
 }
@@ -145,7 +158,7 @@ db_adwords_keywords$date <- as.Date(db_adwords_keywords$date, format="%Y-%m-%d")
 db_adwords_keywords$device <- as.device(db_adwords_keywords$device)
 db_adwords_keywords$est_search_impression_share <- as.impression_share(db_adwords_keywords$est_search_impression_share)
 db_adwords_keywords$est_search_impression_share_lost_rank <- as.lost_impression_share(db_adwords_keywords$est_search_impression_share_lost_rank)
-db_adwords_keywords$keyword <- tolower(db_adwords_keywords$keyword)
+db_adwords_keywords$keyword <- as.adwords.keyword(db_adwords_keywords$keyword)
 db_adwords_keywords <- db_adwords_keywords %>% date_filter(start_date, end_date)
 
 # Format AdWords campaign data for future use
@@ -169,11 +182,8 @@ db_transactions$campaign_id <- as.integer(db_transactions$campaign_id)
 db_transactions$date <- as.Date(db_transactions$transaction_date, format="%Y-%m-%d")
 db_transactions$day_of_week <- weekdays(as.Date(db_transactions$date,'%Y-%m-%d'))
 db_transactions$match_type <- as.match_type(db_transactions$match_type)
+db_transactions$keyword <- as.adwords.keyword(db_transactions$keyword)
 db_transactions <- db_transactions %>% date_filter(start_date, end_date)
-
-# Handles Tag Manager not properly parsing the + in the keyword (by manually inserting it to all entries)
-# This is NOT a sustainable solution.
-db_transactions$keyword <- ifelse(substr(db_transactions$keyword, 1, 1) == '+', db_transactions$keyword, paste('+',db_transactions$keyword, sep="")) 
 
 # Add campaign names to db_transactions log
 db_transactions <- db_adwords_campaigns %>% 
