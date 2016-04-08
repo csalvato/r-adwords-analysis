@@ -207,7 +207,8 @@ user_first_acquisition_metrics <- keywords_elog %>%
                                   summarize(keyword = first(keyword),
                                             campaign_name=first(campaign_name),
                                             campaign_id=first(campaign_id),
-                                            device=first(device))
+                                            device=first(device),
+                                            match_type=first(match_type))
 
 #Add influencer metrics to the event log
 influencer_metrics_with_user_data <- db_influencer_metrics %>%
