@@ -291,8 +291,8 @@ keywords_overview <- keywords_elog %>%
 keywords_weekly_conversion_metrics <- keywords_elog %>%
                         group_by(keyword, campaign_name, week) %>%
                         summarize_adwords_elog %>%
-                        filter(grepl("Geo 1|Geo 2|Geo 3",campaign_name)) %>%
-                        mutate(est_search_impression_share = ifelse(est_search_impression_share >= 1.0, 0, est_search_impression_share  )) %>%
+                        filter(grepl("Paleo Performers",campaign_name)) %>%
+                        mutate(est_search_impression_share = ifelse(!is.na(est_search_impression_share) & est_search_impression_share >= 1.0, 1.0, est_search_impression_share)) %>%
                         ungroup %>%
                         arrange(keyword, campaign_name, week) %>%
                         select(keyword, campaign_name, week, est_search_impression_share, impressions, clicks, num_acquisitions, click_through_rate, conversion_rate)
@@ -346,7 +346,7 @@ keywords_over_time <- keywords_elog %>%
 
 keywords_campaigns_over_time <- keywords_elog %>%
   filter(keyword %in% keywords_with_earnings$keyword) %>%
-  filter(grepl("Geo 1|Geo 2|Geo 3",campaign_name)) %>%
+  filter(grepl("Paleo Performers",campaign_name)) %>%
   group_by(keyword, campaign_name, week) %>%
   summarize(cost = sum(cost, na.rm = TRUE),
             contribution = sum(money_in_the_bank_paid_to_us,na.rm=TRUE) *.25) %>%
