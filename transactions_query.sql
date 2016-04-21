@@ -59,8 +59,6 @@
   discounts d on ti.discount_id = d.id
 where
   t.created_at between '@{start_date}' and '@{end_date}'
-  AND
-  du.first_order_week between '@{start_date}' and '@{end_date}'
 --  AND
 --  t.refunded IS NOT TRUE
 order by t.created_at desc"
