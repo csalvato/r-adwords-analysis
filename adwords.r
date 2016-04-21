@@ -139,7 +139,28 @@ db_influencer_metrics <- dbGetQuery(datawarehouse_db, influencer_metrics_query)
 db_adwords_campaigns <- dbGetQuery(datawarehouse_db, adwords_campaigns_query)
 db_transactions <- dbGetQuery(datawarehouse_db, transactions_query)
 
+db_first_transactions <- dbGetQuery(datawarehouse_db, GetoptLong::qq(paste("SELECT 
+                                                                        * 
+                                                                     FROM
+                                                                       (select 
+                                                                       min(t.created_at) as first_transaction,
+                                                                       u.id,
+                                                                       u.name
+                                                                       from users u
+                                                                       inner join
+                                                                       transactions t on t.user_id = u.id
+                                                                       where
+                                                                       u.id IN (", paste(shQuote(db_transactions$user_id, type = "sh"), collapse=','),
+                                                                                ")
+                                                                       group by u.id
+                                                                       ORDER BY first_transaction desc) first_transactions
+                                                                     WHERE
+                                                                     first_transaction between '@{start_date}' and '@{end_date}'")))
+
 dbDisconnect(datawarehouse_db)
+
+#Filter out people where their first order was not in the specified start_date and end_date
+db_transactions <- db_transactions %>% filter(is.element(user_id, db_first_transactions$id))
 
 # Get Keywords data from CSV
 db_adwords_keywords <- read.csv(file="keyword_performance_report.csv",head=TRUE,sep=",")
