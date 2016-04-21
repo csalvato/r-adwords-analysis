@@ -119,10 +119,12 @@ date_filter <- function(data_frame, start_date, end_date) {
 }
 
 # Set reporting parameters
-start_date = '2015-12-17'
-end_date = toString(Sys.Date() - days(1)) #yesterday
-# start_date = toString(Sys.Date() - days(8))
-# end_date = toString(Sys.Date() - days(1))
+# start_date = '2015-12-17'
+# end_date = toString(Sys.Date() - days(1)) #yesterday
+start_date = toString(Sys.Date() - days(8))
+end_date = toString(Sys.Date() - days(1))
+# start_date = '2016-01-01'
+# end_date = '2016-03-31'
 
 # Retrieve revenue data
 pgsql <- JDBC("org.postgresql.Driver", "../database_drivers/postgresql-9.4.1208.jre6.jar", "`")
