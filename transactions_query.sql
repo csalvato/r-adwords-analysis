@@ -50,7 +50,7 @@
   select distinct on (gsm.user_id)
   gsm.*
   from
-  stage.gs_mixpanel gsm
+  stage.gs_mixpanel_adwords gsm
   order by gsm.user_id, mixpanel_event_timestamp
   ) mp on du.user_id = mp.user_id
   --left outer join
