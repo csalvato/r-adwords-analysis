@@ -391,7 +391,6 @@ plot(ggplot(devices_over_time %>%
             aes(week,value,group=type,col=type,fill=type)) + 
        geom_line() + 
        ggtitle("Keyword Trends on Desktop") + 
-       ylim(-1000,1500) +
        facet_wrap(~keyword + device, ncol=3))
 
 
