@@ -101,13 +101,6 @@ summarize_adwords_elog <- function(elog_data_frame){
 }
 
 write.adwords.csv <- function(data_frame, file){
-  if("keyword" %in% colnames(data_frame))
-  {
-    data_frame = data_frame %>% mutate(keyword = ifelse(grepl("\\+(.+)",keyword),
-                                                 paste0(".",keyword),
-                                                 keyword))
-  }
-  
   write.csv( data_frame,
              file=file,
              eol = "\r\n", 
@@ -119,12 +112,12 @@ date_filter <- function(data_frame, start_date, end_date) {
 }
 
 # Set reporting parameters
-# start_date = '2015-12-17'
-# end_date = toString(Sys.Date() - days(1)) #yesterday
-start_date = paste(toString(Sys.Date() - days(8)), "04:00:00")
-end_date = paste(toString(Sys.Date() - days(0)), "03:59:59")
-# start_date = '2016-01-01'
-# end_date = '2016-03-31'
+start_date = '2015-12-17'
+#end_date = paste(toString(Sys.Date() - days(0)), "03:59:59") #yesterday
+# start_date = paste(toString(Sys.Date() - days(8)), "04:00:00")
+# end_date = paste(toString(Sys.Date() - days(0)), "03:59:59")
+#start_date = '2016-04-28, 04:00:00'
+end_date = '2016-04-28, 03:59:59'
 
 # Retrieve revenue data
 pgsql <- JDBC("org.postgresql.Driver", "../database_drivers/postgresql-9.4.1208.jre6.jar", "`")
@@ -318,7 +311,7 @@ keywords_weekly_conversion_metrics <- keywords_elog %>%
                         mutate(est_search_impression_share = ifelse(!is.na(est_search_impression_share) & est_search_impression_share >= 1.0, 1.0, est_search_impression_share)) %>%
                         ungroup %>%
                         arrange(keyword, campaign_name, week) %>%
-                        select(keyword, campaign_name, week, est_search_impression_share, impressions, clicks, num_acquisitions, click_through_rate, conversion_rate)
+                        select(keyword, campaign_name, week, est_search_impression_share, impressions, clicks, num_acquisitions, click_through_rate, conversion_rate, cost_per_click, contribution_per_click)
 
 all_keyword_ROAS_over_time <- keywords_elog %>%
                               group_by(week) %>%
@@ -331,6 +324,17 @@ all_keyword_ROAS_over_time <- keywords_elog %>%
 
 summary_overview <- keywords_elog %>%
                     summarize_adwords_elog
+
+contribution_per_click_overview <- keywords_elog %>% 
+                                    group_by(keyword,campaign_name) %>% 
+                                    summarize_adwords_elog %>% 
+                                    filter(cost > 0 & earnings > 0) %>% 
+                                    group_by(keyword,campaign_name) %>% 
+                                    summarize(total_cost = sum(cost),
+                                              total_contribution = sum(contribution),
+                                              total_clicks = sum(clicks), 
+                                              contribution_per_click = total_contribution/total_clicks,
+                                              cpc_bid_for_2x_ROAS = contribution_per_click/2)
 
 ######################## View data frames ########################
 # View(campaign_overview)
@@ -391,7 +395,7 @@ plot(ggplot(keywords_over_time, aes(week,value,group=type,col=type,fill=type)) +
        facet_wrap(~keyword))
 
 #Profits over time by keyword and campaign
-plot(ggplot(keywords_campaigns_over_time %>% filter(keyword == "paleo meals"), aes(week,value,group=type,col=type,fill=type)) + 
+plot(ggplot(keywords_campaigns_over_time %>% filter(keyword == "paleo meal delivery"), aes(week,value,group=type,col=type,fill=type)) + 
        geom_line() + 
        ggtitle("Keyword Trends by Campaign") + 
        facet_wrap(~keyword + campaign_name, ncol=2))
@@ -446,7 +450,7 @@ plot(
   ggplot(
     keywords_weekly_conversion_metrics %>% 
       # Filter by a single keyword, and only include the previous 4 weeks of data.
-      filter(keyword == "paleo meals", week >= Sys.Date() - weeks(4), week <= Sys.Date()), 
+      filter(keyword == "paleo delivery", week >= Sys.Date() - weeks(4), week <= Sys.Date()), 
     aes(x=week, y=est_search_impression_share)) +
     geom_bar(stat="identity") +
     ggtitle("Weekly Impression Share by Geo") + 
@@ -466,3 +470,4 @@ plot(
 # write.adwords.csv(keywords_campaign_matchtype_overview, file ="keywords_campaign_matchtype_overview.csv")
 write.adwords.csv(keywords_campaign_device_matchtype_overview, file ="keywords_campaign_device_matchtype_overview.csv")
 # write.adwords.csv(summary_overview, file ="summary_overview.csv")
+write.adwords.csv(contribution_per_click_overview, file ="contribution_per_click_overview.csv")
