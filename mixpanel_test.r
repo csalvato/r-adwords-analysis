@@ -24,8 +24,10 @@ dbDisconnect(datawarehouse_db)
 
 # This is convering app user id into much smaller numbers...What is going on?  Maybe converting it to factor number?  
 # I think as.numeric is wrong..
-events_aw_df  <- events_aw_df %>% mutate(app_user_id = as.numeric(app_user_id))
-mixpanel_test_data  <- mixpanel_test_dw_data %>% inner_join(events_aw_df, by="app_user_id")
+events_aw_df  <- events_aw_df %>% mutate(app_user_id = as.numeric(as.character(app_user_id)))
+unique_users <- distinct(events_aw_df, app_user_id)
+
+mixpanel_test_data  <- mixpanel_test_dw_data %>% inner_join(unique_users, by="app_user_id")
 
 
 # events_bing <- mixpanelGetEvents(account, 
