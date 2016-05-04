@@ -140,17 +140,67 @@ mixpanel_adwords_conversions <- mixpanelGetEvents(MIXPANEL_ACCOUNT,
                                                   event = array("Completed Order"),
                                                   where = '(properties["latest_ad_search"]) and (properties["latest_ad_utm_source"] == "Google")')
 
+##### Retrieve AdWords Spend/Click Data
+google_auth <- doAuth()
+
+adwords_keywords_statement <- statement(select=c('Date',
+                                                 'DayOfWeek',
+                                                 #'HourOfDay',
+                                                 'Criteria',
+                                                 'Status',
+                                                 'CampaignId', 
+                                                 'CampaignName',
+                                                 'AdGroupId',
+                                                 'AdGroupName',
+                                                 'Cost', #Returned in micros (divide by 1,000,000)
+                                                 'AdNetworkType2', #Network with Search Partners
+                                                 'SearchImpressionShare',
+                                                 'SearchRankLostImpressionShare',
+                                                 'Device',
+                                                 'Impressions',
+                                                 'Clicks',
+                                                 'AveragePosition',
+                                                 'QualityScore',
+                                                 'PostClickQualityScore',
+                                                 'KeywordMatchType'),
+                                   report="KEYWORDS_PERFORMANCE_REPORT",
+                                   start="20151217",
+                                   end="20160504")
+
+# Make sure to use Adwords Account Id (MCC Id will not work)
+adwords_keywords_data <- getData(clientCustomerId="479-107-0932", google_auth=google_auth ,statement=adwords_keywords_statement)
+
+adwords_campaigns_statement <- statement(select=c('Date',
+                                                  'DayOfWeek',
+                                                  #'HourOfDay',
+                                                  'CampaignStatus',
+                                                  'CampaignId',
+                                                  'CampaignName', 
+                                                  'Cost', #Returned in micros (divide by 1,000,000)
+                                                  'AdNetworkType2', #Network with Search Partners
+                                                  'SearchImpressionShare',
+                                                  'SearchRankLostImpressionShare',
+                                                  'SearchBudgetLostImpressionShare',
+                                                  'Device',
+                                                  'Amount', #Budget - returned in micros (divide by 1,000,000)
+                                                  'Impressions',
+                                                  'Clicks',
+                                                  'AveragePosition'),
+                                        report="CAMPAIGN_PERFORMANCE_REPORT",
+                                        start="20151217",
+                                        end="20160504")
+
+adwords_campaigns_data <- getData(clientCustomerId="479-107-0932", google_auth=google_auth ,statement=adwords_campaigns_statement)
+
 # Retrieve revenue data
 pgsql <- JDBC("org.postgresql.Driver", "../database_drivers/postgresql-9.4.1208.jre6.jar", "`")
 # heroku_db <- dbConnect(pgsql, string_from_file("jdbc_heroku_string.txt"))
 datawarehouse_db <- dbConnect(pgsql, string_from_file("jdbc_datawarehouse_string.txt"))
 
 transactions_query <- string_from_file("mixpanel_transactions_query.sql")
-adwords_campaigns_query <- string_from_file("adwords_campaigns_query.sql")
 influencer_metrics_query <- string_from_file("influencer_metrics_query.sql")
 
 db_influencer_metrics <- dbGetQuery(datawarehouse_db, influencer_metrics_query)
-db_adwords_campaigns <- dbGetQuery(datawarehouse_db, adwords_campaigns_query)
 db_transactions <- dbGetQuery(datawarehouse_db, transactions_query)
 
 # Join Mixpanel Conversion Data with Data Warehouse transaction data
@@ -237,7 +287,7 @@ db_transactions <- db_transactions %>% select(-user_id)
 db_transactions <- db_transactions %>% mutate(user_id=as.integer(as.character(app_user_id)))
 
 # Add campaign names to db_transactions log
-db_transactions <- db_adwords_campaigns %>% 
+db_transactions <- adwords_campaigns_data %>% 
                      group_by(campaign_id)%>% 
                      summarize(campaign_name = first(campaign_name)) %>%
                      right_join(db_transactions, by=c(campaign_id = "campaign_id"))
@@ -245,7 +295,7 @@ db_transactions <- db_adwords_campaigns %>%
 
 ###################################### CREATE ELOGS ################################################
 # Create keywords elog
-keywords_elog <- rbind.fill(db_transactions, db_adwords_keywords)
+keywords_elog <- rbind.fill(db_transactions, adwords_keywords_data)
 keywords_elog$week <- as.week(keywords_elog$date)
 keywords_elog <- keywords_elog %>% arrange(week)
 
