@@ -15,6 +15,11 @@ MARGIN <- 0.25
 AVG_VALUE_PER_ORDER <- 70
 AVG_NUM_ORDERS_IN_LIFETIME <- 10
 
+MIXPANEL_ACCOUNT <- mixpanelCreateAccount("Power Supply - Main",
+                                           token="3fdbf9929d332c37f82380157a564049",
+                                           secret="af3b32cc21c7b6e91b71f7c0417735d2", 
+                                           key="ce370ab09a166e168d448080b55715f6")
+
 # User defined functions
 as.impression_share <- function(impression_share_vector) {
   impression_share_vector <- gsub("< 10%", "1%", impression_share_vector)
@@ -52,6 +57,7 @@ as.device <- function(device_vector) {
 }
 
 as.adwords.keyword <- function(keyword_vector) {
+  keyword_vector <- as.character(keyword_vector)
   keyword_vector <- tolower(keyword_vector)
   keyword_vector <- gsub("\\+","",keyword_vector)
   # Handles Tag Manager not properly parsing the + in the keyword (by manually inserting it to all entries)
@@ -113,25 +119,41 @@ date_filter <- function(data_frame, start_date, end_date) {
 }
 
 # Set reporting parameters
-start_date = '2015-12-17'
+start_date = '2015-12-17, 04:00:00'
 #end_date = paste(toString(Sys.Date() - days(0)), "03:59:59") #yesterday
 # start_date = paste(toString(Sys.Date() - days(8)), "04:00:00")
-# end_date = paste(toString(Sys.Date() - days(0)), "03:59:59")
+end_date = paste(toString(Sys.Date() - days(0)), "03:59:59")
 #start_date = '2016-04-28, 04:00:00'
-end_date = '2016-04-28, 03:59:59'
+#end_date = '2016-04-28, 03:59:59'
+
+##### Retrieve Mixpanel AdWords Conversion Data
+mixpanel_adwords_conversions <- mixpanelGetEvents(MIXPANEL_ACCOUNT, 
+                                                  from = start_date,
+                                                  to = end_date,
+                                                  event = array("Completed Order"),
+                                                  where = '(properties["latest_ad_search"]) and (properties["latest_ad_utm_source"] == "Google")')
 
 # Retrieve revenue data
 pgsql <- JDBC("org.postgresql.Driver", "../database_drivers/postgresql-9.4.1208.jre6.jar", "`")
 # heroku_db <- dbConnect(pgsql, string_from_file("jdbc_heroku_string.txt"))
 datawarehouse_db <- dbConnect(pgsql, string_from_file("jdbc_datawarehouse_string.txt"))
 
-transactions_query <- string_from_file("transactions_query.sql")
+transactions_query <- string_from_file("mixpanel_transactions_query.sql")
 adwords_campaigns_query <- string_from_file("adwords_campaigns_query.sql")
 influencer_metrics_query <- string_from_file("influencer_metrics_query.sql")
 
 db_influencer_metrics <- dbGetQuery(datawarehouse_db, influencer_metrics_query)
 db_adwords_campaigns <- dbGetQuery(datawarehouse_db, adwords_campaigns_query)
 db_transactions <- dbGetQuery(datawarehouse_db, transactions_query)
+
+# Join Mixpanel Conversion Data with Data Warehouse transaction data
+mixpanel_adwords_conversions <- data.frame(mixpanel_adwords_conversions)
+mixpanel_adwords_conversions  <- mixpanel_adwords_conversions %>% rename(app_user_id=id)
+mixpanel_adwords_conversions  <- mixpanel_adwords_conversions %>% mutate(app_user_id = as.numeric(as.character(app_user_id)))
+unique_users <- distinct(mixpanel_adwords_conversions, app_user_id)
+
+db_transactions  <- db_transactions %>% inner_join(unique_users, by="app_user_id")
+
 
 db_first_transactions <- dbGetQuery(datawarehouse_db, GetoptLong::qq(paste("SELECT 
                                                                         * 
@@ -144,7 +166,7 @@ db_first_transactions <- dbGetQuery(datawarehouse_db, GetoptLong::qq(paste("SELE
                                                                        inner join
                                                                        transactions t on t.user_id = u.id
                                                                        where
-                                                                       u.id IN (", paste(shQuote(db_transactions$user_id, type = "sh"), collapse=','),
+                                                                       u.id IN (", paste(shQuote(db_transactions$app_user_id, type = "sh"), collapse=','),
                                                                                 ")
                                                                        group by u.id
                                                                        ORDER BY first_transaction desc) first_transactions
@@ -153,11 +175,12 @@ db_first_transactions <- dbGetQuery(datawarehouse_db, GetoptLong::qq(paste("SELE
 
 dbDisconnect(datawarehouse_db)
 
-#Filter out people where their first order was not in the specified start_date and end_date
-db_transactions <- db_transactions %>% filter(is.element(user_id, db_first_transactions$id))
-
 # Get Keywords data from CSV
 db_adwords_keywords <- read.csv(file="keyword_performance_report.csv",head=TRUE,sep=",")
+
+#Filter out people where their first order was not in the specified start_date and end_date
+db_transactions <- db_transactions %>% filter(is.element(app_user_id, db_first_transactions$id))
+
 
 # Format AdWords keyword data for future use
 names(db_adwords_keywords) <- tolower(names(db_adwords_keywords))
@@ -192,17 +215,19 @@ db_adwords_campaigns$search_lost_impression_share_rank <- as.lost_impression_sha
 db_adwords_campaigns <- db_adwords_campaigns %>% date_filter(start_date, end_date)
 
 # Format database transactions for future use
-db_transactions <- rename(db_transactions, device=latest_ad_device, 
-                          campaign_id=latest_ad_utm_campaign,
-                          keyword=latest_ad_awkeyword,
-                          ad_group_id=latest_ad_awadgroupid,
-                          match_type=latest_ad_awmatchtype)
-db_transactions$campaign_id <- as.integer(db_transactions$campaign_id)
+db_transactions <- db_transactions %>% rename(device=latest_ad_device, 
+                                              campaign_id=latest_ad_utm_campaign,
+                                              keyword=latest_ad_awkeyword,
+                                              ad_group_id=latest_ad_awadgroupid,
+                                              match_type=latest_ad_awmatchtype)
+db_transactions$campaign_id <- as.integer(as.character(db_transactions$campaign_id))
 db_transactions$date <- as.Date(db_transactions$transaction_date, format="%Y-%m-%d")
 db_transactions$day_of_week <- weekdays(as.Date(db_transactions$date,'%Y-%m-%d'))
 db_transactions$match_type <- as.match_type(db_transactions$match_type)
 db_transactions$keyword <- as.adwords.keyword(db_transactions$keyword)
 db_transactions <- db_transactions %>% date_filter(start_date, end_date)
+db_transactions <- db_transactions %>% select(-user_id)
+db_transactions <- db_transactions %>% mutate(user_id=as.integer(as.character(app_user_id)))
 
 # Add campaign names to db_transactions log
 db_transactions <- db_adwords_campaigns %>% 
