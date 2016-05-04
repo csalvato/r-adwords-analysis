@@ -1,3 +1,10 @@
+library(devtools)
+# To install RAdwords, you must install via github
+# install_github('jburkhardt/RAdwords')
+# Can look up metrics info with:
+# metrics("KEYWORDS_PERFORMANCE_REPORT")
+
+library(RAdwords)
 library(utils)
 library(graphics)
 library(RPostgreSQL)
