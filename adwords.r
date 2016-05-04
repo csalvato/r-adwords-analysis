@@ -9,6 +9,7 @@ library(GetoptLong)
 library(ggplot2)
 library(lubridate) 
 library(Rmisc)
+library(RMixpanel)
 
 MARGIN <- 0.25
 AVG_VALUE_PER_ORDER <- 70
