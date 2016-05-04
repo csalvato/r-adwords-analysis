@@ -239,16 +239,21 @@ adwords_keywords_data <- adwords_keywords_data %>%
                           date_filter(start_date, end_date)
 
 # Format AdWords campaign data for future use
-#TODO switch these all over to adwords_campaigns_data
-db_adwords_campaigns$campaign_id <- as.integer(db_adwords_campaigns$campaign_id)
-db_adwords_campaigns$cost <- as.money(db_adwords_campaigns$cost)
-db_adwords_campaigns$budget <- as.money(db_adwords_campaigns$budget)
-db_adwords_campaigns$date <- as.Date(db_adwords_campaigns$date, format="%Y-%m-%d")
-db_adwords_campaigns$device <- as.device(db_adwords_campaigns$device)
-db_adwords_campaigns$est_search_impression_share <- as.impression_share(db_adwords_campaigns$search_impression_share)
-db_adwords_campaigns$search_lost_impression_share_budget <- as.lost_impression_share(db_adwords_campaigns$search_lost_impression_share_budget)
-db_adwords_campaigns$search_lost_impression_share_rank <- as.lost_impression_share(db_adwords_campaigns$search_lost_impression_share_rank)
-db_adwords_campaigns <- db_adwords_campaigns %>% date_filter(start_date, end_date)
+names(adwords_campaigns_data) <- gsub('\\(|\\)',"",tolower(names(adwords_campaigns_data)))
+adwords_campaigns_data <- adwords_campaigns_data %>%
+                          rename( date=day,
+                                  day_of_week=dayofweek,
+                                  campaign_state=campaignstate,
+                                  campaign_id=campaignid,
+                                  campaign_name=campaign,
+                                  network=networkwithsearchpartners,
+                                  est_search_impression_share=searchimpr.share,
+                                  est_search_impression_share_lost_rank=searchlostisrank,
+                                  est_search_impression_share_lost_budget=searchlostisbudget,
+                                  average_position=position) %>%
+                            mutate(campaign_id = as.integer(campaign_id),
+                                   device = as.device(device)) %>% 
+                            date_filter(start_date, end_date)
 
 # Format database transactions for future use
 db_transactions <- db_transactions %>% rename(device=latest_ad_device, 
