@@ -232,35 +232,36 @@ db_first_transactions <- dbGetQuery(datawarehouse_db, GetoptLong::qq(paste("SELE
 
 dbDisconnect(datawarehouse_db)
 
-# Get Keywords data from CSV
-db_adwords_keywords <- read.csv(file="keyword_performance_report.csv",head=TRUE,sep=",")
-
 #Filter out people where their first order was not in the specified start_date and end_date
 db_transactions <- db_transactions %>% filter(is.element(app_user_id, db_first_transactions$id))
 
 
 # Format AdWords keyword data for future use
-names(db_adwords_keywords) <- tolower(names(db_adwords_keywords))
-db_adwords_keywords <- rename(db_adwords_keywords,date=day,
-                                                  day_of_week=day.of.week,
-                                                  campaign_id=campaign.id,
-                                                  campaign_name=campaign,
-                                                  est_search_impression_share=search.impr..share,
-                                                  est_search_impression_share_lost_rank=search.lost.is..rank.,
-                                                  average_position=avg..position,
-                                                  ad_group_id=ad.group.id,
-                                                  ad_group_name=ad.group,
-                                                  quality_score=quality.score,
-                                                  match_type=match.type)
-db_adwords_keywords$cost <- as.money(db_adwords_keywords$cost)
-db_adwords_keywords$date <- as.Date(db_adwords_keywords$date, format="%Y-%m-%d")
-db_adwords_keywords$device <- as.device(db_adwords_keywords$device)
-db_adwords_keywords$est_search_impression_share <- as.impression_share(db_adwords_keywords$est_search_impression_share)
-db_adwords_keywords$est_search_impression_share_lost_rank <- as.lost_impression_share(db_adwords_keywords$est_search_impression_share_lost_rank)
-db_adwords_keywords$keyword <- as.adwords.keyword(db_adwords_keywords$keyword)
-db_adwords_keywords <- db_adwords_keywords %>% date_filter(start_date, end_date)
+# Clean up column names
+names(adwords_keywords_data) <- gsub('\\(|\\)',"",tolower(names(adwords_keywords_data)))
+# Rename columns, convert values where necessary, 
+# and filter everything outside of start_date and end_date
+adwords_keywords_data <- adwords_keywords_data %>%
+                          rename( date=day,
+                                  day_of_week=dayofweek,
+                                  keyword_state=keywordstate,
+                                  campaign_id=campaignid,
+                                  campaign_name=campaign,
+                                  ad_group_id=adgroupid,
+                                  ad_group_name=adgroup,
+                                  network=networkwithsearchpartners,
+                                  est_search_impression_share=searchimpr.share,
+                                  est_search_impression_share_lost_rank=searchlostisrank,
+                                  average_position=position,
+                                  quality_score=qualityscore,
+                                  landing_page_experience=landingpageexperience,
+                                  match_type=matchtype) %>% 
+                          mutate(device = as.device(device),
+                                 keyword = as.adwords.keyword(keyword)) %>% 
+                          date_filter(start_date, end_date)
 
 # Format AdWords campaign data for future use
+#TODO switch these all over to adwords_campaigns_data
 db_adwords_campaigns$campaign_id <- as.integer(db_adwords_campaigns$campaign_id)
 db_adwords_campaigns$cost <- as.money(db_adwords_campaigns$cost)
 db_adwords_campaigns$budget <- as.money(db_adwords_campaigns$budget)
