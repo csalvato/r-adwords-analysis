@@ -27,33 +27,11 @@ MIXPANEL_ACCOUNT <- mixpanelCreateAccount("Power Supply - Main",
                                            secret="af3b32cc21c7b6e91b71f7c0417735d2", 
                                            key="ce370ab09a166e168d448080b55715f6")
 
-# User defined functions
-as.impression_share <- function(impression_share_vector) {
-  impression_share_vector <- gsub("< 10%", "1%", impression_share_vector)
-  impression_share_vector <- gsub("%", "", impression_share_vector)
-  impression_share_vector <- gsub("--", NA, impression_share_vector)
-  impression_share_vector <- as.numeric(impression_share_vector)/100
-  return(impression_share_vector)
-}
-
-# User defined functions
-as.lost_impression_share <- function(lost_impression_share_vector) {
-  lost_impression_share_vector <- gsub("> 90%", "90%", lost_impression_share_vector)
-  lost_impression_share_vector <- gsub("%", "", lost_impression_share_vector)
-  lost_impression_share_vector <- gsub("--", NA, lost_impression_share_vector)
-  lost_impression_share_vector <- as.numeric(lost_impression_share_vector)/100
-  return(lost_impression_share_vector)
-}
-
 as.match_type <- function(valuetrak_match_type_vector) {
   valuetrak_match_type_vector <- gsub("b", "Broad", valuetrak_match_type_vector)
   valuetrak_match_type_vector <- gsub("e", "Exact", valuetrak_match_type_vector)
   valuetrak_match_type_vector <- gsub("p", "Phrase", valuetrak_match_type_vector)
   return(valuetrak_match_type_vector)
-}
-
-as.money <- function(money_vector){
-  return(money_vector/1000000)
 }
 
 as.device <- function(device_vector) {
