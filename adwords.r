@@ -1,10 +1,8 @@
-library(devtools)
 # To install RAdwords, you must install via github
+# library(devtools)
 # install_github('jburkhardt/RAdwords')
 # Can look up metrics info with:
 # metrics("KEYWORDS_PERFORMANCE_REPORT")
-
-library(RAdwords)
 library(utils)
 library(graphics)
 library(RPostgreSQL)
@@ -17,6 +15,7 @@ library(ggplot2)
 library(lubridate) 
 library(Rmisc)
 library(RMixpanel)
+library(RAdwords)
 
 MARGIN <- 0.25
 AVG_VALUE_PER_ORDER <- 70
@@ -183,7 +182,7 @@ db_transactions <- dbGetQuery(datawarehouse_db, transactions_query)
 
 # Join Mixpanel Conversion Data with Data Warehouse transaction data
 mixpanel_adwords_conversions <- data.frame(mixpanel_adwords_conversions)
-mixpanel_adwords_conversions  <- mixpanel_adwords_conversions %>% rename(app_user_id=id)
+mixpanel_adwords_conversions  <- mixpanel_adwords_conversions %>% rename(app_user_id = id)
 mixpanel_adwords_conversions  <- mixpanel_adwords_conversions %>% mutate(app_user_id = as.numeric(as.character(app_user_id)))
 unique_users <- distinct(mixpanel_adwords_conversions, app_user_id)
 
@@ -235,7 +234,8 @@ adwords_keywords_data <- adwords_keywords_data %>%
                                   landing_page_experience=landingpageexperience,
                                   match_type=matchtype) %>% 
                           mutate(device = as.device(device),
-                                 keyword = as.adwords.keyword(keyword)) %>% 
+                                 keyword = as.adwords.keyword(keyword),
+                                 quality_score = as.numeric(quality_score)) %>% 
                           date_filter(start_date, end_date)
 
 # Format AdWords campaign data for future use
