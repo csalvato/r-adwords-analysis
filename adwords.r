@@ -1,3 +1,8 @@
+# To install RAdwords, you must install via github
+# library(devtools)
+# install_github('jburkhardt/RAdwords')
+# Can look up metrics info with:
+# metrics("KEYWORDS_PERFORMANCE_REPORT")
 library(utils)
 library(graphics)
 library(RPostgreSQL)
@@ -10,6 +15,7 @@ library(ggplot2)
 library(lubridate) 
 library(Rmisc)
 library(RMixpanel)
+library(RAdwords)
 
 MARGIN <- 0.25
 AVG_VALUE_PER_ORDER <- 70
@@ -20,33 +26,11 @@ MIXPANEL_ACCOUNT <- mixpanelCreateAccount("Power Supply - Main",
                                            secret="af3b32cc21c7b6e91b71f7c0417735d2", 
                                            key="ce370ab09a166e168d448080b55715f6")
 
-# User defined functions
-as.impression_share <- function(impression_share_vector) {
-  impression_share_vector <- gsub("< 10%", "1%", impression_share_vector)
-  impression_share_vector <- gsub("%", "", impression_share_vector)
-  impression_share_vector <- gsub("--", NA, impression_share_vector)
-  impression_share_vector <- as.numeric(impression_share_vector)/100
-  return(impression_share_vector)
-}
-
-# User defined functions
-as.lost_impression_share <- function(lost_impression_share_vector) {
-  lost_impression_share_vector <- gsub("> 90%", "90%", lost_impression_share_vector)
-  lost_impression_share_vector <- gsub("%", "", lost_impression_share_vector)
-  lost_impression_share_vector <- gsub("--", NA, lost_impression_share_vector)
-  lost_impression_share_vector <- as.numeric(lost_impression_share_vector)/100
-  return(lost_impression_share_vector)
-}
-
 as.match_type <- function(valuetrak_match_type_vector) {
   valuetrak_match_type_vector <- gsub("b", "Broad", valuetrak_match_type_vector)
   valuetrak_match_type_vector <- gsub("e", "Exact", valuetrak_match_type_vector)
   valuetrak_match_type_vector <- gsub("p", "Phrase", valuetrak_match_type_vector)
   return(valuetrak_match_type_vector)
-}
-
-as.money <- function(money_vector){
-  return(money_vector/1000000)
 }
 
 as.device <- function(device_vector) {
@@ -133,22 +117,72 @@ mixpanel_adwords_conversions <- mixpanelGetEvents(MIXPANEL_ACCOUNT,
                                                   event = array("Completed Order"),
                                                   where = '(properties["latest_ad_search"]) and (properties["latest_ad_utm_source"] == "Google")')
 
+##### Retrieve AdWords Spend/Click Data
+google_auth <- doAuth()
+
+adwords_keywords_statement <- statement(select=c('Date',
+                                                 'DayOfWeek',
+                                                 #'HourOfDay',
+                                                 'Criteria',
+                                                 'Status',
+                                                 'CampaignId', 
+                                                 'CampaignName',
+                                                 'AdGroupId',
+                                                 'AdGroupName',
+                                                 'Cost', #Returned in micros (divide by 1,000,000)
+                                                 'AdNetworkType2', #Network with Search Partners
+                                                 'SearchImpressionShare',
+                                                 'SearchRankLostImpressionShare',
+                                                 'Device',
+                                                 'Impressions',
+                                                 'Clicks',
+                                                 'AveragePosition',
+                                                 'QualityScore',
+                                                 'PostClickQualityScore',
+                                                 'KeywordMatchType'),
+                                   report="KEYWORDS_PERFORMANCE_REPORT",
+                                   start="20151217",
+                                   end="20160504")
+
+# Make sure to use Adwords Account Id (MCC Id will not work)
+adwords_keywords_data <- getData(clientCustomerId="479-107-0932", google_auth=google_auth ,statement=adwords_keywords_statement)
+
+adwords_campaigns_statement <- statement(select=c('Date',
+                                                  'DayOfWeek',
+                                                  #'HourOfDay',
+                                                  'CampaignStatus',
+                                                  'CampaignId',
+                                                  'CampaignName', 
+                                                  'Cost', #Returned in micros (divide by 1,000,000)
+                                                  'AdNetworkType2', #Network with Search Partners
+                                                  'SearchImpressionShare',
+                                                  'SearchRankLostImpressionShare',
+                                                  'SearchBudgetLostImpressionShare',
+                                                  'Device',
+                                                  'Amount', #Budget - returned in micros (divide by 1,000,000)
+                                                  'Impressions',
+                                                  'Clicks',
+                                                  'AveragePosition'),
+                                        report="CAMPAIGN_PERFORMANCE_REPORT",
+                                        start="20151217",
+                                        end="20160504")
+
+adwords_campaigns_data <- getData(clientCustomerId="479-107-0932", google_auth=google_auth ,statement=adwords_campaigns_statement)
+
 # Retrieve revenue data
 pgsql <- JDBC("org.postgresql.Driver", "../database_drivers/postgresql-9.4.1208.jre6.jar", "`")
 # heroku_db <- dbConnect(pgsql, string_from_file("jdbc_heroku_string.txt"))
 datawarehouse_db <- dbConnect(pgsql, string_from_file("jdbc_datawarehouse_string.txt"))
 
 transactions_query <- string_from_file("mixpanel_transactions_query.sql")
-adwords_campaigns_query <- string_from_file("adwords_campaigns_query.sql")
 influencer_metrics_query <- string_from_file("influencer_metrics_query.sql")
 
 db_influencer_metrics <- dbGetQuery(datawarehouse_db, influencer_metrics_query)
-db_adwords_campaigns <- dbGetQuery(datawarehouse_db, adwords_campaigns_query)
 db_transactions <- dbGetQuery(datawarehouse_db, transactions_query)
 
 # Join Mixpanel Conversion Data with Data Warehouse transaction data
 mixpanel_adwords_conversions <- data.frame(mixpanel_adwords_conversions)
-mixpanel_adwords_conversions  <- mixpanel_adwords_conversions %>% rename(app_user_id=id)
+mixpanel_adwords_conversions  <- mixpanel_adwords_conversions %>% rename(app_user_id = id)
 mixpanel_adwords_conversions  <- mixpanel_adwords_conversions %>% mutate(app_user_id = as.numeric(as.character(app_user_id)))
 unique_users <- distinct(mixpanel_adwords_conversions, app_user_id)
 
@@ -175,44 +209,51 @@ db_first_transactions <- dbGetQuery(datawarehouse_db, GetoptLong::qq(paste("SELE
 
 dbDisconnect(datawarehouse_db)
 
-# Get Keywords data from CSV
-db_adwords_keywords <- read.csv(file="keyword_performance_report.csv",head=TRUE,sep=",")
-
 #Filter out people where their first order was not in the specified start_date and end_date
 db_transactions <- db_transactions %>% filter(is.element(app_user_id, db_first_transactions$id))
 
 
 # Format AdWords keyword data for future use
-names(db_adwords_keywords) <- tolower(names(db_adwords_keywords))
-db_adwords_keywords <- rename(db_adwords_keywords,date=day,
-                                                  day_of_week=day.of.week,
-                                                  campaign_id=campaign.id,
-                                                  campaign_name=campaign,
-                                                  est_search_impression_share=search.impr..share,
-                                                  est_search_impression_share_lost_rank=search.lost.is..rank.,
-                                                  average_position=avg..position,
-                                                  ad_group_id=ad.group.id,
-                                                  ad_group_name=ad.group,
-                                                  quality_score=quality.score,
-                                                  match_type=match.type)
-db_adwords_keywords$cost <- as.money(db_adwords_keywords$cost)
-db_adwords_keywords$date <- as.Date(db_adwords_keywords$date, format="%Y-%m-%d")
-db_adwords_keywords$device <- as.device(db_adwords_keywords$device)
-db_adwords_keywords$est_search_impression_share <- as.impression_share(db_adwords_keywords$est_search_impression_share)
-db_adwords_keywords$est_search_impression_share_lost_rank <- as.lost_impression_share(db_adwords_keywords$est_search_impression_share_lost_rank)
-db_adwords_keywords$keyword <- as.adwords.keyword(db_adwords_keywords$keyword)
-db_adwords_keywords <- db_adwords_keywords %>% date_filter(start_date, end_date)
+# Clean up column names
+names(adwords_keywords_data) <- gsub('\\(|\\)',"",tolower(names(adwords_keywords_data)))
+# Rename columns, convert values where necessary, 
+# and filter everything outside of start_date and end_date
+adwords_keywords_data <- adwords_keywords_data %>%
+                          rename( date=day,
+                                  day_of_week=dayofweek,
+                                  keyword_state=keywordstate,
+                                  campaign_id=campaignid,
+                                  campaign_name=campaign,
+                                  ad_group_id=adgroupid,
+                                  ad_group_name=adgroup,
+                                  network=networkwithsearchpartners,
+                                  est_search_impression_share=searchimpr.share,
+                                  est_search_impression_share_lost_rank=searchlostisrank,
+                                  average_position=position,
+                                  quality_score=qualityscore,
+                                  landing_page_experience=landingpageexperience,
+                                  match_type=matchtype) %>% 
+                          mutate(device = as.device(device),
+                                 keyword = as.adwords.keyword(keyword),
+                                 quality_score = as.numeric(quality_score)) %>% 
+                          date_filter(start_date, end_date)
 
 # Format AdWords campaign data for future use
-db_adwords_campaigns$campaign_id <- as.integer(db_adwords_campaigns$campaign_id)
-db_adwords_campaigns$cost <- as.money(db_adwords_campaigns$cost)
-db_adwords_campaigns$budget <- as.money(db_adwords_campaigns$budget)
-db_adwords_campaigns$date <- as.Date(db_adwords_campaigns$date, format="%Y-%m-%d")
-db_adwords_campaigns$device <- as.device(db_adwords_campaigns$device)
-db_adwords_campaigns$est_search_impression_share <- as.impression_share(db_adwords_campaigns$search_impression_share)
-db_adwords_campaigns$search_lost_impression_share_budget <- as.lost_impression_share(db_adwords_campaigns$search_lost_impression_share_budget)
-db_adwords_campaigns$search_lost_impression_share_rank <- as.lost_impression_share(db_adwords_campaigns$search_lost_impression_share_rank)
-db_adwords_campaigns <- db_adwords_campaigns %>% date_filter(start_date, end_date)
+names(adwords_campaigns_data) <- gsub('\\(|\\)',"",tolower(names(adwords_campaigns_data)))
+adwords_campaigns_data <- adwords_campaigns_data %>%
+                          rename( date=day,
+                                  day_of_week=dayofweek,
+                                  campaign_state=campaignstate,
+                                  campaign_id=campaignid,
+                                  campaign_name=campaign,
+                                  network=networkwithsearchpartners,
+                                  est_search_impression_share=searchimpr.share,
+                                  est_search_impression_share_lost_rank=searchlostisrank,
+                                  est_search_impression_share_lost_budget=searchlostisbudget,
+                                  average_position=position) %>%
+                            mutate(campaign_id = as.integer(campaign_id),
+                                   device = as.device(device)) %>% 
+                            date_filter(start_date, end_date)
 
 # Format database transactions for future use
 db_transactions <- db_transactions %>% rename(device=latest_ad_device, 
@@ -230,7 +271,7 @@ db_transactions <- db_transactions %>% select(-user_id)
 db_transactions <- db_transactions %>% mutate(user_id=as.integer(as.character(app_user_id)))
 
 # Add campaign names to db_transactions log
-db_transactions <- db_adwords_campaigns %>% 
+db_transactions <- adwords_campaigns_data %>% 
                      group_by(campaign_id)%>% 
                      summarize(campaign_name = first(campaign_name)) %>%
                      right_join(db_transactions, by=c(campaign_id = "campaign_id"))
@@ -238,7 +279,7 @@ db_transactions <- db_adwords_campaigns %>%
 
 ###################################### CREATE ELOGS ################################################
 # Create keywords elog
-keywords_elog <- rbind.fill(db_transactions, db_adwords_keywords)
+keywords_elog <- rbind.fill(db_transactions, adwords_keywords_data)
 keywords_elog$week <- as.week(keywords_elog$date)
 keywords_elog <- keywords_elog %>% arrange(week)
 

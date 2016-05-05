@@ -7,3 +7,5 @@ jdbc_*.txt
 .Rproj.user
 *.png
 *.zip
+.google.auth.RData
+adwords_test.R
