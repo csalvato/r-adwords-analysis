@@ -126,14 +126,24 @@ end_date = paste(toString(Sys.Date() - days(0)), "03:59:59")
 # start_date = '2016-01-01'
 # end_date = '2016-03-31'
 
+##Cohort Analysis Dates
+# start_date = '2015-12-17'
+# end_date = '2016-5-1'
+
 # Retrieve revenue data
 pgsql <- JDBC("org.postgresql.Driver", "../database_drivers/postgresql-9.4.1208.jre6.jar", "`")
 # heroku_db <- dbConnect(pgsql, string_from_file("jdbc_heroku_string.txt"))
 datawarehouse_db <- dbConnect(pgsql, string_from_file("jdbc_datawarehouse_string.txt"))
 
+
 transactions_query <- string_from_file("transactions_query.sql")
 adwords_campaigns_query <- string_from_file("adwords_campaigns_query.sql")
 influencer_metrics_query <- string_from_file("influencer_metrics_query.sql")
+
+##Modified file path for EW's machine. Short-term fix.
+# transactions_query <- string_from_file("./adwords-analysis/transactions_query.sql")
+# adwords_campaigns_query <- string_from_file("./adwords-analysis/adwords_campaigns_query.sql")
+# influencer_metrics_query <- string_from_file("./adwords-analysis/influencer_metrics_query.sql")
 
 db_influencer_metrics <- dbGetQuery(datawarehouse_db, influencer_metrics_query)
 db_adwords_campaigns <- dbGetQuery(datawarehouse_db, adwords_campaigns_query)
@@ -279,7 +289,7 @@ user_overview <- keywords_elog %>%
                             total_earnings = earnings + referred_earnings,
                             total_contribution = contribution + referred_contribution)
 
-consolidated_user_overview  <- user_overview %>% select(name,
+consolidated_user_overview  <- user_overview %>% select(name,
                                                         keyword, 
                                                         campaign_name,
                                                         contribution,
@@ -332,17 +342,44 @@ all_keyword_ROAS_over_time <- keywords_elog %>%
 summary_overview <- keywords_elog %>%
                     summarize_adwords_elog
 
+##paleo meals cohort
+
+paleo_meals_cohort <- keywords_elog %>%
+                      filter(keyword=="paleo meals" & !is.na(order_id)) %>%
+                        mutate(cohort_week = rep(0,length(paleo_meals_cohort$week)))
+
+##assign ordinal number to weeks for viewing simplicity only
+week_number <- numeric()
+for(i in 1: length(paleo_meals_cohort$cohort_week)) {
+        week_number[i] <- which(unique(paleo_meals_cohort$week)==paleo_meals_cohort$week[i])
+}
+paleo_meals_cohort <- cbind(paleo_meals_cohort,week_number)
+        
+##assign each user to a 'cohort_week' based on date of first order using 'paleo meals' keyword
+for(i in 1:length(unique(paleo_meals_cohort$week_number))) {
+        users <- paleo_meals_cohort[which(paleo_meals_cohort$week_number==i),"user_id"]
+        
+        for(k in 1:length(paleo_meals_cohort$user_id)) {
+                if(paleo_meals_cohort$cohort_week[k] > 0) {next}
+                        if(paleo_meals_cohort$user_id[k] %in% users) {
+                                paleo_meals_cohort$cohort_week[k] <- i} else {next}
+                        } 
+                }
+
+
+
+
 ######################## View data frames ########################
-# View(campaign_overview)
-# View(campaign_device_overview)
-# View(device_overview)
-# View(user_overview)
-# View(keywords_campaign_overview)
-# View(keywords_overview)
-# View(keywords_weekly_conversion_metrics)
-# View(summary_overview)
-# View(keywords_campaign_matchtype_overview)
-# View(keywords_campaign_device_matchtype_overview)
+View(campaign_overview)
+View(campaign_device_overview)
+View(device_overview)
+View(user_overview)
+View(keywords_campaign_overview)
+View(keywords_overview)
+View(keywords_weekly_conversion_metrics)
+View(summary_overview)
+View(keywords_campaign_matchtype_overview)
+View(keywords_campaign_device_matchtype_overview)
 
 ######################## Create Plots ######################## 
 keywords_with_earnings <- keywords_overview %>% 
