@@ -171,14 +171,14 @@ adwords_campaigns_data <- getData(clientCustomerId="479-107-0932", google_auth=g
 
 # Retrieve revenue data
 pgsql <- JDBC("org.postgresql.Driver", "../database_drivers/postgresql-9.4.1208.jre6.jar", "`")
-# heroku_db <- dbConnect(pgsql, string_from_file("jdbc_heroku_string.txt"))
+heroku_db <- dbConnect(pgsql, string_from_file("jdbc_heroku_string.txt"))
 datawarehouse_db <- dbConnect(pgsql, string_from_file("jdbc_datawarehouse_string.txt"))
 
 transactions_query <- string_from_file("mixpanel_transactions_query.sql")
 influencer_metrics_query <- string_from_file("influencer_metrics_query.sql")
 
 db_influencer_metrics <- dbGetQuery(datawarehouse_db, influencer_metrics_query)
-db_transactions <- dbGetQuery(datawarehouse_db, transactions_query)
+db_transactions <- dbGetQuery(heroku_db, transactions_query)
 
 # Join Mixpanel Conversion Data with Data Warehouse transaction data
 mixpanel_adwords_conversions <- data.frame(mixpanel_adwords_conversions)
