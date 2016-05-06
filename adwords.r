@@ -462,7 +462,7 @@ plot(ggplot(keywords_over_time, aes(week,value,group=type,col=type,fill=type)) +
        facet_wrap(~keyword))
 
 #Profits over time by keyword and campaign
-plot(ggplot(keywords_campaigns_over_time %>% filter(keyword == "paleo meal delivery"), aes(week,value,group=type,col=type,fill=type)) + 
+plot(ggplot(keywords_campaigns_over_time %>% filter(keyword == "paleo meals"), aes(week,value,group=type,col=type,fill=type)) + 
        geom_line() + 
        ggtitle("Keyword Trends by Campaign") + 
        facet_wrap(~keyword + campaign_name, ncol=2))
@@ -517,7 +517,7 @@ plot(
   ggplot(
     keywords_weekly_conversion_metrics %>% 
       # Filter by a single keyword, and only include the previous 4 weeks of data.
-      filter(keyword == "paleo delivery", week >= Sys.Date() - weeks(4), week <= Sys.Date()), 
+      filter(keyword == "paleo meals", week >= Sys.Date() - weeks(4), week <= Sys.Date()), 
     aes(x=week, y=est_search_impression_share)) +
     geom_bar(stat="identity") +
     ggtitle("Weekly Impression Share by Geo") + 
