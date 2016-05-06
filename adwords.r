@@ -141,8 +141,8 @@ adwords_keywords_statement <- statement(select=c('Date',
                                                  'PostClickQualityScore',
                                                  'KeywordMatchType'),
                                    report="KEYWORDS_PERFORMANCE_REPORT",
-                                   start=start_date,
-                                   end=end_date)
+                                   start=format(ymd_hms(start_date), format="%Y%m%d"),
+                                   end=format(ymd_hms(end_date), format="%Y%m%d"))
 
 # Make sure to use Adwords Account Id (MCC Id will not work)
 adwords_keywords_data <- getData(clientCustomerId="479-107-0932", google_auth=google_auth ,statement=adwords_keywords_statement)
@@ -164,8 +164,8 @@ adwords_campaigns_statement <- statement(select=c('Date',
                                                   'Clicks',
                                                   'AveragePosition'),
                                         report="CAMPAIGN_PERFORMANCE_REPORT",
-                                        start=start_date,
-                                        end=end_date)
+                                        start=format(ymd_hms(start_date), format="%Y%m%d"),
+                                        end=format(ymd_hms(end_date), format="%Y%m%d"))
 
 adwords_campaigns_data <- getData(clientCustomerId="479-107-0932", google_auth=google_auth ,statement=adwords_campaigns_statement)
 
@@ -189,7 +189,7 @@ unique_users <- distinct(mixpanel_adwords_conversions, app_user_id)
 db_transactions  <- db_transactions %>% inner_join(unique_users, by="app_user_id")
 
 
-db_first_transactions <- dbGetQuery(datawarehouse_db, GetoptLong::qq(paste("SELECT 
+db_first_transactions <- dbGetQuery(heroku_db, GetoptLong::qq(paste("SELECT 
                                                                         * 
                                                                      FROM
                                                                        (select 
