@@ -8,4 +8,4 @@ jdbc_*.txt
 *.png
 *.zip
 .google.auth.RData
-adwords_test.R
+adwords_credentials.txt
