@@ -106,7 +106,7 @@ date_filter <- function(data_frame, start_date, end_date) {
 start_date = '2015-12-17, 04:00:00'
 #end_date = paste(toString(Sys.Date() - days(0)), "03:59:59") #yesterday
 # start_date = paste(toString(Sys.Date() - days(8)), "04:00:00")
-end_date = paste(toString(Sys.Date() - days(0)), "03:59:59")
+end_date = paste(toString(Sys.Date() - days(1)), "03:59:59")
 #start_date = '2016-04-28, 04:00:00'
 #end_date = '2016-04-28, 03:59:59'
 
@@ -141,8 +141,8 @@ adwords_keywords_statement <- statement(select=c('Date',
                                                  'PostClickQualityScore',
                                                  'KeywordMatchType'),
                                    report="KEYWORDS_PERFORMANCE_REPORT",
-                                   start="20151217",
-                                   end="20160504")
+                                   start=start_date,
+                                   end=end_date)
 
 # Make sure to use Adwords Account Id (MCC Id will not work)
 adwords_keywords_data <- getData(clientCustomerId="479-107-0932", google_auth=google_auth ,statement=adwords_keywords_statement)
@@ -164,8 +164,8 @@ adwords_campaigns_statement <- statement(select=c('Date',
                                                   'Clicks',
                                                   'AveragePosition'),
                                         report="CAMPAIGN_PERFORMANCE_REPORT",
-                                        start="20151217",
-                                        end="20160504")
+                                        start=start_date,
+                                        end=end_date)
 
 adwords_campaigns_data <- getData(clientCustomerId="479-107-0932", google_auth=google_auth ,statement=adwords_campaigns_statement)
 
@@ -208,6 +208,7 @@ db_first_transactions <- dbGetQuery(datawarehouse_db, GetoptLong::qq(paste("SELE
                                                                      first_transaction between '@{start_date}' and '@{end_date}'")))
 
 dbDisconnect(datawarehouse_db)
+dbDisconnect(heroku_db)
 
 #Filter out people where their first order was not in the specified start_date and end_date
 db_transactions <- db_transactions %>% filter(is.element(app_user_id, db_first_transactions$id))
@@ -478,7 +479,8 @@ plot(ggplot(devices_over_time %>%
              facet_wrap(~keyword + device, ncol=3))
 
 plot(ggplot(devices_over_time %>% 
-              filter(keyword %in% keywords_with_earnings$keyword) %>% 
+              filter(keyword == "paleo meals") %>% 
+              #filter(keyword %in% keywords_with_earnings$keyword) %>% 
               filter(device == "dt"), 
             aes(week,value,group=type,col=type,fill=type)) + 
        geom_line() + 
@@ -491,7 +493,7 @@ plot(
   ggplot(
     keywords_weekly_conversion_metrics %>% 
       # Filter by a single keyword, and only include the previous 4 weeks of data.
-      filter(week >= Sys.Date() - weeks(4), week <= Sys.Date()), 
+      filter(week >= Sys.Date() - weeks(4), week <= Sys.Date(), keyword == "paleo meals"), 
     aes(x=week, y=est_search_impression_share, fill=campaign_name)) +
     geom_bar(stat="identity", position="dodge") +
     ggtitle("Weekly Impression Share by Geo") + 
@@ -504,11 +506,11 @@ plot(
   ggplot(
     keywords_weekly_conversion_metrics %>% 
       # Filter by a single keyword, and only include the previous 4 weeks of data.
-      filter(week >= Sys.Date() - weeks(4), week <= Sys.Date()), 
+      filter(week >= Sys.Date() - weeks(4), week <= Sys.Date(), keyword == "paleo meals"), 
     aes(x=week, y=click_through_rate, fill=campaign_name)) +
     geom_bar(stat="identity", position="dodge") +
     ggtitle("Weekly CTR by Keyword") +
-    ylim(0, 0.30) +
+    # ylim(0, 0.30) +
     facet_wrap(~keyword, ncol=2)
 )
 
