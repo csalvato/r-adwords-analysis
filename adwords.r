@@ -16,6 +16,7 @@ library(lubridate)
 library(Rmisc)
 library(RMixpanel)
 library(RAdwords)
+library(powersupply.ppc)
 
 MARGIN <- 0.25
 AVG_VALUE_PER_ORDER <- 70
