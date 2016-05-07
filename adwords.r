@@ -140,7 +140,7 @@ transactions_query <- string_from_file("transactions_query.sql")
 adwords_campaigns_query <- string_from_file("adwords_campaigns_query.sql")
 influencer_metrics_query <- string_from_file("influencer_metrics_query.sql")
 
-##Modified file path for EW's machine. Short-term fix.
+##Modified file path for EW's machine. Short-term fix/to be deleted.
 # transactions_query <- string_from_file("./adwords-analysis/transactions_query.sql")
 # adwords_campaigns_query <- string_from_file("./adwords-analysis/adwords_campaigns_query.sql")
 # influencer_metrics_query <- string_from_file("./adwords-analysis/influencer_metrics_query.sql")
@@ -289,7 +289,7 @@ user_overview <- keywords_elog %>%
                             total_earnings = earnings + referred_earnings,
                             total_contribution = contribution + referred_contribution)
 
-consolidated_user_overview  <- user_overview %>% select(name,
+consolidated_user_overview  <- user_overview %>% select(name,
                                                         keyword, 
                                                         campaign_name,
                                                         contribution,
@@ -344,29 +344,47 @@ summary_overview <- keywords_elog %>%
 
 ##paleo meals cohort
 
-paleo_meals_cohort <- keywords_elog %>%
-                      filter(keyword=="paleo meals" & !is.na(order_id)) %>%
-                        mutate(cohort_week = rep(0,length(paleo_meals_cohort$week)))
-
+paleo_meals_cohort <- filter(keywords_elog,keyword == "paleo meals")
+        
 ##assign ordinal number to weeks for viewing simplicity only
 week_number <- numeric()
-for(i in 1: length(paleo_meals_cohort$cohort_week)) {
+for(i in 1: length(paleo_meals_cohort$week)) {
         week_number[i] <- which(unique(paleo_meals_cohort$week)==paleo_meals_cohort$week[i])
 }
 paleo_meals_cohort <- cbind(paleo_meals_cohort,week_number)
+
+
         
-##assign each user to a 'cohort_week' based on date of first order using 'paleo meals' keyword
+##assign each user_id to a 'cohort_week' based on week of first order using the 'paleo meals' keyword
+##if no user_id for a given transaction, cohort_week = week_number
+
+paleo_meals_cohort <- mutate(paleo_meals_cohort,cohort_week = rep(0,length(paleo_meals_cohort$week)))
+
 for(i in 1:length(unique(paleo_meals_cohort$week_number))) {
         users <- paleo_meals_cohort[which(paleo_meals_cohort$week_number==i),"user_id"]
         
         for(k in 1:length(paleo_meals_cohort$user_id)) {
-                if(paleo_meals_cohort$cohort_week[k] > 0) {next}
+                if(paleo_meals_cohort$cohort_week[k] > 0) {next} 
                         if(paleo_meals_cohort$user_id[k] %in% users) {
-                                paleo_meals_cohort$cohort_week[k] <- i} else {next}
-                        } 
-                }
+                                paleo_meals_cohort$cohort_week[k] <- i}
+                                        if(is.na(paleo_meals_cohort$user_id[k]))
+                                        {paleo_meals_cohort$cohort_week[k] <- paleo_meals_cohort$week_number[k]}
+        }
+        }
 
+##Remove duplicate transactions based on identical transaction_date stamp.
+##(unsure of significance of/cause of duplicate transactions)
+paleo_meals_cohort <- paleo_meals_cohort[!duplicated(paleo_meals_cohort),]
 
+##Organize df and prepare for plotting
+paleo_meals_cohorts_over_time <- paleo_meals_cohort %>%
+        group_by(cohort_week,week) %>%
+        summarize(cost = sum(cost, na.rm = TRUE),
+                  contribution = sum(money_in_the_bank_paid_to_us,na.rm=TRUE) *.25) %>%
+        mutate(cum_contribution = cumsum(contribution), 
+               cum_cost = cumsum(cost),
+               cum_ROI = cum_contribution - cum_cost) %>%
+        gather(type,value,cum_cost,cum_contribution,cum_ROI)
 
 
 ######################## View data frames ########################
@@ -414,6 +432,7 @@ keywords_campaigns_over_time <- keywords_elog %>%
          cum_cost = cumsum(cost),
          cum_ROI = cum_contribution - cum_cost) %>%
   gather(type,value,cum_cost,cum_contribution,cum_ROI)
+
 
 #Overall profits over time
 plot(ggplot(all_keyword_ROAS_over_time, 
@@ -491,6 +510,12 @@ plot(
     facet_wrap(~keyword + campaign_name, ncol=2)
 )
 
+
+#Profits over time by weekly cohort for keyword "paleo meals"
+plot(ggplot(paleo_meals_cohorts_over_time, aes(week,value,group=type,col=type,fill=type)) + 
+             geom_line() + 
+             ggtitle("Paleo Meals Cohort Analysis") + 
+             facet_wrap(~cohort_week, ncol=4))
 
 ############################## Write to file ####################################
 # write.adwords.csv(db_transactions, file ="ad_transactions_and_referrals.csv")
