@@ -20,8 +20,6 @@
 #' date_filter(data, as.Date("2016-01-01"), as.Date("2016-02-02"))
 #'         date a b
 #' 1 2016-02-01 2 2
-library(dplyr)
-
 date_filter <- function(data_frame, start_date=Sys.Date(), end_date=Sys.Date()) {
   return(data_frame %>% filter(date >= start_date, date <= end_date))
 }
