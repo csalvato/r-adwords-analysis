@@ -4,15 +4,18 @@
 \alias{write.excel.csv}
 \title{Write Excel CSV}
 \usage{
-write.excel.csv(data_frame, file)
+write.excel.csv(data_frame, file = "")
 }
 \arguments{
 \item{data_frame}{Data frame to be written to CSV file.}
 
-\item{file}{The path to the file to be written}
+\item{file}{(optional) File name for the file to be saved.  If not supplied
+then the data frame's name is used.  Note, ".csv" is appended automatically.}
 }
 \description{
 Wrapper function to write data frame to an excel-readable CSV file.
+Given just the data_frame, a csv file will be written to the working
+directory.
 }
 \examples{
 write.excel.csv(data_frame, "some_csv_file.csv")
