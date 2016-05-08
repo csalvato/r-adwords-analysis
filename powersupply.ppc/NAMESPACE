@@ -2,3 +2,5 @@
 
 export(as.device)
 export(as.match_type)
+export(as.week)
+export(date_filter)
