@@ -28,7 +28,7 @@ MIXPANEL_ACCOUNT <- mixpanelCreateAccount("Power Supply - Main",
                                            key="ce370ab09a166e168d448080b55715f6")
 
 # Set reporting parameters
-start_date = '2016-05-01, 04:00:00'
+start_date = '2016-12-17, 04:00:00'
 #end_date = paste(toString(Sys.Date() - days(0)), "03:59:59") #yesterday
 # start_date = paste(toString(Sys.Date() - days(8)), "04:00:00")
 end_date = paste(toString(Sys.Date() - days(1)), "03:59:59")
