@@ -12,5 +12,6 @@ LazyData: true
 RoxygenNote: 5.0.1.9000
 Suggests: testthat
 Imports:
+    plyr,
     dplyr,
     GetoptLong

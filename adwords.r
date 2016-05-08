@@ -3,6 +3,7 @@
 # install_github('jburkhardt/RAdwords')
 # Can look up metrics info with:
 # metrics("KEYWORDS_PERFORMANCE_REPORT")
+library(devtools)
 library(utils)
 library(graphics)
 library(RPostgreSQL)
@@ -10,13 +11,12 @@ library(RJDBC)
 library(plyr)
 library(dplyr)
 library(tidyr)
-library(GetoptLong)
 library(ggplot2)
 library(lubridate) 
 library(Rmisc)
 library(RMixpanel)
 library(RAdwords)
-library(powersupply.ppc)
+install("powersupply.ppc")
 
 MARGIN <- 0.25
 AVG_VALUE_PER_ORDER <- 70
@@ -28,7 +28,7 @@ MIXPANEL_ACCOUNT <- mixpanelCreateAccount("Power Supply - Main",
                                            key="ce370ab09a166e168d448080b55715f6")
 
 # Set reporting parameters
-start_date = '2015-12-17, 04:00:00'
+start_date = '2016-05-01, 04:00:00'
 #end_date = paste(toString(Sys.Date() - days(0)), "03:59:59") #yesterday
 # start_date = paste(toString(Sys.Date() - days(8)), "04:00:00")
 end_date = paste(toString(Sys.Date() - days(1)), "03:59:59")
@@ -465,4 +465,3 @@ plot(
 write.excel.csv(keywords_campaign_device_matchtype_overview)
 # write.excel.csv(summary_overview)
 write.excel.csv(contribution_per_click_overview)
-write.excel.csv(test_adwords_elog)

@@ -1,4 +1,11 @@
-
+#' As AdWords Keyword
+#'
+#' This function formats AdWords keywords data by removing special characters and ensuring proper typing.
+#' @param keyword_vectoro A vector of keywords from AdWords
+#' @export
+#' @examples
+#' as.device(device_vector)
+#' as.device(google_adwords_report$device)
 as.adwords.keyword <- function(keyword_vector) {
   keyword_vector <- as.character(keyword_vector)
   keyword_vector <- tolower(keyword_vector)
