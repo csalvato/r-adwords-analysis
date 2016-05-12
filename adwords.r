@@ -4,6 +4,10 @@
 # Can look up metrics info with:
 # metrics("KEYWORDS_PERFORMANCE_REPORT")
 library(devtools)
+
+install("powersupply.ppc")
+install("PSAdwordsUtilities")
+
 library(utils)
 library(graphics)
 library(RPostgreSQL)
@@ -16,7 +20,9 @@ library(lubridate)
 library(Rmisc)
 library(RMixpanel)
 library(RAdwords)
-install("powersupply.ppc")
+library(powersupply.ppc)
+library(PSAdwordsUtilities)
+
 
 MARGIN <- 0.25
 AVG_VALUE_PER_ORDER <- 70
@@ -28,7 +34,7 @@ MIXPANEL_ACCOUNT <- mixpanelCreateAccount("Power Supply - Main",
                                            key="ce370ab09a166e168d448080b55715f6")
 
 # Set reporting parameters
-start_date = '2016-12-17, 04:00:00'
+start_date = '2015-12-17, 04:00:00'
 #end_date = paste(toString(Sys.Date() - days(0)), "03:59:59") #yesterday
 # start_date = paste(toString(Sys.Date() - days(8)), "04:00:00")
 end_date = paste(toString(Sys.Date() - days(1)), "03:59:59")
@@ -54,7 +60,7 @@ adwords_keywords_statement <- statement(select=c('Date',
                                                  'CampaignName',
                                                  'AdGroupId',
                                                  'AdGroupName',
-                                                 'Cost', #Returned in micros (divide by 1,000,000)
+                                                 'Cost',
                                                  'AdNetworkType2', #Network with Search Partners
                                                  'SearchImpressionShare',
                                                  'SearchRankLostImpressionShare',
@@ -112,7 +118,6 @@ mixpanel_adwords_conversions  <- mixpanel_adwords_conversions %>% mutate(app_use
 unique_users <- distinct(mixpanel_adwords_conversions, app_user_id)
 
 db_transactions  <- db_transactions %>% inner_join(unique_users, by="app_user_id")
-
 
 db_first_transactions <- dbGetQuery(heroku_db, GetoptLong::qq(paste("SELECT 
                                                                         * 

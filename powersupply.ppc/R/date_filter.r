@@ -21,5 +21,6 @@
 #'         date a b
 #' 1 2016-02-01 2 2
 date_filter <- function(data_frame, start_date=Sys.Date(), end_date=Sys.Date()) {
-  return(data_frame %>% filter(date >= start_date, date <= end_date))
+  require(dplyr)
+  return(droplevels(data_frame %>% filter(date >= start_date, date <= end_date)))
 }

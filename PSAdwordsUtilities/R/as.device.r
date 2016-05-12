@@ -6,6 +6,7 @@
 #' @examples
 #' as.device(device_vector)
 #' as.device(google_adwords_report$device)
+
 as.device <- function(device_vector) {
   device_vector <- gsub("Computers", "dt", device_vector)
   device_vector <- gsub("Tablets with full browsers", "dt", device_vector)

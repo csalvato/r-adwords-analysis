@@ -1,5 +1,5 @@
 Package: powersupply.ppc
-Title: Enables Analysis & Reporting for Power Supply's PPC efforts.
+Title: Utilities for Analysis & Reporting for Power Supply's PPC efforts.
 Version: 0.0.0.9000
 Authors@R: person("Chris", "Salvato", email = "chris@mypowersupply.com", role = c("aut", "cre"))
 Description: Manipulates data and creates reports & visualizations for Power
