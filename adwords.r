@@ -26,11 +26,6 @@ library(SalvatoUtilities)
 library(AdWordsUtilities)
 library(MixpanelUtilities)
 
-
-MARGIN <- 0.25
-AVG_VALUE_PER_ORDER <- 70
-AVG_NUM_ORDERS_IN_LIFETIME <- 10
-
 # Set reporting parameters
 start_date = '2015-12-17, 04:00:00'
 #end_date = paste(toString(Sys.Date() - days(0)), "03:59:59") #yesterday

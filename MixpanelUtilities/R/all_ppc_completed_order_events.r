@@ -24,17 +24,6 @@ all_ppc_completed_order_events <- function(account=NULL, from=Sys.Date(), to=Sys
   }
 
   # If the start date or end date are different from the saved data, retrieve again.
-  write(!file.exists(mixpanel_events_file_name) || 
-       ppc_events[["start_date"]] != from  ||  
-       ppc_events[["end_date"]] != to , stderr())
-  write(!file.exists(mixpanel_events_file_name), stderr())
-  write(ppc_events[["start_date"]] != from, stderr())
-  write(ppc_events[["end_date"]] != to, stderr())
-
-  write(paste("file exists? ", file.exists(mixpanel_events_file_name)), stderr())
-  write(paste("start_date: ", ppc_events[["start_date"]]), stderr())
-  write(paste("end_date: ", ppc_events[["end_date"]]), stderr())
-
   if( !file.exists(mixpanel_events_file_name) || 
        ppc_events[["start_date"]] != from  ||  
        ppc_events[["end_date"]] != to ) {
