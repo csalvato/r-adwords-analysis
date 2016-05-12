@@ -22,6 +22,7 @@ library(RMixpanel)
 library(RAdwords)
 library(SalvatoUtilities)
 library(AdWordsUtilities)
+library(MixpanelUtilities)
 
 
 MARGIN <- 0.25
@@ -42,11 +43,9 @@ end_date = paste(toString(Sys.Date() - days(1)), "03:59:59")
 #end_date = '2016-04-28, 03:59:59'
 
 ##### Retrieve Mixpanel AdWords Conversion Data
-mixpanel_adwords_conversions <- mixpanelGetEvents(MIXPANEL_ACCOUNT, 
+mixpanel_adwords_conversions <- adwords_completed_order_events(MIXPANEL_ACCOUNT, 
                                                   from = start_date,
-                                                  to = end_date,
-                                                  event = array("Completed Order"),
-                                                  where = '(properties["latest_ad_search"]) and (properties["latest_ad_utm_source"] == "Google")')
+                                                  to = end_date)
 
 ##### Retrieve AdWords Spend/Click Data
 google_auth <- doAuth()
