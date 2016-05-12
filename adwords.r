@@ -93,7 +93,7 @@ adwords_campaigns_statement <- statement(select=c('Date',
 adwords_campaigns_data <- getData(clientCustomerId="479-107-0932", google_auth=google_auth ,statement=adwords_campaigns_statement)
 
 # Retrieve revenue data
-pgsql <- JDBC("org.postgresql.Driver", "../database_drivers/postgresql-9.4.1208.jre6.jar", "`")
+pgsql <- JDBC("org.postgresql.Driver", "database_drivers/postgresql-9.4.1208.jre6.jar", "`")
 heroku_db <- dbConnect(pgsql, string_from_file("jdbc_heroku_string.txt"))
 datawarehouse_db <- dbConnect(pgsql, string_from_file("jdbc_datawarehouse_string.txt"))
 

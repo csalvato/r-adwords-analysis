@@ -1,4 +1,4 @@
 library(testthat)
-library(powersupply.ppc)
+library(SalvatoUtilities)
 
-test_check("powersupply.ppc")
+test_check("SalvatoUtilities")
