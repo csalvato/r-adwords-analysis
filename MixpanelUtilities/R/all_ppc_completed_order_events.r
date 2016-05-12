@@ -13,6 +13,7 @@
 #' @export
 #' @examples
 #' bing_completed_order_events(account, from=start_date, to=end_date)
+
 all_ppc_completed_order_events <- function(account=NULL, from=Sys.Date(), to=Sys.Date()) {
   mixpanel_events_file_name <- "mixpanel_ppc_events.RData"
 
@@ -43,6 +44,8 @@ all_ppc_completed_order_events <- function(account=NULL, from=Sys.Date(), to=Sys
 
     ppc_events <- data.frame(ppc_events)
 
+    #TODO: Consider a refactor to not return a list with start_date and end_date, but
+    # instead to calculate those values from the data within the frame itself.
     ppc_events <- list(start_date=from, end_date=to, events=ppc_events)
     save(ppc_events, file=mixpanel_events_file_name)
   }
