@@ -6,7 +6,7 @@
 library(devtools)
 
 install("SalvatoUtilities")
-install("PSAdWordsUtilities")
+install("AdWordsUtilities")
 
 library(utils)
 library(graphics)
