@@ -15,6 +15,8 @@ summarize_adwords_elog <- function(elog_data_frame,
                                    average_num_orders_in_lifetime=10,
                                    average_value_per_order=70
                                    ){
+  require(plyr)
+  require(dplyr)
   return (summarize(elog_data_frame, cost = sum(cost, na.rm = TRUE),
                     average_position = weighted.mean(average_position,impressions, na.rm=TRUE),
                     average_quality_score=mean(quality_score, na.rm=TRUE),

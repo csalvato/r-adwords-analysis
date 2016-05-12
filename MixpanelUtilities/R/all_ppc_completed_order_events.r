@@ -9,6 +9,7 @@
 #' @param account A mixpanel account object.
 #' @param from Start date in either format <"yyyy-mm-dd"> or <yyyymmdd>. Inclusive.
 #' @param to End date in either format <"yyyy-mm-dd"> or <yyyymmdd>. Inclusive.
+#' @return A list containing \code{start_time} (the start range of the events data), \code{end_time} (the end range of the events data) and \code{events} (the actual events). 
 #' @export
 #' @examples
 #' bing_completed_order_events(account, from=start_date, to=end_date)

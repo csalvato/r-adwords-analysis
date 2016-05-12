@@ -9,6 +9,8 @@ install("SalvatoUtilities")
 install("AdWordsUtilities")
 install("MixpanelUtilities")
 
+detach_all_packages()
+
 library(utils)
 library(graphics)
 library(RPostgreSQL)
