@@ -1,4 +1,4 @@
 library(testthat)
-library(powersupply.ppc)
+library(AdWordsUtilities)
 
-test_check("powersupply.ppc")
+test_check("AdWordsUtilities")
