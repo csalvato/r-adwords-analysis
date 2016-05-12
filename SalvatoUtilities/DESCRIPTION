@@ -1,0 +1,17 @@
+Package: SalvatoUtilities
+Title: General Utilties and functions Chris Salvato has found useful.
+Version: 0.0.0.9000
+Authors@R: person("Chris", "Salvato", email = "csalvato@gmail.com", role = c("aut", "cre"))
+Description: Manipulates data and creates reports & visualizations for Power
+    Supply's PPC efforts.
+Depends:
+    R (>= 3.3.0)
+License: MIT License
+Encoding: UTF-8
+LazyData: true
+RoxygenNote: 5.0.1.9000
+Suggests: testthat
+Imports:
+    plyr,
+    dplyr,
+    GetoptLong

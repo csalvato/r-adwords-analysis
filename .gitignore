@@ -9,3 +9,4 @@ jdbc_*.txt
 *.zip
 .google.auth.RData
 adwords_credentials.txt
+temp_*.txt

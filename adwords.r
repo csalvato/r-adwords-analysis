@@ -3,6 +3,11 @@
 # install_github('jburkhardt/RAdwords')
 # Can look up metrics info with:
 # metrics("KEYWORDS_PERFORMANCE_REPORT")
+library(devtools)
+
+install("SalvatoUtilities")
+install("AdWordsUtilities")
+
 library(utils)
 library(graphics)
 library(RPostgreSQL)
@@ -10,12 +15,14 @@ library(RJDBC)
 library(plyr)
 library(dplyr)
 library(tidyr)
-library(GetoptLong)
 library(ggplot2)
 library(lubridate) 
 library(Rmisc)
 library(RMixpanel)
 library(RAdwords)
+library(SalvatoUtilities)
+library(AdWordsUtilities)
+
 
 MARGIN <- 0.25
 AVG_VALUE_PER_ORDER <- 70
@@ -25,82 +32,6 @@ MIXPANEL_ACCOUNT <- mixpanelCreateAccount("Power Supply - Main",
                                            token="3fdbf9929d332c37f82380157a564049",
                                            secret="af3b32cc21c7b6e91b71f7c0417735d2", 
                                            key="ce370ab09a166e168d448080b55715f6")
-
-as.match_type <- function(valuetrak_match_type_vector) {
-  valuetrak_match_type_vector <- gsub("b", "Broad", valuetrak_match_type_vector)
-  valuetrak_match_type_vector <- gsub("e", "Exact", valuetrak_match_type_vector)
-  valuetrak_match_type_vector <- gsub("p", "Phrase", valuetrak_match_type_vector)
-  return(valuetrak_match_type_vector)
-}
-
-as.device <- function(device_vector) {
-  device_vector <- gsub("Computers", "dt", device_vector)
-  device_vector <- gsub("Tablets with full browsers", "dt", device_vector)
-  device_vector <- gsub("Mobile devices with full browsers", "mb", device_vector)
-  return(device_vector)
-}
-
-as.adwords.keyword <- function(keyword_vector) {
-  keyword_vector <- as.character(keyword_vector)
-  keyword_vector <- tolower(keyword_vector)
-  keyword_vector <- gsub("\\+","",keyword_vector)
-  # Handles Tag Manager not properly parsing the + in the keyword (by manually inserting it to all entries)
-  # This is NOT a sustainable solution.
-  # If the keyword field contains a plus, assume the first keyword is also broad match, and prepend a +
-  keyword_vector <- ifelse(grepl("\\+", keyword_vector), paste('+',keyword_vector, sep=""), keyword_vector) 
-  # Replace double spaces that started appearing in data.  
-  #Not sure where they come from, so this monkey patches/hardcodes a fix.
-  keyword_vector <- gsub("  ", " ", keyword_vector)
-  return(keyword_vector)
-}
-
-as.week <- function(date_vector){
-  floor_date(date_vector, "week") + days(1)
-}
-
-string_from_file <- function(file_name){
-  GetoptLong::qq(scan(file_name, character()))
-}
-
-summarize_adwords_elog <- function(elog_data_frame){
-  return (summarize(elog_data_frame, cost = sum(cost, na.rm = TRUE),
-                    average_position = weighted.mean(average_position,impressions, na.rm=TRUE),
-                    average_quality_score=mean(quality_score, na.rm=TRUE),
-                    estimated_available_impressions = sum(impressions/est_search_impression_share, na.rm=TRUE),
-                    impressions = sum(impressions, na.rm = TRUE),
-                    # imp share is not wholly accurate because of the way the numbers are reported, but close enough. 
-                    # May result in 100%+ when impressions are very low 
-                    est_search_impression_share = impressions/estimated_available_impressions,
-                    clicks = sum(clicks, na.rm = TRUE),
-                    click_through_rate = clicks/impressions,
-                    num_acquisitions = n_distinct(user_id, na.rm = TRUE),
-                    conversion_rate = num_acquisitions/clicks,
-                    cost_per_click = cost/clicks,
-                    earnings = sum(money_in_the_bank_paid_to_us, na.rm = TRUE),
-                    contribution = earnings * MARGIN,
-                    earnings_per_click = earnings/clicks,
-                    contribution_per_click= contribution/clicks,
-                    cpa = ifelse(num_acquisitions==0, cost, cost/num_acquisitions),
-                    referred_users=sum(new_referred_users, na.rm=TRUE),
-                    referred_earnings=sum(referred_users_transaction_amount,na.rm=TRUE),
-                    estimated_ltv = num_acquisitions*AVG_NUM_ORDERS_IN_LIFETIME*AVG_VALUE_PER_ORDER*MARGIN,
-                    estimated_lifetime_ROAS=(estimated_ltv-cost)/cost,
-                    total_earnings = earnings + referred_earnings,
-                    total_contribution = total_earnings * MARGIN,
-                    actual_ROAS = (total_contribution-cost)/cost)
-          )
-}
-
-write.adwords.csv <- function(data_frame, file){
-  write.csv( data_frame,
-             file=file,
-             eol = "\r\n", 
-             row.names=FALSE)
-}
-
-date_filter <- function(data_frame, start_date, end_date) {
-  return(data_frame %>% filter(date >= start_date, date <= end_date))
-}
 
 # Set reporting parameters
 start_date = '2015-12-17, 04:00:00'
@@ -129,7 +60,7 @@ adwords_keywords_statement <- statement(select=c('Date',
                                                  'CampaignName',
                                                  'AdGroupId',
                                                  'AdGroupName',
-                                                 'Cost', #Returned in micros (divide by 1,000,000)
+                                                 'Cost',
                                                  'AdNetworkType2', #Network with Search Partners
                                                  'SearchImpressionShare',
                                                  'SearchRankLostImpressionShare',
@@ -174,7 +105,7 @@ adwords_campaigns_data <- getData(clientCustomerId="479-107-0932", google_auth=g
 # end_date = '2016-5-1'
 
 # Retrieve revenue data
-pgsql <- JDBC("org.postgresql.Driver", "../database_drivers/postgresql-9.4.1208.jre6.jar", "`")
+pgsql <- JDBC("org.postgresql.Driver", "database_drivers/postgresql-9.4.1208.jre6.jar", "`")
 heroku_db <- dbConnect(pgsql, string_from_file("jdbc_heroku_string.txt"))
 datawarehouse_db <- dbConnect(pgsql, string_from_file("jdbc_datawarehouse_string.txt"))
 
@@ -191,7 +122,6 @@ mixpanel_adwords_conversions  <- mixpanel_adwords_conversions %>% mutate(app_use
 unique_users <- distinct(mixpanel_adwords_conversions, app_user_id)
 
 db_transactions  <- db_transactions %>% inner_join(unique_users, by="app_user_id")
-
 
 db_first_transactions <- dbGetQuery(heroku_db, GetoptLong::qq(paste("SELECT 
                                                                         * 
@@ -586,14 +516,14 @@ plot(ggplot(paleo_meals_cohorts_over_time, aes(week,value,group=type,col=type,fi
              facet_wrap(~cohort_week, ncol=4))
 
 ############################## Write to file ####################################
-# write.adwords.csv(db_transactions, file ="ad_transactions_and_referrals.csv")
-# write.adwords.csv(campaign_overview, file ="campaign_overview.csv")
-# write.adwords.csv(keywords_elog, file ="full_keywords_event_log.csv")
-# write.adwords.csv(keywords_overview, file ="keywords_overview.csv")
-# write.adwords.csv(keywords_campaign_overview, file ="keywords_campaign_overview.csv")
-# write.adwords.csv(keywords_weekly_conversion_metrics, file ="keywords_weekly_conversion_metrics.csv")
-# write.adwords.csv(user_overview, file ="user_overview.csv")
-# write.adwords.csv(keywords_campaign_matchtype_overview, file ="keywords_campaign_matchtype_overview.csv")
-write.adwords.csv(keywords_campaign_device_matchtype_overview, file ="keywords_campaign_device_matchtype_overview.csv")
-# write.adwords.csv(summary_overview, file ="summary_overview.csv")
-write.adwords.csv(contribution_per_click_overview, file ="contribution_per_click_overview.csv")
+# write.excel.csv(db_transactions)
+# write.excel.csv(campaign_overview)
+# write.excel.csv(keywords_elog)
+# write.excel.csv(keywords_overview)
+# write.excel.csv(keywords_campaign_overview)
+# write.excel.csv(keywords_weekly_conversion_metrics)
+# write.excel.csv(user_overview)
+# write.excel.csv(keywords_campaign_matchtype_overview)
+write.excel.csv(keywords_campaign_device_matchtype_overview)
+# write.excel.csv(summary_overview)
+write.excel.csv(contribution_per_click_overview)
