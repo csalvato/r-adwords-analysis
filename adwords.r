@@ -5,8 +5,8 @@
 # metrics("KEYWORDS_PERFORMANCE_REPORT")
 library(devtools)
 
-install("powersupply.ppc")
-install("PSAdwordsUtilities")
+install("SalvatoUtilities")
+install("PSAdWordsUtilities")
 
 library(utils)
 library(graphics)
@@ -20,8 +20,8 @@ library(lubridate)
 library(Rmisc)
 library(RMixpanel)
 library(RAdwords)
-library(powersupply.ppc)
-library(PSAdwordsUtilities)
+library(SalvatoUtilities)
+library(AdWordsUtilities)
 
 
 MARGIN <- 0.25
