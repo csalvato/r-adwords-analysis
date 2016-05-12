@@ -15,7 +15,7 @@ all_ppc_completed_order_events(account = NULL, from = Sys.Date(),
 \item{to}{End date in either format <"yyyy-mm-dd"> or <yyyymmdd>. Inclusive.}
 }
 \value{
-A list containing \code{start_time} (the start range of the events data), \code{end_time} (the end range of the events data) and \code{events} (the actual events).
+A list containing named data frames for each of the PPC channels: \code{adwords} and \code{bing}
 }
 \description{
 Retrieves all ppc events (those with latest_ad_utm_source of "cpc") from Mixpanel.
