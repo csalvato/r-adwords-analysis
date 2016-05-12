@@ -3,7 +3,7 @@
 #' Takes in an AdWords event log and processes all summary data
 #'
 #' @param elog_data_frame A data frame containing all of the AdWords Event Log data.
-#' @param margin Estimated percentage of contribution margin (e.g. 0.25 for 25%). Used in contribution and estimated Return on Ad Spend (ROAS) calculations
+#' @param margin Estimated percentage of contribution margin (e.g. 0.25 for 25 percent). Used in contribution and estimated Return on Ad Spend (ROAS) calculations
 #' @param average_num_orders_in_lifetime The number of orders a new customer makes, on average. Used in estimated Return on Ad Spend (ROAS) calculations
 #' @param average_value_per_order The average value per order.  Used in estimated Return on Ad Spend (ROAS) calculations
 #' @export
