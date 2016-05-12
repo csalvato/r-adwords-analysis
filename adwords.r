@@ -181,11 +181,6 @@ datawarehouse_db <- dbConnect(pgsql, string_from_file("jdbc_datawarehouse_string
 transactions_query <- string_from_file("mixpanel_transactions_query.sql")
 influencer_metrics_query <- string_from_file("influencer_metrics_query.sql")
 
-##Modified file path for EW's machine. Short-term fix/to be deleted.
-# transactions_query <- string_from_file("./adwords-analysis/transactions_query.sql")
-# adwords_campaigns_query <- string_from_file("./adwords-analysis/adwords_campaigns_query.sql")
-# influencer_metrics_query <- string_from_file("./adwords-analysis/influencer_metrics_query.sql")
-
 db_influencer_metrics <- dbGetQuery(datawarehouse_db, influencer_metrics_query)
 db_transactions <- dbGetQuery(heroku_db, transactions_query)
 
@@ -349,7 +344,7 @@ user_overview <- keywords_elog %>%
                             total_earnings = earnings + referred_earnings,
                             total_contribution = contribution + referred_contribution)
 
-consolidated_user_overview  <- user_overview %>% select(name,
+consolidated_user_overview <- user_overview %>% select(name,
                                                         keyword, 
                                                         campaign_name,
                                                         contribution,
@@ -401,6 +396,7 @@ all_keyword_ROAS_over_time <- keywords_elog %>%
 
 summary_overview <- keywords_elog %>%
                     summarize_adwords_elog
+##########################################################################
 ##paleo meals cohort
 
 paleo_meals_cohort <- filter(keywords_elog,keyword == "paleo meals")
@@ -445,6 +441,8 @@ paleo_meals_cohorts_over_time <- paleo_meals_cohort %>%
                cum_ROI = cum_contribution - cum_cost) %>%
         gather(type,value,cum_cost,cum_contribution,cum_ROI)
 
+############################################################################
+
 contribution_per_click_overview <- keywords_elog %>% 
                                     group_by(keyword,campaign_name) %>% 
                                     summarize_adwords_elog %>% 
@@ -457,16 +455,16 @@ contribution_per_click_overview <- keywords_elog %>%
                                               cpc_bid_for_2x_ROAS = contribution_per_click/2)
 
 ######################## View data frames ########################
-View(campaign_overview)
-View(campaign_device_overview)
-View(device_overview)
-View(user_overview)
-View(keywords_campaign_overview)
-View(keywords_overview)
-View(keywords_weekly_conversion_metrics)
-View(summary_overview)
-View(keywords_campaign_matchtype_overview)
-View(keywords_campaign_device_matchtype_overview)
+# View(campaign_overview)
+# View(campaign_device_overview)
+# View(device_overview)
+# View(user_overview)
+# View(keywords_campaign_overview)
+# View(keywords_overview)
+# View(keywords_weekly_conversion_metrics)
+# View(summary_overview)
+# View(keywords_campaign_matchtype_overview)
+# View(keywords_campaign_device_matchtype_overview)
 
 ######################## Create Plots ######################## 
 keywords_with_earnings <- keywords_overview %>% 
@@ -580,7 +578,7 @@ plot(
     facet_wrap(~keyword + campaign_name, ncol=2)
 )
 
-
+####################################################################################
 #Profits over time by weekly cohort for keyword "paleo meals"
 plot(ggplot(paleo_meals_cohorts_over_time, aes(week,value,group=type,col=type,fill=type)) + 
              geom_line() + 
