@@ -46,6 +46,8 @@ keyword_performance_data <- function(from=Sys.Date(), to=Sys.Date()) {
   require(readr)
   credentials <- yaml.load(read_file("adwords_credentials.yml"))
 
-  adwords_keywords_data <- getData(clientCustomerId=credentials[['ClientCustomerID']], google_auth=google_auth ,statement=statement)
+  data <- getData(clientCustomerId=credentials[['ClientCustomerID']], google_auth=google_auth ,statement=statement)
+
+  return(data)
 
 }
