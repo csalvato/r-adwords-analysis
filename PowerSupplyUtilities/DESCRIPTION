@@ -1,10 +1,15 @@
 Package: PowerSupplyUtilities
-Title: Utilities for use with PowerSupply data sources to help with formatting and analysis.
+Title: Utilities for use with PowerSupply data sources to help with formatting
+    and analysis.
 Version: 0.0.0.9000
 Authors@R: person("Chris", "Salvato", email = "csalvato@gmail.com", role = c("aut", "cre"))
-Description: Creates a set of functions specific to retrieving data from PowerSupply's data sources.
-Depends: R (>= 3.3.0)
+Description: Creates a set of functions specific to retrieving data from
+    PowerSupply's data sources.
+Depends:
+    R (>= 3.3.0)
 License: Copyright Power Supply 2016 - All Rights Reserved
 Encoding: UTF-8
 LazyData: true
-Suggests: testthat
+Suggests:
+    testthat
+RoxygenNote: 5.0.1.9000
