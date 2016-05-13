@@ -10,4 +10,8 @@ License: MIT License
 Encoding: UTF-8
 LazyData: true
 Suggests: testthat
+Imports:
+		RJDBC,
+		RPostgreSQL,
+		SalvatoUtilities
 RoxygenNote: 5.0.1.9000

@@ -1,0 +1,43 @@
+#' Get Transactions Data
+#'
+#' Returns a data frame with all transaction data within a date range.  Data is 
+#' pulled from real time data
+#'
+#' @param from Start date in either format <"yyyy-mm-dd"> or <yyyymmdd>. Inclusive.
+#' @param to End date in either format <"yyyy-mm-dd"> or <yyyymmdd>. Inclusive.
+#' @return A data frame with transaction data within the date range.
+#' @export
+#' @examples
+#' get_transactions_data(from=20150101, to=20151231)
+
+get_transactions_data <- function(from=Sys.Date(), 
+                                  to=Sys.Date(),
+                                  database_driver="database_drivers/postgresql-9.4.1208.jre6.jar",
+                                  jdbc_config_file="jdbc_transactions_database_config.txt",
+                                  transactions_query_file="transactions_query.sql"){
+  if(file.exists(database_driver)) {
+    require(RJDBC)
+    pgsql <- JDBC("org.postgresql.Driver", database_driver, "`")
+    if(file.exists(jdbc_config_file)) {
+      require(RPostgreSQL)
+      db <- dbConnect(pgsql, string_from_file(jdbc_config_file))    
+      if(file.exists(transactions_query_file)) {
+        require(SalvatoUtilities)
+        transactions_query <- string_from_file(transactions_query_file)
+        transactions <- dbGetQuery(db, transactions_query)
+        return(transactions)
+      } else {
+        stop("Can't find transactions_query.sql (or the file provided) in your working directory.\n\tDownload the file from the git repo (https://github.com/powersupplyhq/adwords-analysis), put it in your working directory and try again.")
+      }
+    } else {
+      stop("Can't find the jdbc_heroku_string.txt (or the file provided) in your working directory.\n\tDownload the file, or request it from Chris (chris@mypowersupply.com), put it in your working directory and try again.")
+    }
+  } else {
+    if(database_drive == "database_drivers/postgresql-9.4.1208.jre6.jar") {
+      stop("Can't find postgresql driver at location `database_drivers/postgresql-9.4.1208.jre6.jar` in your working directory.\n\tDownload the driver file, put it in that location and try again.")
+    } else {
+      stop("Can't find the postgresql driver at the location provided.")
+    }
+    
+  }
+}

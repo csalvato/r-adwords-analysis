@@ -9,6 +9,7 @@ library(devtools)
 install("SalvatoUtilities")
 install("AdWordsUtilities")
 install("MixpanelUtilities")
+install("PowerSupplyUtilities")
 
 SalvatoUtilities::detach_all_packages()
 
@@ -28,6 +29,7 @@ library(readr)
 library(SalvatoUtilities)
 library(AdWordsUtilities)
 library(MixpanelUtilities)
+library(PowerSupplyUtilities)
 
 # Set reporting parameters
 start_date = '2015-12-17, 04:00:00'
