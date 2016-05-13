@@ -1,7 +1,7 @@
 .DS_Store
 *.csv
 *.Rproj*
-.RData
+*.RData
 .Rhistory
 jdbc_*.txt
 .Rproj.user
@@ -10,3 +10,4 @@ jdbc_*.txt
 .google.auth.RData
 adwords_credentials.txt
 temp_*.txt
+*.yml
