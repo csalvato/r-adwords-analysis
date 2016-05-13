@@ -100,10 +100,6 @@ adwords_campaigns_statement <- statement(select=c('Date',
 
 adwords_campaigns_data <- getData(clientCustomerId="479-107-0932", google_auth=google_auth ,statement=adwords_campaigns_statement)
 
-##Cohort Analysis Dates
-# start_date = '2015-12-17'
-# end_date = '2016-5-1'
-
 # Retrieve revenue data
 pgsql <- JDBC("org.postgresql.Driver", "database_drivers/postgresql-9.4.1208.jre6.jar", "`")
 heroku_db <- dbConnect(pgsql, string_from_file("jdbc_heroku_string.txt"))
@@ -326,52 +322,7 @@ all_keyword_ROAS_over_time <- keywords_elog %>%
 
 summary_overview <- keywords_elog %>%
                     summarize_adwords_elog
-##########################################################################
-##paleo meals cohort
 
-paleo_meals_cohort <- filter(keywords_elog,keyword == "paleo meals")
-        
-##assign ordinal number to weeks for viewing simplicity only
-week_number <- numeric()
-for(i in 1: length(paleo_meals_cohort$week)) {
-        week_number[i] <- which(unique(paleo_meals_cohort$week)==paleo_meals_cohort$week[i])
-}
-paleo_meals_cohort <- cbind(paleo_meals_cohort,week_number)
-
-
-        
-##assign each user_id to a 'cohort_week' based on week of first order using the 'paleo meals' keyword
-##if no user_id for a given transaction, cohort_week = week_number
-
-paleo_meals_cohort <- mutate(paleo_meals_cohort,cohort_week = rep(0,length(paleo_meals_cohort$week)))
-
-for(i in 1:length(unique(paleo_meals_cohort$week_number))) {
-        users <- paleo_meals_cohort[which(paleo_meals_cohort$week_number==i),"user_id"]
-        
-        for(k in 1:length(paleo_meals_cohort$user_id)) {
-                if(paleo_meals_cohort$cohort_week[k] > 0) {next} 
-                        if(paleo_meals_cohort$user_id[k] %in% users) {
-                                paleo_meals_cohort$cohort_week[k] <- i}
-                                        if(is.na(paleo_meals_cohort$user_id[k]))
-                                        {paleo_meals_cohort$cohort_week[k] <- paleo_meals_cohort$week_number[k]}
-        }
-        }
-
-##Remove duplicate transactions based on identical transaction_date stamp.
-##(unsure of significance of/cause of duplicate transactions)
-paleo_meals_cohort <- paleo_meals_cohort[!duplicated(paleo_meals_cohort),]
-
-##Organize df and prepare for plotting
-paleo_meals_cohorts_over_time <- paleo_meals_cohort %>%
-        group_by(cohort_week,week) %>%
-        summarize(cost = sum(cost, na.rm = TRUE),
-                  contribution = sum(money_in_the_bank_paid_to_us,na.rm=TRUE) *.25) %>%
-        mutate(cum_contribution = cumsum(contribution), 
-               cum_cost = cumsum(cost),
-               cum_ROI = cum_contribution - cum_cost) %>%
-        gather(type,value,cum_cost,cum_contribution,cum_ROI)
-
-############################################################################
 
 contribution_per_click_overview <- keywords_elog %>% 
                                     group_by(keyword,campaign_name) %>% 
@@ -508,8 +459,110 @@ plot(
     facet_wrap(~keyword + campaign_name, ncol=2)
 )
 
-####################################################################################
-#Profits over time by weekly cohort for keyword "paleo meals"
+
+######################## Paleo Meals Cohort Views ########################
+
+paleo_meals_cohort <- filter(keywords_elog,keyword == "paleo meals")
+
+##assign ordinal number to weeks for viewing simplicity only
+week_number <- numeric()
+for(i in 1: length(paleo_meals_cohort$week)) {
+        week_number[i] <- which(unique(paleo_meals_cohort$week)==paleo_meals_cohort$week[i])
+}
+paleo_meals_cohort <- cbind(paleo_meals_cohort,week_number)
+
+##assign each user_id to a 'cohort_week' based on week of first order using the 'paleo meals' keyword
+##all future occurrences of that user_id are labelled with the original cohort_week
+##if no user_id for a given transaction, cohort_week = week_number
+
+paleo_meals_cohort <- mutate(paleo_meals_cohort,cohort_week = rep(0,length(paleo_meals_cohort$week)))
+
+for(i in 1:length(unique(paleo_meals_cohort$week_number))) {
+        users <- paleo_meals_cohort[which(paleo_meals_cohort$week_number==i),"user_id"]
+        
+        for(k in 1:length(paleo_meals_cohort$user_id)) {
+                if(paleo_meals_cohort$cohort_week[k] > 0) {next} 
+                if(paleo_meals_cohort$user_id[k] %in% users) {
+                        paleo_meals_cohort$cohort_week[k] <- i}
+                if(is.na(paleo_meals_cohort$user_id[k]))
+                {paleo_meals_cohort$cohort_week[k] <- paleo_meals_cohort$week_number[k]}
+        }
+}
+##rename cohort_week variable
+paleo_meals_cohort$cohort_week <- sapply(paleo_meals_cohort$cohort_week, function(x) paste(min(paleo_meals_cohort[which(paleo_meals_cohort$cohort_week==x),"week"]),"Cohort"))
+
+##Organize dataframes and prepare for plotting
+
+paleo_meals_cohorts_total_ROI <- paleo_meals_cohort %>%
+        group_by(cohort_week) %>%
+        summarize(cohort_cost = sum(cost, na.rm = TRUE),
+                  cohort_contribution = sum(money_in_the_bank_paid_to_us,na.rm=TRUE) *.25) %>%
+        mutate(cohort_ROI = cohort_contribution - cohort_cost) %>%
+        gather(type,value,cohort_cost,cohort_contribution,cohort_ROI)
+
+paleo_meals_cohorts_over_time <- paleo_meals_cohort %>%
+        group_by(cohort_week,week) %>%
+        summarize(cost = sum(cost, na.rm = TRUE),
+                  contribution = sum(money_in_the_bank_paid_to_us,na.rm=TRUE) *.25) %>%
+        mutate(cum_contribution = cumsum(contribution), 
+               cum_cost = cumsum(cost),
+               cum_ROI = cum_contribution - cum_cost) %>%
+        gather(type,value,cum_cost,cum_contribution,cum_ROI)
+
+##create variables to track the ROI breakeven week for a given cohort (if it exists)
+
+paleo_meals_cohorts_over_time <- as.data.frame(paleo_meals_cohorts_over_time)
+paleo_meals_cohort_breakeven <- filter(paleo_meals_cohorts_over_time,type=="cum_ROI")
+
+##breaken_week is a logical variable tracking if a Cohort broke even (ROI crossed over zero) in a given week
+breakeven_week <- logical()
+ifelse(paleo_meals_cohort_breakeven$value[1] > 0,breakeven_week[1] <- 1,breakeven_week[1] <- 0)
+for(i in 2:length(paleo_meals_cohort_breakeven$week)) {
+        if(paleo_meals_cohort_breakeven$value[i] > 0
+           & paleo_meals_cohort_breakeven$value[i-1] < 0
+           & paleo_meals_cohort_breakeven$cohort_week[i] == paleo_meals_cohort_breakeven$cohort_week[i-1]
+              |  paleo_meals_cohort_breakeven$value[i]>0
+                 & paleo_meals_cohort_breakeven$cohort_week[i] != paleo_meals_cohort_breakeven$cohort_week[i-1])
+                 
+          {breakeven_week[i] <- 1} else {breakeven_week[i] <- 0}
+        }
+        
+paleo_meals_cohort_breakeven <- cbind(paleo_meals_cohort_breakeven,breakeven_week)
+
+##create new variable (weeks_unti_breakeven) which gives the number of weeks it took that cohort to breakeven
+cohort_vector <- unique(paleo_meals_cohort_breakeven$cohort_week)
+weeks2breakeven <- numeric()
+
+for(i in 1:length(cohort_vector)) {
+        bkevn <- paleo_meals_cohort_breakeven[which(paleo_meals_cohort_breakeven$breakeven_week == 1 & paleo_meals_cohort_breakeven$cohort_week == cohort_vector[i]),"week"]
+        frst <- min(paleo_meals_cohort_breakeven[which(paleo_meals_cohort_breakeven$cohort_week==cohort_vector[i]),"week"])
+        if(length(bkevn-frst)==0) {
+                weeks2breakeven[i] <- NA} else {
+                        weeks2breakeven[i] <- (bkevn - frst)/7 
+                } 
+        }
+weeks_until_breakeven <- numeric()
+for(i in 1:length(paleo_meals_cohort_breakeven$week)) {
+        weeks_until_breakeven[i] <- weeks2breakeven[which(paleo_meals_cohort_breakeven$cohort_week[i] == cohort_vector)]
+}
+
+paleo_meals_cohort_breakeven <- cbind(paleo_meals_cohort_breakeven,weeks_until_breakeven)
+
+
+#Cohorts Plot - Profits over time by weekly cohort for keyword "paleo meals"
+
+plot( 
+        ggplot(
+                paleo_meals_cohorts_total_ROI, 
+                aes(x=type,y=value, fill=type)) +
+                geom_bar(stat="identity", position="dodge") +
+                ggtitle("Total ROI for Paleo Meals Cohorts") +
+                facet_wrap(~cohort_week, ncol=4)
+)
+
+
+
+#Cohorts Plot - Profits over time by weekly cohort for keyword "paleo meals"
 plot(ggplot(paleo_meals_cohorts_over_time, aes(week,value,group=type,col=type,fill=type)) + 
              geom_line() + 
              ggtitle("Paleo Meals Cohort Analysis") + 
