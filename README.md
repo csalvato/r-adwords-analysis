@@ -33,5 +33,5 @@ To run the code within this project, you will need the following files. They can
 
 1. adwords_credentials.yml
 2. mixpanel_credentials.yml
-3. influencer_metrics_query.sql
-4. mixpanel_transactions_query.sql
+3. jdbc_heroku_string.txt
+4. jdbc_datawarehouse_string.txt
