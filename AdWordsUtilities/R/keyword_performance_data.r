@@ -17,35 +17,35 @@ keyword_performance_data <- function(from=Sys.Date(), to=Sys.Date()) {
   
   google_auth <- doAuth()
 
-  adwords_keywords_statement <- statement(select=c('Date',
-                                                   'DayOfWeek',
-                                                   # 'HourOfDay',
-                                                   'Criteria',
-                                                   'Status',
-                                                   'CampaignId', 
-                                                   'CampaignName',
-                                                   'AdGroupId',
-                                                   'AdGroupName',
-                                                   'Cost',
-                                                   'AdNetworkType2', #Network with Search Partners
-                                                   'SearchImpressionShare',
-                                                   'SearchRankLostImpressionShare',
-                                                   'Device',
-                                                   'Impressions',
-                                                   'Clicks',
-                                                   'AveragePosition',
-                                                   'QualityScore',
-                                                   'PostClickQualityScore',
-                                                   'KeywordMatchType'),
-                                     report="KEYWORDS_PERFORMANCE_REPORT",
-                                     start= format(from, format="%Y%m%d"),
-                                     end=format(to, format="%Y%m%d"))
+  statement <- statement(select=c( 'Date',
+                                   'DayOfWeek',
+                                   # 'HourOfDay',
+                                   'Criteria',
+                                   'Status',
+                                   'CampaignId', 
+                                   'CampaignName',
+                                   'AdGroupId',
+                                   'AdGroupName',
+                                   'Cost',
+                                   'AdNetworkType2', #Network with Search Partners
+                                   'SearchImpressionShare',
+                                   'SearchRankLostImpressionShare',
+                                   'Device',
+                                   'Impressions',
+                                   'Clicks',
+                                   'AveragePosition',
+                                   'QualityScore',
+                                   'PostClickQualityScore',
+                                   'KeywordMatchType'),
+                     report="KEYWORDS_PERFORMANCE_REPORT",
+                     start= format(from, format="%Y%m%d"),
+                     end=format(to, format="%Y%m%d"))
 
   # Make sure to use Adwords Account Id (MCC Id will not work)
   require(yaml)
   require(readr)
   credentials <- yaml.load(read_file("adwords_credentials.yml"))
 
-  adwords_keywords_data <- getData(clientCustomerId=credentials[['ClientCustomerID']], google_auth=google_auth ,statement=adwords_keywords_statement)
+  adwords_keywords_data <- getData(clientCustomerId=credentials[['ClientCustomerID']], google_auth=google_auth ,statement=statement)
 
 }

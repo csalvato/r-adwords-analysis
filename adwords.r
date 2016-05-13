@@ -41,56 +41,8 @@ mixpanel_adwords_conversions <- ppc_events[["adwords"]]
 mixpanel_bing_conversions <- ppc_events[["bing"]]
 
 ##### Retrieve AdWords Spend/Click Data
-google_auth <- doAuth()
-
-adwords_keywords_statement <- statement(select=c('Date',
-                                                 'DayOfWeek',
-                                                 #'HourOfDay',
-                                                 'Criteria',
-                                                 'Status',
-                                                 'CampaignId', 
-                                                 'CampaignName',
-                                                 'AdGroupId',
-                                                 'AdGroupName',
-                                                 'Cost',
-                                                 'AdNetworkType2', #Network with Search Partners
-                                                 'SearchImpressionShare',
-                                                 'SearchRankLostImpressionShare',
-                                                 'Device',
-                                                 'Impressions',
-                                                 'Clicks',
-                                                 'AveragePosition',
-                                                 'QualityScore',
-                                                 'PostClickQualityScore',
-                                                 'KeywordMatchType'),
-                                   report="KEYWORDS_PERFORMANCE_REPORT",
-                                   start=format(ymd_hms(start_date), format="%Y%m%d"),
-                                   end=format(ymd_hms(end_date), format="%Y%m%d"))
-
-# Make sure to use Adwords Account Id (MCC Id will not work)
-adwords_keywords_data <- getData(clientCustomerId="479-107-0932", google_auth=google_auth ,statement=adwords_keywords_statement)
-
-adwords_campaigns_statement <- statement(select=c('Date',
-                                                  'DayOfWeek',
-                                                  #'HourOfDay',
-                                                  'CampaignStatus',
-                                                  'CampaignId',
-                                                  'CampaignName', 
-                                                  'Cost', #Returned in micros (divide by 1,000,000)
-                                                  'AdNetworkType2', #Network with Search Partners
-                                                  'SearchImpressionShare',
-                                                  'SearchRankLostImpressionShare',
-                                                  'SearchBudgetLostImpressionShare',
-                                                  'Device',
-                                                  'Amount', #Budget - returned in micros (divide by 1,000,000)
-                                                  'Impressions',
-                                                  'Clicks',
-                                                  'AveragePosition'),
-                                        report="CAMPAIGN_PERFORMANCE_REPORT",
-                                        start=format(ymd_hms(start_date), format="%Y%m%d"),
-                                        end=format(ymd_hms(end_date), format="%Y%m%d"))
-
-adwords_campaigns_data <- getData(clientCustomerId="479-107-0932", google_auth=google_auth ,statement=adwords_campaigns_statement)
+adwords_keywords_data <- keyword_performance_data(from=as.Date(start_date), to=as.Date(end_date))
+adwords_campaigns_data <- campaign_performance_data(from=as.Date(start_date), to=as.Date(end_date))
 
 # Retrieve revenue data
 pgsql <- JDBC("org.postgresql.Driver", "database_drivers/postgresql-9.4.1208.jre6.jar", "`")
