@@ -334,6 +334,15 @@ contribution_per_click_overview <- keywords_elog %>%
                                               contribution_per_click = total_contribution/total_clicks,
                                               cpc_bid_for_2x_ROAS = contribution_per_click/2)
 
+num_orders_per_week <- keywords_elog %>% 
+                        filter(keyword=="paleo meals") %>% 
+                        group_by(week,campaign_name) %>% 
+                        filter(grepl("Paleo Performers",campaign_name)) %>% 
+                        summarize(cost = sum(cost, na.rm=TRUE), 
+                                  contribution = sum(money_in_the_bank_paid_to_us, 
+                                                     na.rm=TRUE)*0.25, 
+                                  num_orders=n_distinct(user_name))
+
 ######################## View data frames ########################
 # View(campaign_overview)
 # View(campaign_device_overview)
@@ -457,6 +466,10 @@ plot(
     facet_wrap(~keyword + campaign_name, ncol=2)
 )
 
+# Plot orders per week by geo
+plot( ggplot( num_orders_per_week ) + 
+      aes(week,num_orders,group=campaign_name,col=campaign_name,fill=campaign_name) + 
+      geom_line() )
 
 ############################## Write to file ####################################
 # write.excel.csv(db_transactions)
