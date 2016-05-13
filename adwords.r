@@ -9,7 +9,7 @@ install("SalvatoUtilities")
 install("AdWordsUtilities")
 install("MixpanelUtilities")
 
-detach_all_packages()
+SalvatoUtilities::detach_all_packages()
 
 library(utils)
 library(graphics)
