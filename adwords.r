@@ -3,13 +3,14 @@
 # install_github('jburkhardt/RAdwords')
 # Can look up metrics info with:
 # metrics("KEYWORDS_PERFORMANCE_REPORT")
+install.packages(devtools)
 library(devtools)
 
 install("SalvatoUtilities")
 install("AdWordsUtilities")
 install("MixpanelUtilities")
 
-detach_all_packages()
+SalvatoUtilities::detach_all_packages()
 
 library(utils)
 library(graphics)
@@ -18,7 +19,7 @@ library(RJDBC)
 library(plyr)
 library(dplyr)
 library(tidyr)
-library(ggplot2)
+library(ggplot2) 
 library(lubridate) 
 library(Rmisc)
 library(RMixpanel)
@@ -32,7 +33,7 @@ library(MixpanelUtilities)
 start_date = '2015-12-17, 04:00:00'
 #end_date = paste(toString(Sys.Date() - days(0)), "03:59:59") #yesterday
 # start_date = paste(toString(Sys.Date() - days(8)), "04:00:00")
-end_date = paste(toString(Sys.Date() - days(1)), "03:59:59")
+end_date = paste(toString(Sys.Date() - days(0)), "03:59:59")
 #start_date = '2016-04-28, 04:00:00'
 #end_date = '2016-04-28, 03:59:59'
 
