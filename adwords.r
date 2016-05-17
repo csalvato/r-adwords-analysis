@@ -7,6 +7,9 @@ library(devtools)
 
 install("SalvatoUtilities")
 install("AdWordsUtilities")
+install("MixpanelUtilities")
+
+SalvatoUtilities::detach_all_packages()
 
 library(utils)
 library(graphics)
@@ -20,18 +23,10 @@ library(lubridate)
 library(Rmisc)
 library(RMixpanel)
 library(RAdwords)
+library(readr)
 library(SalvatoUtilities)
 library(AdWordsUtilities)
-
-
-MARGIN <- 0.25
-AVG_VALUE_PER_ORDER <- 70
-AVG_NUM_ORDERS_IN_LIFETIME <- 10
-
-MIXPANEL_ACCOUNT <- mixpanelCreateAccount("Power Supply - Main",
-                                           token="3fdbf9929d332c37f82380157a564049",
-                                           secret="af3b32cc21c7b6e91b71f7c0417735d2", 
-                                           key="ce370ab09a166e168d448080b55715f6")
+library(MixpanelUtilities)
 
 # Set reporting parameters
 start_date = '2015-12-17, 04:00:00'
@@ -41,12 +36,9 @@ end_date = paste(toString(Sys.Date() - days(1)), "03:59:59")
 #start_date = '2016-04-28, 04:00:00'
 #end_date = '2016-04-28, 03:59:59'
 
-##### Retrieve Mixpanel AdWords Conversion Data
-mixpanel_adwords_conversions <- mixpanelGetEvents(MIXPANEL_ACCOUNT, 
-                                                  from = start_date,
-                                                  to = end_date,
-                                                  event = array("Completed Order"),
-                                                  where = '(properties["latest_ad_search"]) and (properties["latest_ad_utm_source"] == "Google")')
+ppc_events <- all_ppc_completed_order_events( from = start_date, to = end_date )
+mixpanel_adwords_conversions <- ppc_events[["adwords"]]
+mixpanel_bing_conversions <- ppc_events[["bing"]]
 
 ##### Retrieve AdWords Spend/Click Data
 google_auth <- doAuth()

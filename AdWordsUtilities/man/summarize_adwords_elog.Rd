@@ -10,7 +10,7 @@ summarize_adwords_elog(elog_data_frame, margin = 0.25,
 \arguments{
 \item{elog_data_frame}{A data frame containing all of the AdWords Event Log data.}
 
-\item{margin}{Estimated percentage of contribution margin (e.g. 0.25 for 25%). Used in contribution and estimated Return on Ad Spend (ROAS) calculations}
+\item{margin}{Estimated percentage of contribution margin (e.g. 0.25 for 25 percent). Used in contribution and estimated Return on Ad Spend (ROAS) calculations}
 
 \item{average_num_orders_in_lifetime}{The number of orders a new customer makes, on average. Used in estimated Return on Ad Spend (ROAS) calculations}
 

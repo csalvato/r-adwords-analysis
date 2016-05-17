@@ -9,5 +9,6 @@ jdbc_*.txt
 *.zip
 .google.auth.RData
 adwords_credentials.txt
+*.yml
 temp_*.txt
 *.yml

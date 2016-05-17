@@ -1,13 +1,20 @@
-Package: AdWordsUtilities
-Title: Utilities for use with RAdwords to help with formatting and analysis.
+Package: MixpanelUtilities
+Title: Utilities for use with RMixpanel to help with formatting and analysis.
 Version: 0.0.0.9000
 Authors@R: person("Chris", "Salvato", email = "csalvato@gmail.com", role = c("aut", "cre"))
 Description: Creates a set of functions specific to retrieving data from the
-    Google AdWords API using RAdwords
+    Mixpanel API using RMixpanel
 Depends:
     R (>= 3.3.0)
 License: MIT License
 Encoding: UTF-8
 LazyData: true
-Suggests: testthat
+Suggests:
+    testthat
+Imports:
+    RMixpanel,
+    dplyr,
+    plyr,
+    yaml,
+    readr
 RoxygenNote: 5.0.1.9000
