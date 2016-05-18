@@ -81,23 +81,7 @@ db_first_transactions <- dbGetQuery(heroku_db, GetoptLong::qq(paste("SELECT
 db_transactions <- db_transactions %>% filter(is.element(app_user_id, db_first_transactions$id))
 
 adwords_keywords_data <- clean_raw_adwords_keyword_data(adwords_keywords_data)
-
-# Format AdWords campaign data for future use
-names(adwords_campaigns_data) <- gsub('\\(|\\)',"",tolower(names(adwords_campaigns_data)))
-adwords_campaigns_data <- adwords_campaigns_data %>%
-                          rename( date=day,
-                                  day_of_week=dayofweek,
-                                  campaign_state=campaignstate,
-                                  campaign_id=campaignid,
-                                  campaign_name=campaign,
-                                  network=networkwithsearchpartners,
-                                  est_search_impression_share=searchimpr.share,
-                                  est_search_impression_share_lost_rank=searchlostisrank,
-                                  est_search_impression_share_lost_budget=searchlostisbudget,
-                                  average_position=position) %>%
-                            mutate(campaign_id = as.integer(campaign_id),
-                                   device = as.device(device)) %>% 
-                            date_filter(start_date, end_date)
+adwords_campaigns_data <- clean_raw_adwords_campaign_data(adwords_campaigns_data)
 
 # Format database transactions for future use
 db_transactions <- db_transactions %>% rename(device=latest_ad_device, 
