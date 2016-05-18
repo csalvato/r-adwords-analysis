@@ -48,12 +48,8 @@ adwords_keywords_data <- keyword_performance_data(from=as.Date(start_date), to=a
 adwords_campaigns_data <- campaign_performance_data(from=as.Date(start_date), to=as.Date(end_date))
 
 # Retrieve revenue data
-pgsql <- JDBC("org.postgresql.Driver", "database_drivers/postgresql-9.4.1208.jre6.jar", "`")
-datawarehouse_db <- dbConnect(pgsql, string_from_file("jdbc_datawarehouse_string.txt"))
-influencer_metrics_query <- string_from_file("influencer_metrics_query.sql")
-db_influencer_metrics <- dbGetQuery(datawarehouse_db, influencer_metrics_query)
-
 db_transactions <- get_transactions_data(from=start_date, to=end_date)
+db_influencer_metrics_new <- get_referrals_data(from=start_date, to=end_date)
 
 # Join Mixpanel Conversion Data with Data Warehouse transaction data
 mixpanel_adwords_conversions <- data.frame(mixpanel_adwords_conversions)
@@ -80,9 +76,6 @@ db_first_transactions <- dbGetQuery(heroku_db, GetoptLong::qq(paste("SELECT
                                                                        ORDER BY first_transaction desc) first_transactions
                                                                      WHERE
                                                                      first_transaction between '@{start_date}' and '@{end_date}'")))
-
-dbDisconnect(datawarehouse_db)
-dbDisconnect(heroku_db)
 
 #Filter out people where their first order was not in the specified start_date and end_date
 db_transactions <- db_transactions %>% filter(is.element(app_user_id, db_first_transactions$id))

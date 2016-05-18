@@ -28,8 +28,10 @@ get_transactions_data <- function(from=Sys.Date(),
         require(SalvatoUtilities)
         transactions_query <- string_from_file(transactions_query_file)
         transactions <- dbGetQuery(db, transactions_query)
+        dbDisconnect(db)
         return(transactions)
       } else {
+        dbDisconnect(db)
         stop("Can't find transactions_query.sql (or the file provided) in your working directory.\n\tDownload the file from the git repo (https://github.com/powersupplyhq/adwords-analysis), put it in your working directory and try again.")
       }
     } else {

@@ -16,7 +16,7 @@
 get_referrals_data <- function(from=Sys.Date(), 
                                   to=Sys.Date(),
                                   database_driver="database_drivers/postgresql-9.4.1208.jre6.jar",
-                                  jdbc_config_file="jdbc_data_warehouse_database_config.txt",
+                                  jdbc_config_file="jdbc_datawarehouse_string.txt",
                                   transactions_query_file="referrals_query.sql"){
   if(file.exists(database_driver)) {
     require(RJDBC)
@@ -28,8 +28,10 @@ get_referrals_data <- function(from=Sys.Date(),
         require(SalvatoUtilities)
         referrals_query <- string_from_file(transactions_query_file)
         referrals_data <- dbGetQuery(db, referrals_query)
+        dbDisconnect(db)
         return(referrals_data)
       } else {
+        dbDisconnect(db)
         stop("Can't find referrals_query.sql (or the file provided) in your working directory.\n\tDownload the file from the git repo (https://github.com/powersupplyhq/adwords-analysis), put it in your working directory and try again.")
       }
     } else {
