@@ -41,6 +41,7 @@ end_date = paste(toString(Sys.Date() - days(0)), "03:59:59")
 
 ppc_events <- all_ppc_raw_completed_order_events( from = start_date, to = end_date )
 mixpanel_adwords_conversions <- ppc_events[["adwords"]]
+mixpanel_adwords_conversions <- clean_adwords_raw_completed_order_events(mixpanel_adwords_conversions)
 mixpanel_bing_conversions <- ppc_events[["bing"]]
 
 ##### Retrieve AdWords Spend/Click Data
@@ -50,13 +51,6 @@ adwords_campaigns_data <- campaign_performance_data(from=as.Date(start_date), to
 # Retrieve revenue data
 db_transactions <- get_transactions_data(from=start_date, to=end_date)
 db_influencer_metrics <- get_referrals_data(from=start_date, to=end_date)
-
-# Join Mixpanel Conversion Data with transaction data
-temp <- clean_adwords_raw_completed_order_events(mixpanel_adwords_conversions)
-
-unique_users <- distinct(mixpanel_adwords_conversions, app_user_id)
-
-db_transactions  <- db_transactions %>% inner_join(unique_users, by="app_user_id")
 
 heroku_db <- dbConnect(pgsql, string_from_file("jdbc_heroku_string.txt"))
 db_first_transactions <- dbGetQuery(heroku_db, GetoptLong::qq(paste("SELECT 
@@ -77,6 +71,11 @@ db_first_transactions <- dbGetQuery(heroku_db, GetoptLong::qq(paste("SELECT
                                                                      WHERE
                                                                      first_transaction between '@{start_date}' and '@{end_date}'")))
 heroku_db <- dbDisconnect(heroku_db)
+
+# Join Mixpanel Conversion Data with transaction data
+unique_users <- distinct(mixpanel_adwords_conversions, app_user_id)
+
+db_transactions  <- db_transactions %>% inner_join(unique_users, by="app_user_id")
 
 #Filter out people where their first order was not in the specified start_date and end_date
 db_transactions <- db_transactions %>% filter(is.element(app_user_id, db_first_transactions$id))
