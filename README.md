@@ -108,14 +108,16 @@ The resulting data frame includes the following variables that can be grouped an
 1. latest_ad_awcreativeid - This is the ID of the latest ad (aka Creative) the user had seen before placing their first order.
 1. keyword - This is the name of the most recent keyword that the user had matched with their search term, and clicked on before placing their first order.
 1. match_type - This is the match type (`Broad`, `Exact` or `Phrase`) of the most recent keyword that the user had matched with their search term, and clicked on before placing their first order.
-1. latest_ad_awnetwork - 
-1. latest_ad_awposition
-1. device
-1. latest_ad_psgeo
-1. latest_ad_search
-1. latest_ad_utm_medium
-1. latest_ad_utm_source
-1. orderId
+1. latest_ad_awnetwork - This is the network on which the user had seen an before placing their first order. Values are `g` (Google), `s` (Search Partners) and `d` (Display Network)
+1. latest_ad_awposition - The position of the ad the user had clicked on before placing their first order, with a value like "1t2"(this means page 1, top, position 2)
+1. device - The device the user was using to place their first order.
+1. latest_ad_psgeo - The PSGeo (power supply geo) that the user was located in (according to campaign targetting) when placing their first order.
+1. latest_ad_search - The full search string (i.e. everything after the `?` in a tracking URL) associated with the most recent ad the user had experienced.
+1. latest_ad_utm_medium - The medium on which the user had seen an ad before making their first purchase. (e.g. cpc = cost per click advertising)
+1. latest_ad_utm_source - The source from which the user had seen an ad before making their first purchase. (e.g. Google)
+1. orderId - The ID of the order in our orders application
+
+** More Data Fields to be defined as they are needed.  For explanation, reach out to Chris Salvato (chris@mypowersupply.com) and then add the definition to the list below in README.md**
 1. utm_campaign
 1. utm_medium
 1. utm_source
