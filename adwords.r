@@ -80,6 +80,8 @@ db_first_transactions <- dbGetQuery(heroku_db, GetoptLong::qq(paste("SELECT
 #Filter out people where their first order was not in the specified start_date and end_date
 db_transactions <- db_transactions %>% filter(is.element(app_user_id, db_first_transactions$id))
 
+adwords_keywords_data <- clean_raw_adwords_keyword_data(adwords_keywords_data)
+
 # Format AdWords campaign data for future use
 names(adwords_campaigns_data) <- gsub('\\(|\\)',"",tolower(names(adwords_campaigns_data)))
 adwords_campaigns_data <- adwords_campaigns_data %>%
