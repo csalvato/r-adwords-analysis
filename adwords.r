@@ -3,7 +3,7 @@
 # install_github('jburkhardt/RAdwords')
 # Can look up metrics info with:
 # metrics("KEYWORDS_PERFORMANCE_REPORT")
-install.packages("devtools")
+#install.packages("devtools")
 library(devtools)
 
 install("SalvatoUtilities")
@@ -39,8 +39,9 @@ end_date = paste(toString(Sys.Date() - days(0)), "03:59:59")
 #start_date = '2016-04-28, 04:00:00'
 #end_date = '2016-04-28, 03:59:59'
 
-ppc_events <- all_ppc_completed_order_events( from = start_date, to = end_date )
+ppc_events <- all_ppc_raw_completed_order_events( from = start_date, to = end_date )
 mixpanel_adwords_conversions <- ppc_events[["adwords"]]
+mixpanel_adwords_conversions <- clean_adwords_raw_completed_order_events(mixpanel_adwords_conversions)
 mixpanel_bing_conversions <- ppc_events[["bing"]]
 
 ##### Retrieve AdWords Spend/Click Data
@@ -49,16 +50,9 @@ adwords_campaigns_data <- campaign_performance_data(from=as.Date(start_date), to
 
 # Retrieve revenue data
 db_transactions <- get_transactions_data(from=start_date, to=end_date)
-db_influencer_metrics_new <- get_referrals_data(from=start_date, to=end_date)
+db_influencer_metrics <- get_referrals_data(from=start_date, to=end_date)
 
-# Join Mixpanel Conversion Data with Data Warehouse transaction data
-mixpanel_adwords_conversions <- data.frame(mixpanel_adwords_conversions)
-mixpanel_adwords_conversions  <- mixpanel_adwords_conversions %>% rename(app_user_id = id)
-mixpanel_adwords_conversions  <- mixpanel_adwords_conversions %>% mutate(app_user_id = as.numeric(as.character(app_user_id)))
-unique_users <- distinct(mixpanel_adwords_conversions, app_user_id)
-
-db_transactions  <- db_transactions %>% inner_join(unique_users, by="app_user_id")
-
+heroku_db <- dbConnect(pgsql, string_from_file("jdbc_heroku_string.txt"))
 db_first_transactions <- dbGetQuery(heroku_db, GetoptLong::qq(paste("SELECT 
                                                                         * 
                                                                      FROM
@@ -76,52 +70,15 @@ db_first_transactions <- dbGetQuery(heroku_db, GetoptLong::qq(paste("SELECT
                                                                        ORDER BY first_transaction desc) first_transactions
                                                                      WHERE
                                                                      first_transaction between '@{start_date}' and '@{end_date}'")))
+heroku_db <- dbDisconnect(heroku_db)
+
+# Join Mixpanel Conversion Data with transaction data
+unique_users <- distinct(mixpanel_adwords_conversions, app_user_id)
+
+db_transactions  <- db_transactions %>% inner_join(unique_users, by="app_user_id")
 
 #Filter out people where their first order was not in the specified start_date and end_date
 db_transactions <- db_transactions %>% filter(is.element(app_user_id, db_first_transactions$id))
-
-
-# Format AdWords keyword data for future use
-# Clean up column names
-names(adwords_keywords_data) <- gsub('\\(|\\)',"",tolower(names(adwords_keywords_data)))
-# Rename columns, convert values where necessary, 
-# and filter everything outside of start_date and end_date
-adwords_keywords_data <- adwords_keywords_data %>%
-                          rename( date=day,
-                                  day_of_week=dayofweek,
-                                  keyword_state=keywordstate,
-                                  campaign_id=campaignid,
-                                  campaign_name=campaign,
-                                  ad_group_id=adgroupid,
-                                  ad_group_name=adgroup,
-                                  network=networkwithsearchpartners,
-                                  est_search_impression_share=searchimpr.share,
-                                  est_search_impression_share_lost_rank=searchlostisrank,
-                                  average_position=position,
-                                  quality_score=qualityscore,
-                                  landing_page_experience=landingpageexperience,
-                                  match_type=matchtype) %>% 
-                          mutate(device = as.device(device),
-                                 keyword = as.adwords.keyword(keyword),
-                                 quality_score = as.numeric(quality_score)) %>% 
-                          date_filter(start_date, end_date)
-
-# Format AdWords campaign data for future use
-names(adwords_campaigns_data) <- gsub('\\(|\\)',"",tolower(names(adwords_campaigns_data)))
-adwords_campaigns_data <- adwords_campaigns_data %>%
-                          rename( date=day,
-                                  day_of_week=dayofweek,
-                                  campaign_state=campaignstate,
-                                  campaign_id=campaignid,
-                                  campaign_name=campaign,
-                                  network=networkwithsearchpartners,
-                                  est_search_impression_share=searchimpr.share,
-                                  est_search_impression_share_lost_rank=searchlostisrank,
-                                  est_search_impression_share_lost_budget=searchlostisbudget,
-                                  average_position=position) %>%
-                            mutate(campaign_id = as.integer(campaign_id),
-                                   device = as.device(device)) %>% 
-                            date_filter(start_date, end_date)
 
 # Format database transactions for future use
 db_transactions <- db_transactions %>% rename(device=latest_ad_device, 

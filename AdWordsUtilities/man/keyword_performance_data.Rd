@@ -12,13 +12,14 @@ keyword_performance_data(from = Sys.Date(), to = Sys.Date())
 \item{to}{Date object for end date in format <yyyymmdd>. Inclusive. If left blank, defaults to Sys.Date()}
 }
 \value{
-A data frame with the keyword performance data in the timeframe.
+A data frame with the cleaned keyword performance data in the timeframe.
 }
 \description{
 This is a utility function for that pulls a Keyword Performance Report
-with the data needed for our analysis. If a field is missing that is 
-supported by the \code{keyword performance report}, it should be added to
-this function.
+with the data needed for our analysis. The data is returned cleaned so that it is
+consistent with data formats from other source and easily human readable.
+If a field is missing that is supported by the \code{keyword performance report}, 
+it should be added to the function \code{raw_keyword_performance_data}
 NOTE: Requires you to enter Google Authentication info or have
 .google.auth.RData in your working directory.
 }
