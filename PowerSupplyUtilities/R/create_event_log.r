@@ -128,7 +128,7 @@ create_event_log <- function(from=Sys.Date(),
                             -utm_content,
                             -mp_keyword,
                             -traits,
-                            -user_id)
+                            -app_user_id)
 
   return(keywords_elog)
 }

@@ -66,7 +66,7 @@ user_overview <- keywords_elog %>%
                   filter(!is.na(user_id)) %>% #Remove NA user_ids (which means they are not monetary transactions)
                   group_by(user_id) %>%
                   summarize(name = first(user_name), 
-                            num_transactions=length(transaction_date), 
+                            num_transactions=length(date), 
                             earnings = sum(money_in_the_bank_paid_to_us, na.rm=TRUE),
                             contribution = earnings*.25,
                             campaign_name = first(campaign_name),

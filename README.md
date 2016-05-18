@@ -84,7 +84,7 @@ The resulting data frame includes the following variables that can be grouped an
 1. campaign_id - The ID of the campaign. Not intended to be human readable. Used to join campaign data to other data sets based on ID.
 1. campaign_name - The name of the campaign.
 1. user_name - The user's name
-1. app_user_id - The user's ID in the orders app
+1. user_id - The user's ID in the orders app
 1. discount_amount - If this observation is a purchase, this is the amount of any discount applied.
 1. credit_used - If this observation is a purchase, this is the amount of any credit applied.
 1. sales_tax_amount - If this observation is a purchase, this is the amount of any sales tax applied.
