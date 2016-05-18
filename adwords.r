@@ -3,7 +3,7 @@
 # install_github('jburkhardt/RAdwords')
 # Can look up metrics info with:
 # metrics("KEYWORDS_PERFORMANCE_REPORT")
-install.packages(devtools)
+install.packages("devtools")
 library(devtools)
 
 install("SalvatoUtilities")
@@ -49,14 +49,11 @@ adwords_campaigns_data <- campaign_performance_data(from=as.Date(start_date), to
 
 # Retrieve revenue data
 pgsql <- JDBC("org.postgresql.Driver", "database_drivers/postgresql-9.4.1208.jre6.jar", "`")
-heroku_db <- dbConnect(pgsql, string_from_file("jdbc_heroku_string.txt"))
 datawarehouse_db <- dbConnect(pgsql, string_from_file("jdbc_datawarehouse_string.txt"))
-
-transactions_query <- string_from_file("mixpanel_transactions_query.sql")
 influencer_metrics_query <- string_from_file("influencer_metrics_query.sql")
-
 db_influencer_metrics <- dbGetQuery(datawarehouse_db, influencer_metrics_query)
-db_transactions <- dbGetQuery(heroku_db, transactions_query)
+
+db_transactions <- get_transactions_data(from=start_date, to=end_date)
 
 # Join Mixpanel Conversion Data with Data Warehouse transaction data
 mixpanel_adwords_conversions <- data.frame(mixpanel_adwords_conversions)
