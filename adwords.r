@@ -46,6 +46,8 @@ mixpanel_bing_conversions <- ppc_events[["bing"]]
 ##### Retrieve AdWords Spend/Click Data
 adwords_keywords_data <- keyword_performance_data(from=as.Date(start_date), to=as.Date(end_date))
 adwords_campaigns_data <- campaign_performance_data(from=as.Date(start_date), to=as.Date(end_date))
+adwords_keywords_data <- clean_raw_adwords_keyword_data(adwords_keywords_data)
+adwords_campaigns_data <- clean_raw_adwords_campaign_data(adwords_campaigns_data)
 
 # Retrieve revenue data
 db_transactions <- get_transactions_data(from=start_date, to=end_date)
@@ -79,9 +81,6 @@ db_first_transactions <- dbGetQuery(heroku_db, GetoptLong::qq(paste("SELECT
 
 #Filter out people where their first order was not in the specified start_date and end_date
 db_transactions <- db_transactions %>% filter(is.element(app_user_id, db_first_transactions$id))
-
-adwords_keywords_data <- clean_raw_adwords_keyword_data(adwords_keywords_data)
-adwords_campaigns_data <- clean_raw_adwords_campaign_data(adwords_campaigns_data)
 
 # Format database transactions for future use
 db_transactions <- db_transactions %>% rename(device=latest_ad_device, 
