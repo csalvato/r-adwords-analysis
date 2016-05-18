@@ -6,7 +6,7 @@
 #' @return A data frame with the AdWords data in a format consistent with other related data sets.
 #' @export
 #' @examples
-#' data  <- campaign_performance_data(from=20151216, to=20151219)
+#' data  <- raw_campaign_performance_data(from=20151216, to=20151219)
 #' clean_data <- clean_raw_adwords_campaign_data(data)
 
 
@@ -14,6 +14,8 @@ clean_raw_adwords_campaign_data  <- function(data_frame) {
   # Format AdWords campaign data for future use
   names(data_frame) <- gsub('\\(|\\)',"",tolower(names(data_frame)))
 
+  require(plyr)
+  require(dplyr)
   data_frame <- data_frame %>%
                 rename( date=day,
                         day_of_week=dayofweek,

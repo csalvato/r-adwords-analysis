@@ -3,7 +3,7 @@
 # install_github('jburkhardt/RAdwords')
 # Can look up metrics info with:
 # metrics("KEYWORDS_PERFORMANCE_REPORT")
-install.packages("devtools")
+#install.packages("devtools")
 library(devtools)
 
 install("SalvatoUtilities")
@@ -46,12 +46,10 @@ mixpanel_bing_conversions <- ppc_events[["bing"]]
 ##### Retrieve AdWords Spend/Click Data
 adwords_keywords_data <- keyword_performance_data(from=as.Date(start_date), to=as.Date(end_date))
 adwords_campaigns_data <- campaign_performance_data(from=as.Date(start_date), to=as.Date(end_date))
-adwords_keywords_data <- clean_raw_adwords_keyword_data(adwords_keywords_data)
-adwords_campaigns_data <- clean_raw_adwords_campaign_data(adwords_campaigns_data)
 
 # Retrieve revenue data
 db_transactions <- get_transactions_data(from=start_date, to=end_date)
-db_influencer_metrics_new <- get_referrals_data(from=start_date, to=end_date)
+db_influencer_metrics <- get_referrals_data(from=start_date, to=end_date)
 
 # Join Mixpanel Conversion Data with Data Warehouse transaction data
 mixpanel_adwords_conversions <- data.frame(mixpanel_adwords_conversions)
@@ -61,6 +59,7 @@ unique_users <- distinct(mixpanel_adwords_conversions, app_user_id)
 
 db_transactions  <- db_transactions %>% inner_join(unique_users, by="app_user_id")
 
+heroku_db <- dbConnect(pgsql, string_from_file("jdbc_heroku_string.txt"))
 db_first_transactions <- dbGetQuery(heroku_db, GetoptLong::qq(paste("SELECT 
                                                                         * 
                                                                      FROM
@@ -78,6 +77,7 @@ db_first_transactions <- dbGetQuery(heroku_db, GetoptLong::qq(paste("SELECT
                                                                        ORDER BY first_transaction desc) first_transactions
                                                                      WHERE
                                                                      first_transaction between '@{start_date}' and '@{end_date}'")))
+heroku_db <- dbDisconnect(heroku_db)
 
 #Filter out people where their first order was not in the specified start_date and end_date
 db_transactions <- db_transactions %>% filter(is.element(app_user_id, db_first_transactions$id))

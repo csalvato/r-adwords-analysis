@@ -6,7 +6,7 @@
 #' @return A data frame with the AdWords data in a format consistent with other related data sets.
 #' @export
 #' @examples
-#' data  <- keyword_performance_data(from=20151216, to=20151219)
+#' data  <- raw_keyword_performance_data(from=20151216, to=20151219)
 #' clean_data <- clean_raw_adwords_keyword_data(data)
 
 
@@ -16,6 +16,8 @@ clean_raw_adwords_keyword_data  <- function(data_frame) {
   
   # Rename columns, convert values where necessary, 
   # and filter everything outside of start_date and end_date
+  require(plyr)
+  require(dplyr)
   data_frame <- data_frame %>%
                 rename( date=day,
                         day_of_week=dayofweek,

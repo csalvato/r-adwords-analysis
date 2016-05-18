@@ -17,7 +17,7 @@ Takes the raw data from an AdWords campaign Performance Report via an API pull a
 to be more easily readable, understandable and consistent with other data sets.
 }
 \examples{
-data  <- campaign_performance_data(from=20151216, to=20151219)
+data  <- raw_campaign_performance_data(from=20151216, to=20151219)
 clean_data <- clean_raw_adwords_campaign_data(data)
 }
 
