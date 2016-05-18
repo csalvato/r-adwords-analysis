@@ -12,7 +12,7 @@
 #' @return A list containing named data frames for each of the PPC channels: \code{adwords} and \code{bing}
 #' @export
 #' @examples
-#' bing_completed_order_events(account, from=start_date, to=end_date)
+#' all_ppc_completed_order_events(account, from=start_date, to=end_date)
 
 all_ppc_completed_order_events <- function(account=NULL, from=Sys.Date(), to=Sys.Date()) {
   mixpanel_events_file_name <- "mixpanel_ppc_events.RData"
