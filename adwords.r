@@ -39,7 +39,7 @@ end_date = paste(toString(Sys.Date() - days(0)), "03:59:59")
 #start_date = '2016-04-28, 04:00:00'
 #end_date = '2016-04-28, 03:59:59'
 
-ppc_events <- all_ppc_completed_order_events( from = start_date, to = end_date )
+ppc_events <- all_ppc_raw_completed_order_events( from = start_date, to = end_date )
 mixpanel_adwords_conversions <- ppc_events[["adwords"]]
 mixpanel_bing_conversions <- ppc_events[["bing"]]
 
@@ -51,10 +51,9 @@ adwords_campaigns_data <- campaign_performance_data(from=as.Date(start_date), to
 db_transactions <- get_transactions_data(from=start_date, to=end_date)
 db_influencer_metrics <- get_referrals_data(from=start_date, to=end_date)
 
-# Join Mixpanel Conversion Data with Data Warehouse transaction data
-mixpanel_adwords_conversions <- data.frame(mixpanel_adwords_conversions)
-mixpanel_adwords_conversions  <- mixpanel_adwords_conversions %>% rename(app_user_id = id)
-mixpanel_adwords_conversions  <- mixpanel_adwords_conversions %>% mutate(app_user_id = as.numeric(as.character(app_user_id)))
+# Join Mixpanel Conversion Data with transaction data
+temp <- clean_adwords_raw_completed_order_events(mixpanel_adwords_conversions)
+
 unique_users <- distinct(mixpanel_adwords_conversions, app_user_id)
 
 db_transactions  <- db_transactions %>% inner_join(unique_users, by="app_user_id")

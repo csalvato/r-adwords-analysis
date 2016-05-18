@@ -1,4 +1,4 @@
-#' Retrieve Mixpanel Completed Order Events From All PPC Channels
+#' Retrieve Raw Mixpanel Completed Order Events From All PPC Channels
 #'
 #' Retrieves all ppc events (those with latest_ad_utm_source of "cpc") from Mixpanel.
 #' If data with the start and end date specified has already been retrieved, it restores
@@ -12,9 +12,9 @@
 #' @return A list containing named data frames for each of the PPC channels: \code{adwords} and \code{bing}
 #' @export
 #' @examples
-#' all_ppc_completed_order_events(account, from=start_date, to=end_date)
+#' all_ppc_raw_completed_order_events(account, from=start_date, to=end_date)
 
-all_ppc_completed_order_events <- function(account=NULL, from=Sys.Date(), to=Sys.Date()) {
+all_ppc_raw_completed_order_events <- function(account=NULL, from=Sys.Date(), to=Sys.Date()) {
   mixpanel_events_file_name <- "mixpanel_ppc_events.RData"
 
   require(RMixpanel)
