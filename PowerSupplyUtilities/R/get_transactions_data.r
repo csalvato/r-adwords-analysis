@@ -5,6 +5,9 @@
 #'
 #' @param from Start date in either format <"yyyy-mm-dd"> or <yyyymmdd>. Inclusive.
 #' @param to End date in either format <"yyyy-mm-dd"> or <yyyymmdd>. Inclusive.
+#' @param database_driver Path to the database driver for the database being used. Defaults to "database_drivers/postgresql-9.4.1208.jre6.jar".
+#' @param jdbc_config_file Path to a text file with the URI to connect to the database, including credentials. Defaults to "jdbc_transactions_database_config.txt"
+#' @param transactions_query_file Path to a .sql file that includes the SQL query to be used to retrieve the necessary data from the database. Defaults to "transactions_query.sql"
 #' @return A data frame with transaction data within the date range.
 #' @export
 #' @examples
