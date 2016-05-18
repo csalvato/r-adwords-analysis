@@ -41,26 +41,6 @@ end_date = paste(toString(Sys.Date() - days(0)), "03:59:59")
 
 keywords_elog <- create_event_log(from=start_date, to=end_date)
 
-# Create join table for user_id and the keyword and campaign_name of first purchase
-user_first_acquisition_metrics <- keywords_elog %>%
-                                  filter(!is.na(user_id)) %>% #Remove NA user_ids (which means they are not monetary transactions)
-                                  group_by(user_id) %>%
-                                  summarize(keyword = first(keyword),
-                                            campaign_name=first(campaign_name),
-                                            campaign_id=first(campaign_id),
-                                            device=first(device),
-                                            match_type=first(match_type))
-
-#Add influencer metrics to the event log
-influencer_metrics_with_user_data <- db_influencer_metrics %>%
-                                    rename(week=week_start,
-                                           user_id=influencer_id) %>%
-                                    mutate(week = as.Date(week, format = '%Y-%m-%d')) %>%
-                                    inner_join(user_first_acquisition_metrics, by=c(user_id="user_id")) %>% 
-                                    filter(week >= start_date, week <= end_date)
-
-keywords_elog <- rbind.fill(keywords_elog, influencer_metrics_with_user_data)
-
 ###################################### END CREATE ELOGS ################################################
 
 
