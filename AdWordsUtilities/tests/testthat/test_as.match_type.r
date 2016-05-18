@@ -1,4 +1,4 @@
-library(powersupply.ppc)
+library(AdWordsUtilities)
 context("As Match Type")
 
 test_that("as.match_type converts 'b' to 'Broad'", {

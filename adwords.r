@@ -3,11 +3,13 @@
 # install_github('jburkhardt/RAdwords')
 # Can look up metrics info with:
 # metrics("KEYWORDS_PERFORMANCE_REPORT")
+#install.packages("devtools")
 library(devtools)
 
 install("SalvatoUtilities")
 install("AdWordsUtilities")
 install("MixpanelUtilities")
+install("PowerSupplyUtilities")
 
 SalvatoUtilities::detach_all_packages()
 
@@ -18,7 +20,7 @@ library(RJDBC)
 library(plyr)
 library(dplyr)
 library(tidyr)
-library(ggplot2)
+library(ggplot2) 
 library(lubridate) 
 library(Rmisc)
 library(RMixpanel)
@@ -27,90 +29,31 @@ library(readr)
 library(SalvatoUtilities)
 library(AdWordsUtilities)
 library(MixpanelUtilities)
+library(PowerSupplyUtilities)
 
 # Set reporting parameters
 start_date = '2015-12-17, 04:00:00'
 #end_date = paste(toString(Sys.Date() - days(0)), "03:59:59") #yesterday
 # start_date = paste(toString(Sys.Date() - days(8)), "04:00:00")
-end_date = paste(toString(Sys.Date() - days(1)), "03:59:59")
+end_date = paste(toString(Sys.Date() - days(0)), "03:59:59")
 #start_date = '2016-04-28, 04:00:00'
 #end_date = '2016-04-28, 03:59:59'
 
-ppc_events <- all_ppc_completed_order_events( from = start_date, to = end_date )
+ppc_events <- all_ppc_raw_completed_order_events( from = start_date, to = end_date )
 mixpanel_adwords_conversions <- ppc_events[["adwords"]]
+mixpanel_adwords_conversions <- clean_adwords_raw_completed_order_events(mixpanel_adwords_conversions)
 mixpanel_bing_conversions <- ppc_events[["bing"]]
 
 ##### Retrieve AdWords Spend/Click Data
-google_auth <- doAuth()
-
-adwords_keywords_statement <- statement(select=c('Date',
-                                                 'DayOfWeek',
-                                                 #'HourOfDay',
-                                                 'Criteria',
-                                                 'Status',
-                                                 'CampaignId', 
-                                                 'CampaignName',
-                                                 'AdGroupId',
-                                                 'AdGroupName',
-                                                 'Cost',
-                                                 'AdNetworkType2', #Network with Search Partners
-                                                 'SearchImpressionShare',
-                                                 'SearchRankLostImpressionShare',
-                                                 'Device',
-                                                 'Impressions',
-                                                 'Clicks',
-                                                 'AveragePosition',
-                                                 'QualityScore',
-                                                 'PostClickQualityScore',
-                                                 'KeywordMatchType'),
-                                   report="KEYWORDS_PERFORMANCE_REPORT",
-                                   start=format(ymd_hms(start_date), format="%Y%m%d"),
-                                   end=format(ymd_hms(end_date), format="%Y%m%d"))
-
-# Make sure to use Adwords Account Id (MCC Id will not work)
-adwords_keywords_data <- getData(clientCustomerId="479-107-0932", google_auth=google_auth ,statement=adwords_keywords_statement)
-
-adwords_campaigns_statement <- statement(select=c('Date',
-                                                  'DayOfWeek',
-                                                  #'HourOfDay',
-                                                  'CampaignStatus',
-                                                  'CampaignId',
-                                                  'CampaignName', 
-                                                  'Cost', #Returned in micros (divide by 1,000,000)
-                                                  'AdNetworkType2', #Network with Search Partners
-                                                  'SearchImpressionShare',
-                                                  'SearchRankLostImpressionShare',
-                                                  'SearchBudgetLostImpressionShare',
-                                                  'Device',
-                                                  'Amount', #Budget - returned in micros (divide by 1,000,000)
-                                                  'Impressions',
-                                                  'Clicks',
-                                                  'AveragePosition'),
-                                        report="CAMPAIGN_PERFORMANCE_REPORT",
-                                        start=format(ymd_hms(start_date), format="%Y%m%d"),
-                                        end=format(ymd_hms(end_date), format="%Y%m%d"))
-
-adwords_campaigns_data <- getData(clientCustomerId="479-107-0932", google_auth=google_auth ,statement=adwords_campaigns_statement)
+adwords_keywords_data <- keyword_performance_data(from=as.Date(start_date), to=as.Date(end_date))
+adwords_campaigns_data <- campaign_performance_data(from=as.Date(start_date), to=as.Date(end_date))
 
 # Retrieve revenue data
+db_transactions <- get_transactions_data(from=start_date, to=end_date)
+db_influencer_metrics <- get_referrals_data(from=start_date, to=end_date)
+
 pgsql <- JDBC("org.postgresql.Driver", "database_drivers/postgresql-9.4.1208.jre6.jar", "`")
 heroku_db <- dbConnect(pgsql, string_from_file("jdbc_heroku_string.txt"))
-datawarehouse_db <- dbConnect(pgsql, string_from_file("jdbc_datawarehouse_string.txt"))
-
-transactions_query <- string_from_file("mixpanel_transactions_query.sql")
-influencer_metrics_query <- string_from_file("influencer_metrics_query.sql")
-
-db_influencer_metrics <- dbGetQuery(datawarehouse_db, influencer_metrics_query)
-db_transactions <- dbGetQuery(heroku_db, transactions_query)
-
-# Join Mixpanel Conversion Data with Data Warehouse transaction data
-mixpanel_adwords_conversions <- data.frame(mixpanel_adwords_conversions)
-mixpanel_adwords_conversions  <- mixpanel_adwords_conversions %>% rename(app_user_id = id)
-mixpanel_adwords_conversions  <- mixpanel_adwords_conversions %>% mutate(app_user_id = as.numeric(as.character(app_user_id)))
-unique_users <- distinct(mixpanel_adwords_conversions, app_user_id)
-
-db_transactions  <- db_transactions %>% inner_join(unique_users, by="app_user_id")
-
 db_first_transactions <- dbGetQuery(heroku_db, GetoptLong::qq(paste("SELECT 
                                                                         * 
                                                                      FROM
@@ -128,55 +71,15 @@ db_first_transactions <- dbGetQuery(heroku_db, GetoptLong::qq(paste("SELECT
                                                                        ORDER BY first_transaction desc) first_transactions
                                                                      WHERE
                                                                      first_transaction between '@{start_date}' and '@{end_date}'")))
+heroku_db <- dbDisconnect(heroku_db)
 
-dbDisconnect(datawarehouse_db)
-dbDisconnect(heroku_db)
+# Join Mixpanel Conversion Data with transaction data
+unique_users <- distinct(mixpanel_adwords_conversions, app_user_id)
+
+db_transactions  <- db_transactions %>% inner_join(unique_users, by="app_user_id")
 
 #Filter out people where their first order was not in the specified start_date and end_date
 db_transactions <- db_transactions %>% filter(is.element(app_user_id, db_first_transactions$id))
-
-
-# Format AdWords keyword data for future use
-# Clean up column names
-names(adwords_keywords_data) <- gsub('\\(|\\)',"",tolower(names(adwords_keywords_data)))
-# Rename columns, convert values where necessary, 
-# and filter everything outside of start_date and end_date
-adwords_keywords_data <- adwords_keywords_data %>%
-                          rename( date=day,
-                                  day_of_week=dayofweek,
-                                  keyword_state=keywordstate,
-                                  campaign_id=campaignid,
-                                  campaign_name=campaign,
-                                  ad_group_id=adgroupid,
-                                  ad_group_name=adgroup,
-                                  network=networkwithsearchpartners,
-                                  est_search_impression_share=searchimpr.share,
-                                  est_search_impression_share_lost_rank=searchlostisrank,
-                                  average_position=position,
-                                  quality_score=qualityscore,
-                                  landing_page_experience=landingpageexperience,
-                                  match_type=matchtype) %>% 
-                          mutate(device = as.device(device),
-                                 keyword = as.adwords.keyword(keyword),
-                                 quality_score = as.numeric(quality_score)) %>% 
-                          date_filter(start_date, end_date)
-
-# Format AdWords campaign data for future use
-names(adwords_campaigns_data) <- gsub('\\(|\\)',"",tolower(names(adwords_campaigns_data)))
-adwords_campaigns_data <- adwords_campaigns_data %>%
-                          rename( date=day,
-                                  day_of_week=dayofweek,
-                                  campaign_state=campaignstate,
-                                  campaign_id=campaignid,
-                                  campaign_name=campaign,
-                                  network=networkwithsearchpartners,
-                                  est_search_impression_share=searchimpr.share,
-                                  est_search_impression_share_lost_rank=searchlostisrank,
-                                  est_search_impression_share_lost_budget=searchlostisbudget,
-                                  average_position=position) %>%
-                            mutate(campaign_id = as.integer(campaign_id),
-                                   device = as.device(device)) %>% 
-                            date_filter(start_date, end_date)
 
 # Format database transactions for future use
 db_transactions <- db_transactions %>% rename(device=latest_ad_device, 

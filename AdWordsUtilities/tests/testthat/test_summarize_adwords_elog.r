@@ -1,4 +1,4 @@
-library(powersupply.ppc)
+library(AdWordsUtilities)
 
 context("Summarize a full AdWords Event Log")
 test_adwords_elog <- readRDS("test_adwords_elog.rds")

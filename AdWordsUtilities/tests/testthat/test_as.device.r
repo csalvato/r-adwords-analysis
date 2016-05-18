@@ -1,4 +1,4 @@
-library(powersupply.ppc)
+library(AdWordsUtilities)
 context("As Device")
 
 test_that("as.device converts 'Computers' to 'dt'", {
