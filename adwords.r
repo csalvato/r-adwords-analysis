@@ -39,95 +39,7 @@ end_date = paste(toString(Sys.Date() - days(0)), "03:59:59")
 #start_date = '2016-04-28, 04:00:00'
 #end_date = '2016-04-28, 03:59:59'
 
-ppc_events <- all_ppc_raw_completed_order_events( from = start_date, to = end_date )
-mixpanel_adwords_conversions <- ppc_events[["adwords"]]
-mixpanel_adwords_conversions <- clean_adwords_raw_completed_order_events(mixpanel_adwords_conversions)
-mixpanel_bing_conversions <- ppc_events[["bing"]]
-
-##### Retrieve AdWords Spend/Click Data
-adwords_keywords_data <- keyword_performance_data(from=as.Date(start_date), to=as.Date(end_date))
-adwords_campaigns_data <- campaign_performance_data(from=as.Date(start_date), to=as.Date(end_date))
-
-# Retrieve revenue data
-db_transactions <- get_transactions_data(from=start_date, to=end_date)
-db_influencer_metrics <- get_referrals_data(from=start_date, to=end_date)
-
-pgsql <- JDBC("org.postgresql.Driver", "database_drivers/postgresql-9.4.1208.jre6.jar", "`")
-heroku_db <- dbConnect(pgsql, string_from_file("jdbc_heroku_string.txt"))
-db_first_transactions <- dbGetQuery(heroku_db, GetoptLong::qq(paste("SELECT 
-                                                                        * 
-                                                                     FROM
-                                                                       (select 
-                                                                       min(t.created_at) as first_transaction,
-                                                                       u.id,
-                                                                       u.name
-                                                                       from users u
-                                                                       inner join
-                                                                       transactions t on t.user_id = u.id
-                                                                       where
-                                                                       u.id IN (", paste(shQuote(db_transactions$app_user_id, type = "sh"), collapse=','),
-                                                                                ")
-                                                                       group by u.id
-                                                                       ORDER BY first_transaction desc) first_transactions
-                                                                     WHERE
-                                                                     first_transaction between '@{start_date}' and '@{end_date}'")))
-heroku_db <- dbDisconnect(heroku_db)
-
-# Join Mixpanel Conversion Data with transaction data
-unique_users <- distinct(mixpanel_adwords_conversions, app_user_id)
-
-db_transactions  <- db_transactions %>% inner_join(unique_users, by="app_user_id")
-
-#Filter out people where their first order was not in the specified start_date and end_date
-db_transactions <- db_transactions %>% filter(is.element(app_user_id, db_first_transactions$id))
-
-# Format database transactions for future use
-db_transactions <- db_transactions %>% rename(device=latest_ad_device, 
-                                              campaign_id=latest_ad_utm_campaign,
-                                              keyword=latest_ad_awkeyword,
-                                              ad_group_id=latest_ad_awadgroupid,
-                                              match_type=latest_ad_awmatchtype)
-db_transactions$campaign_id <- as.integer(as.character(db_transactions$campaign_id))
-db_transactions$date <- as.Date(db_transactions$transaction_date, format="%Y-%m-%d")
-db_transactions$day_of_week <- weekdays(as.Date(db_transactions$date,'%Y-%m-%d'))
-db_transactions$match_type <- as.match_type(db_transactions$match_type)
-db_transactions$keyword <- as.adwords.keyword(db_transactions$keyword)
-db_transactions <- db_transactions %>% date_filter(start_date, end_date)
-db_transactions <- db_transactions %>% select(-user_id)
-db_transactions <- db_transactions %>% mutate(user_id=as.integer(as.character(app_user_id)))
-
-# Add campaign names to db_transactions log
-db_transactions <- adwords_campaigns_data %>% 
-                     group_by(campaign_id)%>% 
-                     summarize(campaign_name = first(campaign_name)) %>%
-                     right_join(db_transactions, by=c(campaign_id = "campaign_id"))
-
-
-###################################### CREATE ELOGS ################################################
-# Create keywords elog
-keywords_elog <- rbind.fill(db_transactions, adwords_keywords_data)
-keywords_elog$week <- as.week(keywords_elog$date)
-keywords_elog <- keywords_elog %>% arrange(week)
-
-# Create join table for user_id and the keyword and campaign_name of first purchase
-user_first_acquisition_metrics <- keywords_elog %>%
-                                  filter(!is.na(user_id)) %>% #Remove NA user_ids (which means they are not monetary transactions)
-                                  group_by(user_id) %>%
-                                  summarize(keyword = first(keyword),
-                                            campaign_name=first(campaign_name),
-                                            campaign_id=first(campaign_id),
-                                            device=first(device),
-                                            match_type=first(match_type))
-
-#Add influencer metrics to the event log
-influencer_metrics_with_user_data <- db_influencer_metrics %>%
-                                    rename(week=week_start,
-                                           user_id=influencer_id) %>%
-                                    mutate(week = as.Date(week, format = '%Y-%m-%d')) %>%
-                                    inner_join(user_first_acquisition_metrics, by=c(user_id="user_id")) %>% 
-                                    filter(week >= start_date, week <= end_date)
-
-keywords_elog <- rbind.fill(keywords_elog, influencer_metrics_with_user_data)
+keywords_elog <- create_event_log(from=start_date, to=end_date)
 
 ###################################### END CREATE ELOGS ################################################
 
@@ -364,7 +276,8 @@ plot(
 # Plot orders per week by geo
 plot( ggplot( num_orders_per_week ) + 
       aes(week,num_orders,group=campaign_name,col=campaign_name,fill=campaign_name) + 
-      geom_line() )
+      geom_line() +
+      facet_wrap(~campaign_name, ncol=2))
 
 ############################## Write to file ####################################
 # write.excel.csv(db_transactions)
