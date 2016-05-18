@@ -52,6 +52,7 @@ adwords_campaigns_data <- campaign_performance_data(from=as.Date(start_date), to
 db_transactions <- get_transactions_data(from=start_date, to=end_date)
 db_influencer_metrics <- get_referrals_data(from=start_date, to=end_date)
 
+pgsql <- JDBC("org.postgresql.Driver", "database_drivers/postgresql-9.4.1208.jre6.jar", "`")
 heroku_db <- dbConnect(pgsql, string_from_file("jdbc_heroku_string.txt"))
 db_first_transactions <- dbGetQuery(heroku_db, GetoptLong::qq(paste("SELECT 
                                                                         * 
