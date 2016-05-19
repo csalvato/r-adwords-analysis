@@ -11,7 +11,7 @@
 #' @return A data frame with transaction data within the date range.
 #' @export
 #' @examples
-#' get_transactions_data(from=20150101, to=20151231)
+#' get_referrals_data(from=20150101, to=20151231)
 
 get_referrals_data <- function(from=Sys.Date(), 
                                   to=Sys.Date(),

@@ -16,39 +16,20 @@
 create_event_log <- function(from=Sys.Date(), 
                                   to=Sys.Date()){
 
-  ppc_events <- all_ppc_raw_completed_order_events( from = start_date, to = end_date )
+  ppc_events <- all_ppc_raw_completed_order_events( from = from, to = to )
   mixpanel_adwords_conversions <- ppc_events[["adwords"]]
   mixpanel_adwords_conversions <- clean_adwords_raw_completed_order_events(mixpanel_adwords_conversions)
   mixpanel_bing_conversions <- ppc_events[["bing"]]
 
   ##### Retrieve AdWords Spend/Click Data
-  adwords_keywords_data <- keyword_performance_data(from=as.Date(start_date), to=as.Date(end_date))
-  adwords_campaigns_data <- campaign_performance_data(from=as.Date(start_date), to=as.Date(end_date))
+  adwords_keywords_data <- keyword_performance_data(from=as.Date(from), to=as.Date(to))
+  adwords_campaigns_data <- campaign_performance_data(from=as.Date(from), to=as.Date(to))
 
   # Retrieve revenue data
-  db_transactions <- get_transactions_data(from=start_date, to=end_date)
-  db_influencer_metrics <- get_referrals_data(from=start_date, to=end_date)
+  db_transactions <- get_transactions_data(from=from, to=to)
+  db_influencer_metrics <- get_referrals_data(from=from, to=to)
 
-  pgsql <- JDBC("org.postgresql.Driver", "database_drivers/postgresql-9.4.1208.jre6.jar", "`")
-  heroku_db <- dbConnect(pgsql, string_from_file("jdbc_heroku_string.txt"))
-  db_first_transactions <- dbGetQuery(heroku_db, GetoptLong::qq(paste("SELECT 
-                                                                          * 
-                                                                       FROM
-                                                                         (select 
-                                                                         min(t.created_at) as first_transaction,
-                                                                         u.id,
-                                                                         u.name
-                                                                         from users u
-                                                                         inner join
-                                                                         transactions t on t.user_id = u.id
-                                                                         where
-                                                                         u.id IN (", paste(shQuote(db_transactions$app_user_id, type = "sh"), collapse=','),
-                                                                                  ")
-                                                                         group by u.id
-                                                                         ORDER BY first_transaction desc) first_transactions
-                                                                       WHERE
-                                                                       first_transaction between '@{start_date}' and '@{end_date}'")))
-  heroku_db <- dbDisconnect(heroku_db)
+  db_first_transactions  <- get_first_transaction_dates_for_users(from=from, to=to, users=db_transactions$app_user_id)
 
   # Join Mixpanel Conversion Data with transaction data
   unique_users <- distinct(mixpanel_adwords_conversions, app_user_id)
