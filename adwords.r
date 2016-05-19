@@ -41,9 +41,6 @@ end_date = paste(toString(Sys.Date() - days(0)), "03:59:59")
 
 keywords_elog <- create_event_log(from=start_date, to=end_date)
 
-###################################### END CREATE ELOGS ################################################
-
-
 ###################################### CREATE DATA FRAMES ##############################################
 campaign_overview <- keywords_elog %>%
                       group_by(campaign_name) %>%
@@ -149,18 +146,6 @@ num_orders_per_week <- keywords_elog %>%
                                   contribution = sum(money_in_the_bank_paid_to_us, 
                                                      na.rm=TRUE)*0.25, 
                                   num_orders=n_distinct(user_name))
-
-######################## View data frames ########################
-# View(campaign_overview)
-# View(campaign_device_overview)
-# View(device_overview)
-# View(user_overview)
-# View(keywords_campaign_overview)
-# View(keywords_overview)
-# View(keywords_weekly_conversion_metrics)
-# View(summary_overview)
-# View(keywords_campaign_matchtype_overview)
-# View(keywords_campaign_device_matchtype_overview)
 
 ######################## Create Plots ######################## 
 keywords_with_earnings <- keywords_overview %>% 

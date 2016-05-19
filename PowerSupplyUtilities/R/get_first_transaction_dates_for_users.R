@@ -30,22 +30,22 @@ get_first_transaction_dates_for_users <- function(from=Sys.Date(),
       if(!is.null(users)) {
         require(SalvatoUtilities)
         data <- dbGetQuery(db, GetoptLong::qq(paste("SELECT 
-                                                              * 
-                                                           FROM
-                                                             (select 
-                                                             min(t.created_at) as first_transaction,
-                                                             u.id,
-                                                             u.name
-                                                             from users u
-                                                             inner join
-                                                             transactions t on t.user_id = u.id
-                                                             where
-                                                             u.id IN (", paste(shQuote(users, type = "sh"), collapse=','),
-                                                                      ")
-                                                             group by u.id
-                                                             ORDER BY first_transaction desc) first_transactions
-                                                           WHERE
-                                                           first_transaction between '@{start_date}' and '@{end_date}'")))
+                                                        * 
+                                                     FROM
+                                                       (select 
+                                                       min(t.created_at) as first_transaction,
+                                                       u.id,
+                                                       u.name
+                                                       from users u
+                                                       inner join
+                                                       transactions t on t.user_id = u.id
+                                                       where
+                                                       u.id IN (", paste(shQuote(users, type = "sh"), collapse=','),
+                                                                ")
+                                                       group by u.id
+                                                       ORDER BY first_transaction desc) first_transactions
+                                                     WHERE
+                                                      first_transaction between '@{start_date}' and '@{end_date}'")))
         dbDisconnect(db)
         return(data)
       } else {
