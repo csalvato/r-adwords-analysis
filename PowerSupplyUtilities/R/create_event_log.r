@@ -18,8 +18,9 @@ create_event_log <- function(from=Sys.Date(),
 
   ppc_events <- all_ppc_raw_completed_order_events( from = start_date, to = end_date )
   mixpanel_adwords_conversions <- ppc_events[["adwords"]]
-  mixpanel_adwords_conversions <- clean_adwords_raw_completed_order_events(mixpanel_adwords_conversions)
+  mixpanel_adwords_conversions <- clean_completed_order_events(mixpanel_adwords_conversions)
   mixpanel_bing_conversions <- ppc_events[["bing"]]
+  mixpanel_bing_conversions <- clean_completed_order_events(mixpanel_bing_conversions)
 
   ##### Retrieve AdWords Spend/Click Data
   adwords_keywords_data <- keyword_performance_data(from=as.Date(start_date), to=as.Date(end_date))
