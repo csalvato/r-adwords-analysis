@@ -15,20 +15,28 @@
 
 create_event_log <- function(from=Sys.Date(), 
                                   to=Sys.Date()){
+  require(AdWordsUtilities)
+  require(PowerSupplyUtilities)
+  require(SalvatoUtilities)
 
-  ppc_events <- all_ppc_raw_completed_order_events( from = start_date, to = end_date )
+  ppc_events <- all_ppc_raw_completed_order_events( from = from, to = to )
   mixpanel_adwords_conversions <- ppc_events[["adwords"]]
   mixpanel_adwords_conversions <- clean_completed_order_events(mixpanel_adwords_conversions)
   mixpanel_bing_conversions <- ppc_events[["bing"]]
   mixpanel_bing_conversions <- clean_completed_order_events(mixpanel_bing_conversions)
 
+  #bing_keywords_data <- BingUtilities::keyword_performance_data(from=as.Date(from), to=as.Date(to))
+  #bing_keywords_data$data_source  <- "bing"
+  #bing_campaigns_data <- BingUtilities::campaign_performance_data(from=as.Date(from), to=as.Date(to))
+
   ##### Retrieve AdWords Spend/Click Data
-  adwords_keywords_data <- keyword_performance_data(from=as.Date(start_date), to=as.Date(end_date))
-  adwords_campaigns_data <- campaign_performance_data(from=as.Date(start_date), to=as.Date(end_date))
+  adwords_keywords_data <- AdWordsUtilities::keyword_performance_data(from=as.Date(from), to=as.Date(to))
+  adwords_keywords_data$data_source  <- "adwords"
+  adwords_campaigns_data <- AdWordsUtilities::campaign_performance_data(from=as.Date(from), to=as.Date(to))
 
   # Retrieve revenue data
-  db_transactions <- get_transactions_data(from=start_date, to=end_date)
-  db_influencer_metrics <- get_referrals_data(from=start_date, to=end_date)
+  db_transactions <- get_transactions_data(from=from, to=to)
+  db_influencer_metrics <- get_referrals_data(from=from, to=to)
 
   pgsql <- JDBC("org.postgresql.Driver", "database_drivers/postgresql-9.4.1208.jre6.jar", "`")
   heroku_db <- dbConnect(pgsql, string_from_file("jdbc_heroku_string.txt"))
@@ -48,7 +56,7 @@ create_event_log <- function(from=Sys.Date(),
                                                                          group by u.id
                                                                          ORDER BY first_transaction desc) first_transactions
                                                                        WHERE
-                                                                       first_transaction between '@{start_date}' and '@{end_date}'")))
+                                                                       first_transaction between '@{start_date}' and '@{to}'")))
   heroku_db <- dbDisconnect(heroku_db)
 
   # Join Mixpanel Conversion Data with transaction data
@@ -56,7 +64,7 @@ create_event_log <- function(from=Sys.Date(),
 
   db_transactions  <- db_transactions %>% inner_join(unique_users, by="app_user_id")
 
-  #Filter out people where their first order was not in the specified start_date and end_date
+  #Filter out people where their first order was not in the specified start date and end date
   db_transactions <- db_transactions %>% filter(is.element(app_user_id, db_first_transactions$id))
 
   # Format database transactions for future use
@@ -70,7 +78,7 @@ create_event_log <- function(from=Sys.Date(),
   db_transactions$day_of_week <- weekdays(as.Date(db_transactions$date,'%Y-%m-%d'))
   db_transactions$match_type <- as.match_type(db_transactions$match_type)
   db_transactions$keyword <- as.adwords.keyword(db_transactions$keyword)
-  db_transactions <- db_transactions %>% date_filter(start_date, end_date)
+  db_transactions <- db_transactions %>% date_filter(from, to)
   db_transactions <- db_transactions %>% select(-user_id)
   db_transactions <- db_transactions %>% mutate(user_id=as.integer(as.character(app_user_id)))
 
@@ -79,11 +87,12 @@ create_event_log <- function(from=Sys.Date(),
                        group_by(campaign_id)%>% 
                        summarize(campaign_name = first(campaign_name)) %>%
                        right_join(db_transactions, by=c(campaign_id = "campaign_id"))
+  db_transactions$data_source  <- "orders app"
 
 
   ###################################### CREATE ELOGS ################################################
   # Create keywords elog
-  keywords_elog <- rbind.fill(db_transactions, adwords_keywords_data)
+  keywords_elog <- rbind.fill(db_transactions, adwords_keywords_data, bing_keywords_data)
   keywords_elog$week <- as.week(keywords_elog$date)
   keywords_elog <- keywords_elog %>% arrange(week)
 
@@ -103,7 +112,7 @@ create_event_log <- function(from=Sys.Date(),
                                              user_id=influencer_id) %>%
                                       mutate(week = as.Date(week, format = '%Y-%m-%d')) %>%
                                       inner_join(user_first_acquisition_metrics, by=c(user_id="user_id")) %>% 
-                                      filter(week >= start_date, week <= end_date)
+                                      filter(week >= from, week <= to)
 
   keywords_elog <- rbind.fill(keywords_elog, influencer_metrics_with_user_data)
 

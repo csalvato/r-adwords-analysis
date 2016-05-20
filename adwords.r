@@ -32,10 +32,10 @@ library(MixpanelUtilities)
 library(PowerSupplyUtilities)
 
 # Set reporting parameters
-start_date = '2015-12-17, 04:00:00'
+from = start_date = '2015-12-17 04:00:00'
 #end_date = paste(toString(Sys.Date() - days(0)), "03:59:59") #yesterday
 # start_date = paste(toString(Sys.Date() - days(8)), "04:00:00")
-end_date = paste(toString(Sys.Date() - days(0)), "03:59:59")
+to = end_date = paste(toString(Sys.Date() - days(0)), "03:59:59")
 #start_date = '2016-04-28, 04:00:00'
 #end_date = '2016-04-28, 03:59:59'
 

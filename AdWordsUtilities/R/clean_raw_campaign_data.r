@@ -10,7 +10,7 @@
 #' clean_data <- clean_raw_adwords_campaign_data(data)
 
 
-clean_raw_adwords_campaign_data  <- function(data_frame) {
+clean_raw_campaign_data  <- function(data_frame) {
   # Format AdWords campaign data for future use
   names(data_frame) <- gsub('\\(|\\)',"",tolower(names(data_frame)))
 
