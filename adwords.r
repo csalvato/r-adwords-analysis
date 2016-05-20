@@ -22,7 +22,7 @@ library(RMixpanel)
 library(RAdwords)
 library(SalvatoUtilities)
 library(AdWordsUtilities)
-library(gtools)
+library(directlabels)
 
 
 MARGIN <- 0.25
@@ -538,8 +538,8 @@ paleo_meals_cohorts_over_time <- as.data.frame(paleo_meals_cohorts_over_time)
 paleo_meals_cohort_breakeven <- filter(paleo_meals_cohorts_over_time,type=="cum_ROI")
 
 ##breaken_week is a logical variable tracking if a Cohort broke even (ROI crossed over zero) in a given week
+
 breakeven_week <- logical()
-ifelse(paleo_meals_cohort_breakeven$value[1] > 0,breakeven_week[1] <- 1,breakeven_week[1] <- 0)
 for(i in 2:length(paleo_meals_cohort_breakeven$week)) {
         if(paleo_meals_cohort_breakeven$value[i] > 0
            & paleo_meals_cohort_breakeven$value[i-1] < 0
@@ -688,13 +688,22 @@ plot(
 
 ##!!Need to figure out how to add "cohort_ROI" line to the legend.
 
+##make cost values negative
+for(i in 1:length(paleo_meals_cohorts_total_ROI_v2$cohort_week)) {
+        if(paleo_meals_cohorts_total_ROI_v2[i,"type.x"]=="cohort_cost") {
+        paleo_meals_cohorts_total_ROI_v2[i,"value.x"] <- -(paleo_meals_cohorts_total_ROI_v2[i,"value.x"])
+} else {next}
+}
+
 plot( 
         ggplot(
                 paleo_meals_cohorts_total_ROI_v2, 
                 aes(x=cohort_week,y=value.x, fill=type.x)) +
-                geom_bar(stat="identity", position="stack") +
-                geom_line(data=paleo_meals_cohorts_total_ROI_v2,aes(x=cohort_week,y=value.y,color="cohort_ROI"),linetype=1,size=1.25,color="darkslateblue") +
+                geom_bar(stat="identity", position="identity") +
+                geom_line(data=paleo_meals_cohorts_total_ROI_v2,aes(x=cohort_week,y=value.y),linetype=1,size=1,color="grey55") +
+                geom_point(data=paleo_meals_cohorts_total_ROI_v2,aes(x=cohort_week,y=value.y,color="cohort_ROI"),shape=21,size=2,fill="chartreuse1",color="turquoise4") +
                 scale_x_continuous(breaks=seq(1,23,1)) +
+                scale_fill_manual(values=c("springgreen4","red2")) +
                 guides(fill=guide_legend(title=NULL)) +
                 labs(title="Contribution, Cost, and ROI by Cohort Week",x="Cohort Week",y="") 
 )
@@ -828,10 +837,10 @@ plot(
 
 
 #Cohorts Plot - Profits over time by weekly cohort for keyword "paleo meals"
-plot(ggplot(paleo_meals_cohorts_over_time_geo, aes(week,value,group=type,col=type,fill=type)) + 
-             geom_line() + 
-             ggtitle("Paleo Meals Cohort Analysis") + 
-             facet_wrap(~cohort_week, ncol=4))
+# plot(ggplot(paleo_meals_cohorts_over_time_geo, aes(cohort_week,value,group=type,col=type,fill=type)) + 
+#              geom_line() + 
+#              ggtitle("Paleo Meals Cohort Analysis by Geo") + 
+#              facet_wrap(~campaign_name, ncol=4))
 
 
 #Cohorts Plot - Cum ROI over time by weekly cohort and by geo for keyword "paleo meals"
