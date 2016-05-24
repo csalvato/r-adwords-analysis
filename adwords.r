@@ -41,7 +41,10 @@ to = end_date = paste(toString(Sys.Date() - days(0)), "03:59:59")
 #start_date = '2016-04-28, 04:00:00'
 #end_date = '2016-04-28, 03:59:59'
 
-keywords_elog <- create_event_log(from=start_date, to=end_date)
+adwords_keywords_elog <- create_adwords_event_log(from=start_date, to=end_date)
+bing_keywords_elog <- create_bing_event_log(from=start_date, to=end_date)
+
+keywords_elog <- bing_keywords_elog
 
 ###################################### END CREATE ELOGS ################################################
 

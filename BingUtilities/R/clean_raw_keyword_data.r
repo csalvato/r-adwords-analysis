@@ -20,8 +20,6 @@ clean_raw_keyword_data  <- function(data_frame) {
   require(dplyr)
   data_frame <- data_frame %>%
                 rename( date=gregorian.date,
-                        est_search_impression_share=impression.share....,
-                        est_search_impression_share_lost_rank=impression.share.lost.to.rank....,
                         keyword_id = keyword.id,
                         keyword_state=keyword.status,
                         campaign_id=campaign.id,
@@ -32,10 +30,14 @@ clean_raw_keyword_data  <- function(data_frame) {
                         device=device.type,
                         average_position=avg..position,
                         quality_score=quality.score,
-                        match_type=delivered.match.type,
-                        landing_page_experience=landing.page.user.experience) %>% 
+                        match_type=delivered.match.type
+                        #landing_page_experience=landing.page.user.experience,
+                        # est_search_impression_share=impression.share....,
+                        # est_search_impression_share_lost_rank=impression.share.lost.to.rank....
+                        ) %>% 
                 mutate(day_of_week=weekdays(date),
-                       keyword=BingUtilities::as.keyword(keyword)) %>% 
+                       keyword=BingUtilities::as.keyword(keyword),
+                       device=BingUtilities::as.device(device)) %>% 
                 # mutate(device = as.device(device),
                 #        quality_score = as.numeric(quality_score)) %>% 
                 date_filter(start_date, end_date)
