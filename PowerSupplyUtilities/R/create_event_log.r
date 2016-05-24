@@ -92,7 +92,7 @@ create_event_log <- function(from=Sys.Date(),
 
   ###################################### CREATE ELOGS ################################################
   # Create keywords elog
-  keywords_elog <- rbind.fill(db_transactions, adwords_keywords_data, bing_keywords_data)
+  keywords_elog <- rbind.fill(db_transactions, adwords_keywords_data)
   keywords_elog$week <- as.week(keywords_elog$date)
   keywords_elog <- keywords_elog %>% arrange(week)
 

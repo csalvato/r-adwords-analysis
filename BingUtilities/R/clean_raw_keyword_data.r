@@ -7,12 +7,10 @@
 #' @export
 #' @examples
 #' data  <- raw_keyword_performance_data(from=20151216, to=20151219)
-#' clean_data <- clean_raw_keyword_data(data)
+#' clean_raw_keyword_data <- clean_raw_keyword_data(data)
 
 
 clean_raw_keyword_data  <- function(data_frame) {
-  #TODO ADJUST THIS TO CLEAN BING DATA FROM CSV FILE
-
   # Reformat column names
   names(data_frame) <- gsub('\\(|\\)',"",tolower(names(data_frame)))
   
@@ -21,23 +19,24 @@ clean_raw_keyword_data  <- function(data_frame) {
   require(plyr)
   require(dplyr)
   data_frame <- data_frame %>%
-                rename( date=day,
-                        day_of_week=dayofweek,
-                        keyword_state=keywordstate,
-                        campaign_id=campaignid,
-                        campaign_name=campaign,
-                        ad_group_id=adgroupid,
-                        ad_group_name=adgroup,
-                        network=networkwithsearchpartners,
-                        est_search_impression_share=searchimpr.share,
-                        est_search_impression_share_lost_rank=searchlostisrank,
-                        average_position=position,
-                        quality_score=qualityscore,
-                        landing_page_experience=landingpageexperience,
-                        match_type=matchtype) %>% 
-                mutate(device = as.device(device),
-                       keyword = as.adwords.keyword(keyword),
-                       quality_score = as.numeric(quality_score)) %>% 
+                rename( date=gregorian.date,
+                        est_search_impression_share=impression.share....,
+                        est_search_impression_share_lost_rank=impression.share.lost.to.rank....,
+                        keyword_id = keyword.id,
+                        keyword_state=keyword.status,
+                        campaign_id=campaign.id,
+                        campaign_name=campaign.name,
+                        ad_group_id=ad.group.id,
+                        ad_group_name=ad.group,
+                        cost=spend,
+                        device=device.type,
+                        average_position=avg..position,
+                        quality_score=quality.score,
+                        match_type=delivered.match.type,
+                        landing_page_experience=landing.page.user.experience) %>% 
+                mutate(day_of_week= weekdays(date)) %>% 
+                # mutate(device = as.device(device),
+                #        quality_score = as.numeric(quality_score)) %>% 
                 date_filter(start_date, end_date)
 
   return(data_frame)

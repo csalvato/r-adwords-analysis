@@ -10,6 +10,7 @@ install("SalvatoUtilities")
 install("AdWordsUtilities")
 install("MixpanelUtilities")
 install("PowerSupplyUtilities")
+install("BingUtilities")
 
 SalvatoUtilities::detach_all_packages()
 
@@ -30,6 +31,7 @@ library(SalvatoUtilities)
 library(AdWordsUtilities)
 library(MixpanelUtilities)
 library(PowerSupplyUtilities)
+library(BingUtilities)
 
 # Set reporting parameters
 from = start_date = '2015-12-17 04:00:00'
