@@ -34,7 +34,8 @@ clean_raw_keyword_data  <- function(data_frame) {
                         quality_score=quality.score,
                         match_type=delivered.match.type,
                         landing_page_experience=landing.page.user.experience) %>% 
-                mutate(day_of_week= weekdays(date)) %>% 
+                mutate(day_of_week=weekdays(date),
+                       keyword=BingUtilities::as.keyword(keyword)) %>% 
                 # mutate(device = as.device(device),
                 #        quality_score = as.numeric(quality_score)) %>% 
                 date_filter(start_date, end_date)

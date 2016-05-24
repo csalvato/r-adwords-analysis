@@ -18,6 +18,6 @@ to be more easily readable, understandable and consistent with other data sets.
 }
 \examples{
 data  <- raw_keyword_performance_data(from=20151216, to=20151219)
-clean_data <- clean_raw_keyword_data(data)
+clean_raw_keyword_data <- clean_raw_keyword_data(data)
 }
 

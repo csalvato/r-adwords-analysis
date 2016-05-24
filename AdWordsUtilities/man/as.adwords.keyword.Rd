@@ -13,7 +13,7 @@ as.adwords.keyword(keyword_vector)
 This function formats AdWords keywords data by removing special characters and ensuring proper typing.
 }
 \examples{
-as.device(device_vector)
-as.device(google_adwords_report$device)
+as.adwords.keyword(keyword_vector)
+as.adwords.keyword(google_adwords_report$keyword)
 }
 

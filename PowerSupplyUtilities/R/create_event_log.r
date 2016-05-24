@@ -25,13 +25,12 @@ create_event_log <- function(from=Sys.Date(),
   mixpanel_bing_conversions <- ppc_events[["bing"]]
   mixpanel_bing_conversions <- clean_completed_order_events(mixpanel_bing_conversions)
 
-  #bing_keywords_data <- BingUtilities::keyword_performance_data(from=as.Date(from), to=as.Date(to))
-  #bing_keywords_data$data_source  <- "bing"
-  #bing_campaigns_data <- BingUtilities::campaign_performance_data(from=as.Date(from), to=as.Date(to))
+  bing_keywords_data <- BingUtilities::keyword_performance_data(from=as.Date(from), to=as.Date(to))
+  bing_keywords_data$data_source  <- "bing"
 
   ##### Retrieve AdWords Spend/Click Data
   adwords_keywords_data <- AdWordsUtilities::keyword_performance_data(from=as.Date(from), to=as.Date(to))
-  adwords_keywords_data$data_source  <- "adwords"
+  adwords_keywords_data$data_source  <- "adwords search"
   adwords_campaigns_data <- AdWordsUtilities::campaign_performance_data(from=as.Date(from), to=as.Date(to))
 
   # Retrieve revenue data
@@ -92,7 +91,7 @@ create_event_log <- function(from=Sys.Date(),
 
   ###################################### CREATE ELOGS ################################################
   # Create keywords elog
-  keywords_elog <- rbind.fill(db_transactions, adwords_keywords_data)
+  keywords_elog <- rbind.fill(db_transactions, adwords_keywords_data, bing_keywords_data)
   keywords_elog$week <- as.week(keywords_elog$date)
   keywords_elog <- keywords_elog %>% arrange(week)
 

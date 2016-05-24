@@ -4,8 +4,8 @@
 #' @param keyword_vectoro A vector of keywords from AdWords
 #' @export
 #' @examples
-#' as.device(device_vector)
-#' as.device(google_adwords_report$device)
+#' as.adwords.keyword(keyword_vector)
+#' as.adwords.keyword(google_adwords_report$keyword)
 as.adwords.keyword <- function(keyword_vector) {
   keyword_vector <- as.character(keyword_vector)
   keyword_vector <- tolower(keyword_vector)
