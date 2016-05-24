@@ -11,6 +11,8 @@
 
 
 clean_raw_keyword_data  <- function(data_frame) {
+  #TODO ADJUST THIS TO CLEAN BING DATA FROM CSV FILE
+
   # Reformat column names
   names(data_frame) <- gsub('\\(|\\)',"",tolower(names(data_frame)))
   
