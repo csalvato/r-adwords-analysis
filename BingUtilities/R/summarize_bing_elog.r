@@ -20,11 +20,10 @@ summarize_bing_elog <- function(elog_data_frame,
   return (summarize(elog_data_frame, cost = sum(cost, na.rm = TRUE),
                     average_position = weighted.mean(average_position,impressions, na.rm=TRUE),
                     average_quality_score=mean(quality_score, na.rm=TRUE),
-                    estimated_available_impressions = sum(impressions/est_search_impression_share, na.rm=TRUE),
                     impressions = sum(impressions, na.rm = TRUE),
-                    # imp share is not wholly accurate because of the way the numbers are reported, but close enough. 
-                    # May result in 100%+ when impressions are very low 
-                    est_search_impression_share = impressions/estimated_available_impressions,
+                    #### Can't get impression share info from Bing (at least not in a way that CVS understands...?)
+                    #estimated_available_impressions = sum(impressions/est_search_impression_share, na.rm=TRUE), 
+                    #est_search_impression_share = impressions/estimated_available_impressions,
                     clicks = sum(clicks, na.rm = TRUE),
                     click_through_rate = clicks/impressions,
                     num_acquisitions = n_distinct(user_id, na.rm = TRUE),
