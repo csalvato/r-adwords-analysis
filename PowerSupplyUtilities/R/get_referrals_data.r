@@ -16,7 +16,7 @@
 get_referrals_data <- function(from=Sys.Date(), 
                                   to=Sys.Date(),
                                   database_driver="database_drivers/postgresql-9.4.1208.jre6.jar",
-                                  jdbc_config_file="jdbc_datawarehouse_string.txt",
+                                  jdbc_config_file="jdbc_data_warehouse_database_config.txt",
                                   transactions_query_file="referrals_query.sql"){
   if(file.exists(database_driver)) {
     require(RJDBC)
