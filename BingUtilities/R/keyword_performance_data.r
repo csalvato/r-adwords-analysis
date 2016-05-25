@@ -14,7 +14,7 @@
 #' @examples
 #' keyword_performance_data(from=20151216, to=20151219)
 keyword_performance_data <- function(from=Sys.Date(), to=Sys.Date()) {
-  raw <- raw_keyword_performance_data(from, to)
+  raw <- BingUtilities::raw_keyword_performance_data(from, to)
   cleaned  <- BingUtilities::clean_raw_keyword_data(raw)
   return(cleaned)
 }

@@ -21,6 +21,10 @@ create_bing_event_log <- function(from=Sys.Date(),
   ppc_events <- all_ppc_raw_completed_order_events( from = from, to = to )
   mixpanel_bing_conversions <- ppc_events[["bing"]]
   mixpanel_bing_conversions <- clean_completed_order_events(mixpanel_bing_conversions)
+  #Clean up keywords info for future lookup of Keyword name with Keyword ID from Bing data.
+  mixpanel_bing_conversions <- mixpanel_bing_conversions %>% 
+                               mutate(keyword_id = as.numeric(gsub("kwd-","",latest_ad_awkeyword))) %>%
+                               select(-latest_ad_awkeyword)
 
   ##### Retrieve Bing Spend/Click Data
   bing_keywords_data <- BingUtilities::keyword_performance_data(from=as.Date(from), to=as.Date(to))
