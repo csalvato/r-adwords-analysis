@@ -13,6 +13,7 @@ clean_completed_order_events  <- function(events_matrix){
 
 	#Clean up keywords info for future lookup of Keyword name with Keyword ID from Bing data.
 	events_data_frame <- events_data_frame %>% mutate(keyword_id = as.numeric(gsub("kwd-","",latest_ad_awkeyword)))
+	events_data_frame <- events_data_frame %>% select( -latest_ad_awkeyword )
 
 	return(events_data_frame)
 }
