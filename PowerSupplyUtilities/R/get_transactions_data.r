@@ -35,7 +35,7 @@ get_transactions_data <- function(from=Sys.Date(),
         stop("Can't find transactions_query.sql (or the file provided) in your working directory.\n\tDownload the file from the git repo (https://github.com/powersupplyhq/adwords-analysis), put it in your working directory and try again.")
       }
     } else {
-      stop("Can't find the jdbc_heroku_string.txt (or the file provided) in your working directory.\n\tDownload the file, or request it from Chris (chris@mypowersupply.com), put it in your working directory and try again.")
+      stop("Can't find the jdbc_transactions_database_config.txt (or the file provided) in your working directory.\n\tDownload the file, or request it from Chris (chris@mypowersupply.com), put it in your working directory and try again.")
     }
   } else {
     if(database_drive == "database_drivers/postgresql-9.4.1208.jre6.jar") {
