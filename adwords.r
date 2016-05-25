@@ -49,7 +49,7 @@ keywords_elog <- bing_keywords_elog
 ###################################### END CREATE ELOGS ################################################
 
 
-###################################### CREATE DATA FRAMES ##############################################
+###################################### CREATE AdWords DATA FRAMES ##############################################
 campaign_overview <- keywords_elog %>%
                       group_by(campaign_name) %>%
                       summarize_adwords_elog %>%
@@ -156,6 +156,112 @@ num_orders_per_week <- keywords_elog %>%
                                                      na.rm=TRUE)*0.25, 
                                   num_orders=n_distinct(user_name))
 
+###################################### CREATE Bing DATA FRAMES ##############################################
+campaign_overview <- keywords_elog %>%
+  group_by(campaign_name) %>%
+  summarize_bing_elog %>%
+  arrange(desc(earnings))
+
+campaign_device_overview <- keywords_elog %>%
+  group_by(device, campaign_name) %>%
+  summarize_bing_elog %>%
+  ungroup() %>% # Required to sort properly after multiple grouping.
+  arrange(desc(earnings))
+
+device_overview <- keywords_elog %>%
+  group_by(device) %>%
+  summarize_bing_elog%>%
+  arrange(desc(earnings))
+
+# Note, number of transactions is NOT the same as number of orders
+user_overview <- keywords_elog %>% 
+  filter(!is.na(user_id)) %>% #Remove NA user_ids (which means they are not monetary transactions)
+  group_by(user_id) %>%
+  summarize(name = first(user_name), 
+            num_transactions=length(date), 
+            earnings = sum(money_in_the_bank_paid_to_us, na.rm=TRUE),
+            contribution = earnings*.25,
+            campaign_name = first(campaign_name),
+            keyword=first(keyword),
+            referred_users=sum(new_referred_users, na.rm=TRUE),
+            referred_earnings=sum(referred_users_transaction_amount,na.rm=TRUE),
+            referred_contribution = referred_earnings * .25,
+            total_earnings = earnings + referred_earnings,
+            total_contribution = contribution + referred_contribution)
+
+consolidated_user_overview <- user_overview %>% select(name,
+                                                       keyword, 
+                                                       campaign_name,
+                                                       contribution,
+                                                       referred_contribution,
+                                                       total_contribution)
+
+keywords_campaign_overview <- keywords_elog %>%
+  group_by(keyword, campaign_name) %>%
+  summarize_bing_elog %>%
+  ungroup %>%
+  arrange(desc(earnings))
+
+keywords_campaign_device_matchtype_overview <- keywords_elog %>%
+  group_by(keyword, campaign_name, device, match_type) %>%
+  summarize_bing_elog %>%
+  ungroup %>%
+  arrange(desc(earnings))
+
+
+keywords_campaign_matchtype_overview <- keywords_elog %>%
+  group_by(keyword, campaign_name, match_type) %>%
+  summarize_bing_elog %>%
+  ungroup %>%
+  arrange(desc(earnings))
+
+
+keywords_overview <- keywords_elog %>%
+  group_by(keyword) %>%
+  summarize_bing_elog %>%
+  arrange(desc(earnings))
+
+keywords_weekly_conversion_metrics <- keywords_elog %>%
+  group_by(keyword, campaign_name, week) %>%
+  summarize_bing_elog %>%
+  #filter(grepl("Paleo Performers",campaign_name)) %>%
+  ungroup %>%
+  arrange(keyword, campaign_name, week) %>%
+  select(keyword, campaign_name, week, impressions, clicks, num_acquisitions, click_through_rate, conversion_rate, cost_per_click, contribution_per_click)
+
+all_keyword_ROAS_over_time <- keywords_elog %>%
+  group_by(week) %>%
+  summarize_bing_elog %>%
+  mutate(cum_contribution = cumsum(contribution),
+         cum_cost = cumsum(cost),
+         cum_ROI = cum_contribution - cum_cost) %>%
+  gather(type,value,cum_cost,cum_contribution, cum_ROI)
+
+
+summary_overview <- keywords_elog %>%
+  summarize_bing_elog
+
+
+contribution_per_click_overview <- keywords_elog %>% 
+  group_by(keyword,campaign_name) %>% 
+  summarize_bing_elog %>% 
+  filter(cost > 0 & earnings > 0) %>% 
+  group_by(keyword,campaign_name) %>% 
+  summarize(total_cost = sum(cost),
+            total_contribution = sum(contribution),
+            total_clicks = sum(clicks), 
+            contribution_per_click = total_contribution/total_clicks,
+            cpc_bid_for_2x_ROAS = contribution_per_click/2)
+
+num_orders_per_week <- keywords_elog %>% 
+  filter(keyword=="paleo meals") %>% 
+  group_by(week,campaign_name) %>% 
+  #filter(grepl("Paleo Performers",campaign_name)) %>% 
+  summarize(cost = sum(cost, na.rm=TRUE), 
+            contribution = sum(money_in_the_bank_paid_to_us, 
+                               na.rm=TRUE)*0.25, 
+            num_orders=n_distinct(user_name))
+
 ######################## View data frames ########################
 # View(campaign_overview)
 # View(campaign_device_overview)
@@ -193,7 +299,7 @@ keywords_over_time <- keywords_elog %>%
 
 keywords_campaigns_over_time <- keywords_elog %>%
   filter(keyword %in% keywords_with_earnings$keyword) %>%
-  filter(grepl("Paleo Performers",campaign_name)) %>%
+  #filter(grepl("Paleo Performers",campaign_name)) %>%
   group_by(keyword, campaign_name, week) %>%
   summarize(cost = sum(cost, na.rm = TRUE),
             contribution = sum(money_in_the_bank_paid_to_us,na.rm=TRUE) *.25) %>%
