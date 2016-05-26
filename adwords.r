@@ -69,13 +69,6 @@ device_overview <- keywords_elog %>%
 # Note, number of transactions is NOT the same as number of orders
 adwords_user_overview <- user_overview(adwords_keywords_elog)
 
-consolidated_user_overview <- user_overview %>% select(name,
-                                                        keyword, 
-                                                        campaign_name,
-                                                        contribution,
-                                                        referred_contribution,
-                                                        total_contribution)
-
 keywords_campaign_overview <- keywords_elog %>%
                               group_by(keyword, campaign_name) %>%
                               summarize_adwords_elog %>%
@@ -156,13 +149,6 @@ device_overview <- keywords_elog %>%
 
 # Note, number of transactions is NOT the same as number of orders
 bing_user_overview <- user_overview(bing_keywords_elog)
-
-consolidated_user_overview <- user_overview %>% select(name,
-                                                       keyword, 
-                                                       campaign_name,
-                                                       contribution,
-                                                       referred_contribution,
-                                                       total_contribution)
 
 keywords_campaign_overview <- keywords_elog %>%
   group_by(keyword, campaign_name) %>%
