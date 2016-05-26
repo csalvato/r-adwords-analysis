@@ -15,9 +15,9 @@ plot logical. If TRUE, creates a plot of the data.  If false, creates no plot, D
 The data frame used to create a plot of performance over time.
 }
 \description{
-Takes in a Bing event log and processes all summary data
+Takes in a AdWords event log and processes all summary data
 }
 \examples{
-summarize_bing_elog(elog_data_frame)
+overall_performance_over_time(elog_data_frame)
 }
 
