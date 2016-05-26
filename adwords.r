@@ -123,7 +123,7 @@ BingUtilities::keywords_campaign_device_matchtype_report(bing_keywords_elog)
 
 keywords_weekly_conversion_metrics <- keywords_elog %>%
   group_by(keyword, campaign_name, week) %>%
-  summarize_bing_elog %>%
+  BingUtilities::summarize_elog() %>%
   #filter(grepl("Paleo Performers",campaign_name)) %>%
   ungroup %>%
   arrange(keyword, campaign_name, week) %>%
