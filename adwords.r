@@ -105,6 +105,7 @@ plot(
 adwords_summary_overview <- keywords_elog %>%
                             AdWordsUtilities::summarize_elog()
 
+adwords_overall_performance_over_time <- AdWordsUtilities::overall_performance_over_time(keywords_elog, plot = TRUE)
 
 AdWordsUtilities::contribution_per_click_report(adwords_keywords_elog)
 
@@ -167,8 +168,9 @@ plot(
 )
 
 bing_summary_overview <- keywords_elog %>%
-                         summarize_bing_elog
+                         BingUtilities::summarize_elog()
 
+bing_overall_performance_over_time <- BingUtilities::overall_performance_over_time(bing_keywords_elog, plot = TRUE)
 
 BingUtilities::contribution_per_click_report(bing_keywords_elog)
 
