@@ -1,6 +1,6 @@
 #' Contribution per click report
 #'
-#' Take in a bing keyword event log and creates a contribution per click report
+#' Take in an adwords keyword event log and creates a contribution per click report
 #' by keyword and campaign_name
 #'
 #' @param keywords_elog A data frame containing keywords and transaction event log data.
@@ -20,6 +20,7 @@ contribution_per_click_report <- function(keywords_elog,
                                           file="adwords_contribution_per_click_report.csv"){
   require(plyr)
   require(dplyr)
+  require(SalvatoUtilities)
   if( !is.null(keyword_filter) ) {
   	keywords_elog <- keywords_elog %>% filter(keyword==keyword_filter)
   } 

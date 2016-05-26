@@ -23,7 +23,7 @@ contribution_per_click_report(keywords_elog, keyword_filter = NULL,
 The data frame used to create the report.
 }
 \description{
-Take in a bing keyword event log and creates a contribution per click report
+Take in an adwords keyword event log and creates a contribution per click report
 by keyword and campaign_name
 }
 \examples{

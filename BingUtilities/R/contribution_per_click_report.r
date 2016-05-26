@@ -20,6 +20,7 @@ contribution_per_click_report <- function(keywords_elog,
                                           file="bing_contribution_per_click_report.csv"){
   require(plyr)
   require(dplyr)
+  require(SalvatoUtilities)
   if( !is.null(keyword_filter) ) {
   	keywords_elog <- keywords_elog %>% filter(keyword==keyword_filter)
   } 
