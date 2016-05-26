@@ -63,7 +63,7 @@ keywords_overview <- keywords_elog %>%
 
 keywords_weekly_conversion_metrics <- keywords_elog %>%
                         group_by(keyword, campaign_name, week) %>%
-                        summarize_adwords_elog %>%
+                        AdWordsUtilities::summarize_elog() %>%
                         filter(grepl("Paleo Performers",campaign_name)) %>%
                         mutate(est_search_impression_share = ifelse(!is.na(est_search_impression_share) & est_search_impression_share >= 1.0, 1.0, est_search_impression_share)) %>%
                         ungroup %>%
@@ -74,7 +74,7 @@ adwords_overall_performance_over_time <- AdWordsUtilities::overall_performance_o
                               
 
 adwords_summary_overview <- keywords_elog %>%
-                            summarize_adwords_elog
+                            AdWordsUtilities::summarize_elog()
 
 
 AdWordsUtilities::contribution_per_click_report(adwords_keywords_elog)
