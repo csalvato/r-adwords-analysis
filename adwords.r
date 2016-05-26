@@ -106,8 +106,8 @@ keywords_weekly_conversion_metrics <- keywords_elog %>%
 adwords_overall_performance_over_time <- AdWordsUtilities::overall_performance_over_time(keywords_elog, plot = TRUE)
                               
 
-summary_overview <- keywords_elog %>%
-                    summarize_adwords_elog
+adwords_summary_overview <- keywords_elog %>%
+                            summarize_adwords_elog
 
 
 contribution_per_click_overview <- keywords_elog %>% 
@@ -184,8 +184,8 @@ keywords_weekly_conversion_metrics <- keywords_elog %>%
   select(keyword, campaign_name, week, impressions, clicks, num_acquisitions, click_through_rate, conversion_rate, cost_per_click, contribution_per_click)
 
 
-summary_overview <- keywords_elog %>%
-  summarize_bing_elog
+bing_summary_overview <- keywords_elog %>%
+                         summarize_bing_elog
 
 
 contribution_per_click_overview <- keywords_elog %>% 
