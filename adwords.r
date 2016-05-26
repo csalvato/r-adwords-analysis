@@ -63,9 +63,44 @@ keywords_weekly_conversion_metrics <- keywords_elog %>%
                         ungroup %>%
                         arrange(keyword, campaign_name, week) %>%
                         select(keyword, campaign_name, week, est_search_impression_share, impressions, clicks, num_acquisitions, click_through_rate, conversion_rate, cost_per_click, contribution_per_click)
+#All keywords impression share
+plot( 
+  ggplot(
+    keywords_weekly_conversion_metrics %>% 
+      # Filter by a single keyword, and only include the previous 4 weeks of data.
+      filter(week >= Sys.Date() - weeks(4), week <= Sys.Date(), keyword == "paleo meals"), 
+    aes(x=week, y=est_search_impression_share, fill=campaign_name)) +
+    geom_bar(stat="identity", position="dodge") +
+    ggtitle("Weekly Impression Share by Geo") + 
+    ylim(0, 1) +
+    facet_wrap(~keyword, ncol=2)
+  )
 
-adwords_overall_performance_over_time <- AdWordsUtilities::overall_performance_over_time(keywords_elog, plot = TRUE)
-                              
+#All keywords Clickthrough Rate
+plot( 
+  ggplot(
+    keywords_weekly_conversion_metrics %>% 
+      # Filter by a single keyword, and only include the previous 4 weeks of data.
+      filter(week >= Sys.Date() - weeks(4), week <= Sys.Date(), keyword == "paleo meals"), 
+    aes(x=week, y=click_through_rate, fill=campaign_name)) +
+    geom_bar(stat="identity", position="dodge") +
+    ggtitle("Weekly CTR by Keyword") +
+    # ylim(0, 0.30) +
+    facet_wrap(~keyword, ncol=2)
+)
+
+#Three plots. All same keyword, one plot per campaign. Impression share.
+plot( 
+  ggplot(
+    keywords_weekly_conversion_metrics %>% 
+      # Filter by a single keyword, and only include the previous 4 weeks of data.
+      filter(keyword == "paleo meals", week >= Sys.Date() - weeks(4), week <= Sys.Date()), 
+    aes(x=week, y=est_search_impression_share)) +
+    geom_bar(stat="identity") +
+    ggtitle("Weekly Impression Share by Geo") + 
+    ylim(0, 1) +
+    facet_wrap(~keyword + campaign_name, ncol=2)
+)
 
 adwords_summary_overview <- keywords_elog %>%
                             AdWordsUtilities::summarize_elog()
@@ -92,7 +127,44 @@ keywords_weekly_conversion_metrics <- keywords_elog %>%
   ungroup %>%
   arrange(keyword, campaign_name, week) %>%
   select(keyword, campaign_name, week, impressions, clicks, num_acquisitions, click_through_rate, conversion_rate, cost_per_click, contribution_per_click)
+  #All keywords impression share
+plot( 
+  ggplot(
+    keywords_weekly_conversion_metrics %>% 
+      # Filter by a single keyword, and only include the previous 4 weeks of data.
+      filter(week >= Sys.Date() - weeks(4), week <= Sys.Date(), keyword == "paleo meals"), 
+    aes(x=week, y=est_search_impression_share, fill=campaign_name)) +
+    geom_bar(stat="identity", position="dodge") +
+    ggtitle("Weekly Impression Share by Geo") + 
+    ylim(0, 1) +
+    facet_wrap(~keyword, ncol=2)
+  )
 
+#All keywords Clickthrough Rate
+plot( 
+  ggplot(
+    keywords_weekly_conversion_metrics %>% 
+      # Filter by a single keyword, and only include the previous 4 weeks of data.
+      filter(week >= Sys.Date() - weeks(4), week <= Sys.Date(), keyword == "paleo meals"), 
+    aes(x=week, y=click_through_rate, fill=campaign_name)) +
+    geom_bar(stat="identity", position="dodge") +
+    ggtitle("Weekly CTR by Keyword") +
+    # ylim(0, 0.30) +
+    facet_wrap(~keyword, ncol=2)
+)
+
+#Three plots. All same keyword, one plot per campaign. Impression share.
+plot( 
+  ggplot(
+    keywords_weekly_conversion_metrics %>% 
+      # Filter by a single keyword, and only include the previous 4 weeks of data.
+      filter(keyword == "paleo meals", week >= Sys.Date() - weeks(4), week <= Sys.Date()), 
+    aes(x=week, y=est_search_impression_share)) +
+    geom_bar(stat="identity") +
+    ggtitle("Weekly Impression Share by Geo") + 
+    ylim(0, 1) +
+    facet_wrap(~keyword + campaign_name, ncol=2)
+)
 
 bing_summary_overview <- keywords_elog %>%
                          summarize_bing_elog
@@ -147,76 +219,14 @@ keywords_campaigns_over_time <- keywords_elog %>%
          cum_ROI = cum_contribution - cum_cost) %>%
   gather(type,value,cum_cost,cum_contribution,cum_ROI)
 
-
-bing_overall_performance_over_time <- BingUtilities::overall_performance_over_time(bing_keywords_elog, plot = TRUE)
-
-#Profits over time by keyword
-plot(ggplot(keywords_over_time, aes(week,value,group=type,col=type,fill=type)) + 
-       geom_line() + 
-       ggtitle("Keyword Trends") + 
-       facet_wrap(~keyword))
-
 #Profits over time by keyword and campaign
 plot(ggplot(keywords_campaigns_over_time %>% filter(keyword == "paleo meals"), aes(week,value,group=type,col=type,fill=type)) + 
        geom_line() + 
        ggtitle("Keyword Trends by Campaign") + 
        facet_wrap(~keyword + campaign_name, ncol=2))
 
-#Profits over time by keyword and device
-plot(ggplot(devices_over_time %>% 
-              filter(keyword %in% keywords_with_earnings$keyword) %>% 
-              filter(device == "mb"), 
-            aes(week,value,group=type,col=type,fill=type)) + 
-             geom_line() + 
-             ggtitle("Keyword Trends on Mobile") + 
-             ylim(-1000,1500) +
-             facet_wrap(~keyword + device, ncol=3))
-
-plot(ggplot(devices_over_time %>% 
-              filter(keyword == "paleo meals") %>% 
-              #filter(keyword %in% keywords_with_earnings$keyword) %>% 
-              filter(device == "dt"), 
-            aes(week,value,group=type,col=type,fill=type)) + 
-       geom_line() + 
-       ggtitle("Keyword Trends on Desktop") + 
-       facet_wrap(~keyword + device, ncol=3))
 
 
-#All keywords impression share
-plot( 
-  ggplot(
-    keywords_weekly_conversion_metrics %>% 
-      # Filter by a single keyword, and only include the previous 4 weeks of data.
-      filter(week >= Sys.Date() - weeks(4), week <= Sys.Date(), keyword == "paleo meals"), 
-    aes(x=week, y=est_search_impression_share, fill=campaign_name)) +
-    geom_bar(stat="identity", position="dodge") +
-    ggtitle("Weekly Impression Share by Geo") + 
-    ylim(0, 1) +
-    facet_wrap(~keyword, ncol=2)
-  )
 
-#All keywords Clickthrough Rate
-plot( 
-  ggplot(
-    keywords_weekly_conversion_metrics %>% 
-      # Filter by a single keyword, and only include the previous 4 weeks of data.
-      filter(week >= Sys.Date() - weeks(4), week <= Sys.Date(), keyword == "paleo meals"), 
-    aes(x=week, y=click_through_rate, fill=campaign_name)) +
-    geom_bar(stat="identity", position="dodge") +
-    ggtitle("Weekly CTR by Keyword") +
-    # ylim(0, 0.30) +
-    facet_wrap(~keyword, ncol=2)
-)
 
-#Three plots. All same keyword, one plot per campaign. Impression share.
-plot( 
-  ggplot(
-    keywords_weekly_conversion_metrics %>% 
-      # Filter by a single keyword, and only include the previous 4 weeks of data.
-      filter(keyword == "paleo meals", week >= Sys.Date() - weeks(4), week <= Sys.Date()), 
-    aes(x=week, y=est_search_impression_share)) +
-    geom_bar(stat="identity") +
-    ggtitle("Weekly Impression Share by Geo") + 
-    ylim(0, 1) +
-    facet_wrap(~keyword + campaign_name, ncol=2)
-)
+
