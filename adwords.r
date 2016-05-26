@@ -88,16 +88,7 @@ adwords_summary_overview <- keywords_elog %>%
                             summarize_adwords_elog
 
 
-contribution_per_click_overview <- keywords_elog %>% 
-                                    group_by(keyword,campaign_name) %>% 
-                                    summarize_adwords_elog %>% 
-                                    filter(cost > 0 & earnings > 0) %>% 
-                                    group_by(keyword,campaign_name) %>% 
-                                    summarize(total_cost = sum(cost),
-                                              total_contribution = sum(contribution),
-                                              total_clicks = sum(clicks), 
-                                              contribution_per_click = total_contribution/total_clicks,
-                                              cpc_bid_for_2x_ROAS = contribution_per_click/2)
+AdWordsUtilities::contribution_per_click_report(adwords_keywords_elog)
 
 adwords_order_per_week <- PowerSupplyUtilities::orders_per_week(adwords_keywords_elog, 
                                                                 keyword_filter="paleo meals", 
@@ -141,16 +132,7 @@ bing_summary_overview <- keywords_elog %>%
                          summarize_bing_elog
 
 
-contribution_per_click_overview <- keywords_elog %>% 
-  group_by(keyword,campaign_name) %>% 
-  summarize_bing_elog %>% 
-  filter(cost > 0 & earnings > 0) %>% 
-  group_by(keyword,campaign_name) %>% 
-  summarize(total_cost = sum(cost),
-            total_contribution = sum(contribution),
-            total_clicks = sum(clicks), 
-            contribution_per_click = total_contribution/total_clicks,
-            cpc_bid_for_2x_ROAS = contribution_per_click/2)
+BingUtilities::contribution_per_click_report(bing_keywords_elog)
 
 bing_orders_per_week <- PowerSupplyUtilities::orders_per_week_by_geo(bing_keywords_elog,
                                                                      keyword_filter="paleo meals")
