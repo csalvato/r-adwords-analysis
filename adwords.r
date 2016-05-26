@@ -246,14 +246,3 @@ plot(
     ylim(0, 1) +
     facet_wrap(~keyword + campaign_name, ncol=2)
 )
-
-# Plot orders per week by geo
-plot( ggplot( num_orders_per_week ) + 
-      aes(week,num_orders,group=campaign_name,col=campaign_name,fill=campaign_name) + 
-      geom_line() +
-      facet_wrap(~campaign_name, ncol=2))
-
-############################## Write to file ####################################
-write.excel.csv(keywords_campaign_device_matchtype_overview)
-write.excel.csv(contribution_per_click_overview)
-
