@@ -53,12 +53,6 @@ keywords_elog <- bing_keywords_elog
 # Note, number of transactions is NOT the same as number of orders
 adwords_user_overview <- user_overview(adwords_keywords_elog)
 
-keywords_campaign_overview <- keywords_elog %>%
-                              group_by(keyword, campaign_name) %>%
-                              summarize_adwords_elog %>%
-                              ungroup %>%
-                              arrange(desc(earnings))
-
 keywords_campaign_device_matchtype_overview <- keywords_elog %>%
                                                 group_by(keyword, campaign_name, device, match_type) %>%
                                                 summarize_adwords_elog %>%
@@ -114,12 +108,6 @@ paleo_cohort_views(adwords_keywords_elog)
 ###################################### CREATE Bing DATA FRAMES ##############################################
 # Note, number of transactions is NOT the same as number of orders
 bing_user_overview <- user_overview(bing_keywords_elog)
-
-keywords_campaign_overview <- keywords_elog %>%
-  group_by(keyword, campaign_name) %>%
-  summarize_bing_elog %>%
-  ungroup %>%
-  arrange(desc(earnings))
 
 keywords_campaign_device_matchtype_overview <- keywords_elog %>%
   group_by(keyword, campaign_name, device, match_type) %>%
