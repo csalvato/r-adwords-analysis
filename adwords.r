@@ -50,22 +50,6 @@ keywords_elog <- bing_keywords_elog
 
 
 ###################################### CREATE AdWords DATA FRAMES ##############################################
-campaign_overview <- keywords_elog %>%
-                      group_by(campaign_name) %>%
-                      summarize_adwords_elog %>%
-                      arrange(desc(earnings))
-
-campaign_device_overview <- keywords_elog %>%
-                            group_by(device, campaign_name) %>%
-                            summarize_adwords_elog %>%
-                            ungroup() %>% # Required to sort properly after multiple grouping.
-                            arrange(desc(earnings))
-
-device_overview <- keywords_elog %>%
-                    group_by(device) %>%
-                    summarize_adwords_elog%>%
-                    arrange(desc(earnings))
-
 # Note, number of transactions is NOT the same as number of orders
 adwords_user_overview <- user_overview(adwords_keywords_elog)
 
@@ -126,22 +110,6 @@ adwords_order_per_week <- PowerSupplyUtilities::orders_per_week(adwords_keywords
                                                                 campaign_filter="Paleo Performers")
 
 ###################################### CREATE Bing DATA FRAMES ##############################################
-campaign_overview <- keywords_elog %>%
-  group_by(campaign_name) %>%
-  summarize_bing_elog %>%
-  arrange(desc(earnings))
-
-campaign_device_overview <- keywords_elog %>%
-  group_by(device, campaign_name) %>%
-  summarize_bing_elog %>%
-  ungroup() %>% # Required to sort properly after multiple grouping.
-  arrange(desc(earnings))
-
-device_overview <- keywords_elog %>%
-  group_by(device) %>%
-  summarize_bing_elog%>%
-  arrange(desc(earnings))
-
 # Note, number of transactions is NOT the same as number of orders
 bing_user_overview <- user_overview(bing_keywords_elog)
 
