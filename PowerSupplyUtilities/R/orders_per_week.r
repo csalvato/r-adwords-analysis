@@ -21,7 +21,7 @@ orders_per_week <- function(keywords_elog,
   	keywords_elog <- keywords_elog %>% filter(keyword==keyword_filter)
   } 
   if( !is.null(campaign_filter) ) {
-  	keywords_elog <-  keywords_elog %>% filter(grepl("Paleo Performers",campaign_name))
+  	keywords_elog <-  keywords_elog %>% filter(grepl(campaign_filter,campaign_name))
   }
 
   num_orders_per_week <- keywords_elog %>% 
