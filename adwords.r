@@ -121,14 +121,9 @@ contribution_per_click_overview <- keywords_elog %>%
                                               contribution_per_click = total_contribution/total_clicks,
                                               cpc_bid_for_2x_ROAS = contribution_per_click/2)
 
-num_orders_per_week <- keywords_elog %>% 
-                        filter(keyword=="paleo meals") %>% 
-                        group_by(week,campaign_name) %>% 
-                        filter(grepl("Paleo Performers",campaign_name)) %>% 
-                        summarize(cost = sum(cost, na.rm=TRUE), 
-                                  contribution = sum(money_in_the_bank_paid_to_us, 
-                                                     na.rm=TRUE)*0.25, 
-                                  num_orders=n_distinct(user_name))
+adwords_order_per_week <- PowerSupplyUtilities::orders_per_week(adwords_keywords_elog, 
+                                                                keyword_filter="paleo meals", 
+                                                                campaign_filter="Paleo Performers")
 
 ###################################### CREATE Bing DATA FRAMES ##############################################
 campaign_overview <- keywords_elog %>%
@@ -199,15 +194,8 @@ contribution_per_click_overview <- keywords_elog %>%
             contribution_per_click = total_contribution/total_clicks,
             cpc_bid_for_2x_ROAS = contribution_per_click/2)
 
-num_orders_per_week <- keywords_elog %>% 
-  filter(keyword=="paleo meals") %>% 
-  group_by(week,campaign_name) %>% 
-  #filter(grepl("Paleo Performers",campaign_name)) %>% 
-  summarize(cost = sum(cost, na.rm=TRUE), 
-            contribution = sum(money_in_the_bank_paid_to_us, 
-                               na.rm=TRUE)*0.25, 
-            num_orders=n_distinct(user_name))
-
+bing_orders_per_week <- PowerSupplyUtilities::orders_per_week_by_geo(bing_keywords_elog,
+                                                                     keyword_filter="paleo meals")
 ######################## Create Plots ######################## 
 keywords_with_earnings <- keywords_overview %>% 
   filter(earnings > 0)
@@ -321,6 +309,8 @@ plot( ggplot( num_orders_per_week ) +
       aes(week,num_orders,group=campaign_name,col=campaign_name,fill=campaign_name) + 
       geom_line() +
       facet_wrap(~campaign_name, ncol=2))
+
+
 
 ###################################### PALEO MEALS COHORT VIEWS ###################################
 
