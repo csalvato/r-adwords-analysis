@@ -200,6 +200,27 @@ devices_over_time <- keywords_elog %>%
                              cum_ROI = cum_contribution - cum_cost) %>%
                       gather(type,value,cum_cost,cum_contribution,cum_ROI)
 
+#Profits over time by keyword and device
+plot(ggplot(devices_over_time %>% 
+              filter(keyword %in% keywords_with_earnings$keyword) %>% 
+              filter(device == "mb"), 
+            aes(week,value,group=type,col=type,fill=type)) + 
+             geom_line() + 
+             ggtitle("Keyword Trends on Mobile") + 
+             ylim(-1000,1500) +
+             facet_wrap(~keyword + device, ncol=3))
+
+plot(ggplot(devices_over_time %>% 
+              filter(keyword == "paleo meals") %>% 
+              #filter(keyword %in% keywords_with_earnings$keyword) %>% 
+              filter(device == "dt"), 
+            aes(week,value,group=type,col=type,fill=type)) + 
+       geom_line() + 
+       ggtitle("Keyword Trends on Desktop") + 
+       facet_wrap(~keyword + device, ncol=3))
+
+
+
 keywords_over_time <- keywords_elog %>%
   filter(keyword %in% keywords_with_earnings$keyword) %>%
   group_by(keyword,week) %>%
@@ -209,6 +230,12 @@ keywords_over_time <- keywords_elog %>%
          cum_cost = cumsum(cost),
          cum_ROI = cum_contribution - cum_cost) %>%
   gather(type,value,cum_cost,cum_contribution,cum_ROI)
+
+#Profits over time by keyword
+plot(ggplot(keywords_over_time, aes(week,value,group=type,col=type,fill=type)) + 
+       geom_line() + 
+       ggtitle("Keyword Trends") + 
+       facet_wrap(~keyword))
 
 keywords_campaigns_over_time <- keywords_elog %>%
   filter(keyword %in% keywords_with_earnings$keyword) %>%
