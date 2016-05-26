@@ -9,7 +9,7 @@
 #' @return The data frame used to create a plot of performance over time.
 #' @export
 #' @examples
-#' orders_per_week(keywords_elog, keyword_filter="paleo meals", plot = TRUE){
+#' orders_per_week(keywords_elog, keyword_filter="paleo meals", campaign_filter="Paleo Performers")
 
 orders_per_week <- function(keywords_elog, 
 														keyword_filter=NULL, 
