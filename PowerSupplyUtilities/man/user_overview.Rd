@@ -4,14 +4,12 @@
 \alias{user_overview}
 \title{Generate User Performance Overview}
 \usage{
-user_overview(keywords_elog, view = TRUE)
+user_overview(keywords_elog)
 }
 \arguments{
 \item{keywords_elog}{A data frame containing keywords and transaction event log data.}
 }
 \value{
-plot logical. If TRUE, creates a plot of the data.  If false, creates no plot, Defaults to \code{TRUE}.
-
 The data frame used to create a plot of performance over time.
 }
 \description{
