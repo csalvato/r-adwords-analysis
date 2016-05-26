@@ -436,14 +436,5 @@ plot(
 
 
 ############################## Write to file ####################################
-# write.excel.csv(db_transactions)
-# write.excel.csv(campaign_overview)
-# write.excel.csv(keywords_elog)
-# write.excel.csv(keywords_overview)
-# write.excel.csv(keywords_campaign_overview)
-# write.excel.csv(keywords_weekly_conversion_metrics)
-# write.excel.csv(user_overview)
-# write.excel.csv(keywords_campaign_matchtype_overview)
 write.excel.csv(keywords_campaign_device_matchtype_overview)
-# write.excel.csv(summary_overview)
 write.excel.csv(contribution_per_click_overview)
