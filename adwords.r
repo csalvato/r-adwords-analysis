@@ -55,12 +55,6 @@ adwords_user_overview <- user_overview(adwords_keywords_elog)
 
 AdWordsUtilities::keywords_campaign_device_matchtype_report(adwords_keywords_elog)
 
-
-keywords_overview <- keywords_elog %>%
-                      group_by(keyword) %>%
-                      summarize_adwords_elog %>%
-                      arrange(desc(earnings))
-
 keywords_weekly_conversion_metrics <- keywords_elog %>%
                         group_by(keyword, campaign_name, week) %>%
                         AdWordsUtilities::summarize_elog() %>%
@@ -91,11 +85,6 @@ bing_user_overview <- user_overview(bing_keywords_elog)
 
 BingUtilities::keywords_campaign_device_matchtype_report(bing_keywords_elog)
 
-keywords_overview <- keywords_elog %>%
-  group_by(keyword) %>%
-  summarize_bing_elog %>%
-  arrange(desc(earnings))
-
 keywords_weekly_conversion_metrics <- keywords_elog %>%
   group_by(keyword, campaign_name, week) %>%
   summarize_bing_elog %>%
@@ -117,6 +106,14 @@ paleo_cohort_views(bing_keywords_elog)
 
 
 ######################## Create Plots ######################## 
+keywords_overview <- keywords_elog %>%
+  group_by(keyword) %>%
+  BingUtilities::summarize_elog()
+
+keywords_overview <- keywords_elog %>%
+  group_by(keyword) %>%
+  AdWordsUtilities::summarize_elog()
+
 keywords_with_earnings <- keywords_overview %>% 
   filter(earnings > 0)
 
