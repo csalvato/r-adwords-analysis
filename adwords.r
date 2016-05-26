@@ -123,13 +123,7 @@ keywords_weekly_conversion_metrics <- keywords_elog %>%
                         arrange(keyword, campaign_name, week) %>%
                         select(keyword, campaign_name, week, est_search_impression_share, impressions, clicks, num_acquisitions, click_through_rate, conversion_rate, cost_per_click, contribution_per_click)
 
-all_keyword_ROAS_over_time <- keywords_elog %>%
-                              group_by(week) %>%
-                              summarize_adwords_elog %>%
-                              mutate(cum_contribution = cumsum(contribution),
-                                     cum_cost = cumsum(cost),
-                                     cum_ROI = cum_contribution - cum_cost) %>%
-                              gather(type,value,cum_cost,cum_contribution, cum_ROI)
+adwords_overall_performance_over_time <- AdWordsUtilities::overall_performance_over_time(keywords_elog, plot = TRUE)
                               
 
 summary_overview <- keywords_elog %>%
@@ -229,14 +223,6 @@ keywords_weekly_conversion_metrics <- keywords_elog %>%
   arrange(keyword, campaign_name, week) %>%
   select(keyword, campaign_name, week, impressions, clicks, num_acquisitions, click_through_rate, conversion_rate, cost_per_click, contribution_per_click)
 
-all_keyword_ROAS_over_time <- keywords_elog %>%
-  group_by(week) %>%
-  summarize_bing_elog %>%
-  mutate(cum_contribution = cumsum(contribution),
-         cum_cost = cumsum(cost),
-         cum_ROI = cum_contribution - cum_cost) %>%
-  gather(type,value,cum_cost,cum_contribution, cum_ROI)
-
 
 summary_overview <- keywords_elog %>%
   summarize_bing_elog
@@ -309,11 +295,7 @@ keywords_campaigns_over_time <- keywords_elog %>%
   gather(type,value,cum_cost,cum_contribution,cum_ROI)
 
 
-#Overall profits over time
-plot(ggplot(all_keyword_ROAS_over_time, 
-            aes(week,value,group=type,col=type,fill=type)) + 
-     geom_line()
-    )
+bing_overall_performance_over_time <- BingUtilities::overall_performance_over_time(bing_keywords_elog, plot = TRUE)
 
 #Profits over time by keyword
 plot(ggplot(keywords_over_time, aes(week,value,group=type,col=type,fill=type)) + 
