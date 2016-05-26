@@ -13,10 +13,10 @@ orders_per_week(keywords_elog, keyword_filter = NULL,
 \item{keyword_filter}{Optional. (e.g. "paleo meals") If provided, generates a data frame and plot only for the *exact* keyword provided. Default to NULL.}
 
 \item{campaign_filter}{Optional. (e.g. "Paleo Performers") If provided, generates a data frame and plot for campaigns where the string is included in the campaign name. Default to NULL.}
+
+\item{plot}{logical. If TRUE, creates a plot of the data.  If false, creates no plot, Defaults to \code{TRUE}.}
 }
 \value{
-plot logical. If TRUE, creates a plot of the data.  If false, creates no plot, Defaults to \code{TRUE}.
-
 The data frame used to create a plot of performance over time.
 }
 \description{
