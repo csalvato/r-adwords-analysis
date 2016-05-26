@@ -155,7 +155,7 @@ device_overview <- keywords_elog %>%
   arrange(desc(earnings))
 
 # Note, number of transactions is NOT the same as number of orders
-bing_user_overview <- user_overview(bing_keywords_elog, view=TRUE)
+bing_user_overview <- user_overview(bing_keywords_elog)
 
 consolidated_user_overview <- user_overview %>% select(name,
                                                        keyword, 
