@@ -2,6 +2,7 @@
 
 export(create_adwords_event_log)
 export(create_bing_event_log)
+export(customers_per_month_report)
 export(get_referrals_data)
 export(get_transactions_data)
 export(orders_per_week)

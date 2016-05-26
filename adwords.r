@@ -115,6 +115,8 @@ adwords_order_per_week <- PowerSupplyUtilities::orders_per_week(adwords_keywords
 
 paleo_cohort_views(adwords_keywords_elog)
 
+adwords_customers_per_month_report <- PowerSupplyUtilities::customers_per_month_report(adwords_keywords_elog, file="adwords_customers_per_month.csv")
+
 ###################################### CREATE Bing DATA FRAMES ##############################################
 # Note, number of transactions is NOT the same as number of orders
 bing_user_overview <- user_overview(bing_keywords_elog)
@@ -178,6 +180,16 @@ bing_orders_per_week <- PowerSupplyUtilities::orders_per_week_by_geo(bing_keywor
                                                                      keyword_filter="paleo meals")
 paleo_cohort_views(bing_keywords_elog)
 
+bing_customers_per_month_report <- PowerSupplyUtilities::customers_per_month_report(bing_keywords_elog, file="bing_customers_per_month.csv")
+
+total_customers_per_month_report <- merge(adwords_customers_per_month_report, 
+                                          bing_customers_per_month_report, 
+                                          by="first_transaction_month", 
+                                          all=TRUE, 
+                                          suffixes=c(".adwords",".bing")) %>% 
+                                      mutate_each(funs(ifelse(is.na(.),0,.))) %>% 
+                                      mutate(total_acquisitions=num_acquisitions.adwords+num_acquisitions.bing)
+write.excel.csv(total_customers_per_month_report)
 
 ######################## Create Plots ######################## 
 keywords_overview <- keywords_elog %>%
