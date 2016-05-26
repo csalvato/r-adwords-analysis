@@ -8,9 +8,9 @@
 #' @param average_value_per_order The average value per order.  Used in estimated Return on Ad Spend (ROAS) calculations
 #' @export
 #' @examples
-#' summarize_bing_elog(elog_data_frame)
+#' summarize_elog(elog_data_frame)
 
-summarize_bing_elog <- function(elog_data_frame, 
+summarize_elog <- function(elog_data_frame, 
                                    margin=0.25, 
                                    average_num_orders_in_lifetime=10,
                                    average_value_per_order=70
