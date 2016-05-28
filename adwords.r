@@ -44,8 +44,6 @@ to = end_date = paste(toString(Sys.Date() - days(0)), "03:59:59")
 adwords_keywords_elog <- create_adwords_event_log(from=start_date, to=end_date)
 bing_keywords_elog <- create_bing_event_log(from=start_date, to=end_date)
 
-keywords_elog <- bing_keywords_elog
-
 ###################################### END CREATE ELOGS ################################################
 
 
@@ -55,7 +53,7 @@ adwords_user_overview <- user_overview(adwords_keywords_elog)
 
 AdWordsUtilities::keywords_campaign_device_matchtype_report(adwords_keywords_elog)
 
-keywords_weekly_conversion_metrics <- keywords_elog %>%
+keywords_weekly_conversion_metrics <- adwords_keywords_elog %>%
                         group_by(keyword, campaign_name, week) %>%
                         AdWordsUtilities::summarize_elog() %>%
                         filter(grepl("Paleo Performers",campaign_name)) %>%
@@ -71,7 +69,7 @@ plot(
       filter(week >= Sys.Date() - weeks(4), week <= Sys.Date(), keyword == "paleo meals"), 
     aes(x=week, y=est_search_impression_share, fill=campaign_name)) +
     geom_bar(stat="identity", position="dodge") +
-    ggtitle("Weekly Impression Share by Geo") + 
+    ggtitle("AdWords - Weekly Impression Share by Geo") + 
     ylim(0, 1) +
     facet_wrap(~keyword, ncol=2)
   )
@@ -84,7 +82,7 @@ plot(
       filter(week >= Sys.Date() - weeks(4), week <= Sys.Date(), keyword == "paleo meals"), 
     aes(x=week, y=click_through_rate, fill=campaign_name)) +
     geom_bar(stat="identity", position="dodge") +
-    ggtitle("Weekly CTR by Keyword") +
+    ggtitle("AdWords - Weekly CTR by Keyword") +
     # ylim(0, 0.30) +
     facet_wrap(~keyword, ncol=2)
 )
@@ -97,15 +95,15 @@ plot(
       filter(keyword == "paleo meals", week >= Sys.Date() - weeks(4), week <= Sys.Date()), 
     aes(x=week, y=est_search_impression_share)) +
     geom_bar(stat="identity") +
-    ggtitle("Weekly Impression Share by Geo") + 
+    ggtitle("AdWords - Weekly Impression Share by Geo") + 
     ylim(0, 1) +
     facet_wrap(~keyword + campaign_name, ncol=2)
 )
 
-adwords_summary_overview <- keywords_elog %>%
+adwords_summary_overview <- adwords_keywords_elog %>%
                             AdWordsUtilities::summarize_elog()
 
-adwords_overall_performance_over_time <- AdWordsUtilities::overall_performance_over_time(keywords_elog, plot = TRUE)
+adwords_overall_performance_over_time <- AdWordsUtilities::overall_performance_over_time(adwords_keywords_elog, plot = TRUE)
 
 AdWordsUtilities::contribution_per_click_report(adwords_keywords_elog)
 
@@ -117,93 +115,14 @@ paleo_cohort_views(adwords_keywords_elog)
 
 adwords_customers_per_month_report <- PowerSupplyUtilities::customers_per_month_report(adwords_keywords_elog, file="adwords_customers_per_month.csv")
 
-###################################### CREATE Bing DATA FRAMES ##############################################
-# Note, number of transactions is NOT the same as number of orders
-bing_user_overview <- user_overview(bing_keywords_elog)
-
-BingUtilities::keywords_campaign_device_matchtype_report(bing_keywords_elog)
-
-keywords_weekly_conversion_metrics <- keywords_elog %>%
-  group_by(keyword, campaign_name, week) %>%
-  BingUtilities::summarize_elog() %>%
-  #filter(grepl("Paleo Performers",campaign_name)) %>%
-  ungroup %>%
-  arrange(keyword, campaign_name, week) %>%
-  select(keyword, campaign_name, week, impressions, clicks, num_acquisitions, click_through_rate, conversion_rate, cost_per_click, contribution_per_click)
-  #All keywords impression share
-plot( 
-  ggplot(
-    keywords_weekly_conversion_metrics %>% 
-      # Filter by a single keyword, and only include the previous 4 weeks of data.
-      filter(week >= Sys.Date() - weeks(4), week <= Sys.Date(), keyword == "paleo meals"), 
-    aes(x=week, y=est_search_impression_share, fill=campaign_name)) +
-    geom_bar(stat="identity", position="dodge") +
-    ggtitle("Weekly Impression Share by Geo") + 
-    ylim(0, 1) +
-    facet_wrap(~keyword, ncol=2)
-  )
-
-#All keywords Clickthrough Rate
-plot( 
-  ggplot(
-    keywords_weekly_conversion_metrics %>% 
-      # Filter by a single keyword, and only include the previous 4 weeks of data.
-      filter(week >= Sys.Date() - weeks(4), week <= Sys.Date(), keyword == "paleo meals"), 
-    aes(x=week, y=click_through_rate, fill=campaign_name)) +
-    geom_bar(stat="identity", position="dodge") +
-    ggtitle("Weekly CTR by Keyword") +
-    # ylim(0, 0.30) +
-    facet_wrap(~keyword, ncol=2)
-)
-
-#Three plots. All same keyword, one plot per campaign. Impression share.
-plot( 
-  ggplot(
-    keywords_weekly_conversion_metrics %>% 
-      # Filter by a single keyword, and only include the previous 4 weeks of data.
-      filter(keyword == "paleo meals", week >= Sys.Date() - weeks(4), week <= Sys.Date()), 
-    aes(x=week, y=est_search_impression_share)) +
-    geom_bar(stat="identity") +
-    ggtitle("Weekly Impression Share by Geo") + 
-    ylim(0, 1) +
-    facet_wrap(~keyword + campaign_name, ncol=2)
-)
-
-bing_summary_overview <- keywords_elog %>%
-                         BingUtilities::summarize_elog()
-
-bing_overall_performance_over_time <- BingUtilities::overall_performance_over_time(bing_keywords_elog, plot = TRUE)
-
-BingUtilities::contribution_per_click_report(bing_keywords_elog)
-
-bing_orders_per_week <- PowerSupplyUtilities::orders_per_week_by_geo(bing_keywords_elog,
-                                                                     keyword_filter="paleo meals")
-paleo_cohort_views(bing_keywords_elog)
-
-bing_customers_per_month_report <- PowerSupplyUtilities::customers_per_month_report(bing_keywords_elog, file="bing_customers_per_month.csv")
-
-total_customers_per_month_report <- merge(adwords_customers_per_month_report, 
-                                          bing_customers_per_month_report, 
-                                          by="first_transaction_month", 
-                                          all=TRUE, 
-                                          suffixes=c(".adwords",".bing")) %>% 
-                                      mutate_each(funs(ifelse(is.na(.),0,.))) %>% 
-                                      mutate(total_acquisitions=num_acquisitions.adwords+num_acquisitions.bing)
-write.excel.csv(total_customers_per_month_report)
-
-######################## Create Plots ######################## 
-keywords_overview <- keywords_elog %>%
-  group_by(keyword) %>%
-  BingUtilities::summarize_elog()
-
-keywords_overview <- keywords_elog %>%
+keywords_overview <- adwords_keywords_elog %>%
   group_by(keyword) %>%
   AdWordsUtilities::summarize_elog()
 
 keywords_with_earnings <- keywords_overview %>% 
   filter(earnings > 0)
 
-devices_over_time <- keywords_elog %>%
+devices_over_time <- adwords_keywords_elog %>%
                       group_by(keyword,device,week) %>%
                       summarize(cost = sum(cost, na.rm = TRUE),
                                 contribution = sum(money_in_the_bank_paid_to_us,na.rm=TRUE) *.25) %>%
@@ -218,7 +137,7 @@ plot(ggplot(devices_over_time %>%
               filter(device == "mb"), 
             aes(week,value,group=type,col=type,fill=type)) + 
              geom_line() + 
-             ggtitle("Keyword Trends on Mobile") + 
+             ggtitle("AdWords - Keyword Trends on Mobile") + 
              ylim(-1000,1500) +
              facet_wrap(~keyword + device, ncol=3))
 
@@ -228,12 +147,12 @@ plot(ggplot(devices_over_time %>%
               filter(device == "dt"), 
             aes(week,value,group=type,col=type,fill=type)) + 
        geom_line() + 
-       ggtitle("Keyword Trends on Desktop") + 
+       ggtitle("AdWords - Keyword Trends on Desktop") + 
        facet_wrap(~keyword + device, ncol=3))
 
 
 
-keywords_over_time <- keywords_elog %>%
+keywords_over_time <- adwords_keywords_elog %>%
   filter(keyword %in% keywords_with_earnings$keyword) %>%
   group_by(keyword,week) %>%
   summarize(cost = sum(cost, na.rm = TRUE),
@@ -246,10 +165,130 @@ keywords_over_time <- keywords_elog %>%
 #Profits over time by keyword
 plot(ggplot(keywords_over_time, aes(week,value,group=type,col=type,fill=type)) + 
        geom_line() + 
-       ggtitle("Keyword Trends") + 
+       ggtitle("AdWords - Keyword Trends") + 
        facet_wrap(~keyword))
 
-keywords_campaigns_over_time <- keywords_elog %>%
+keywords_campaigns_over_time <- adwords_keywords_elog %>%
+  filter(keyword %in% keywords_with_earnings$keyword) %>%
+  #filter(grepl("Paleo Performers",campaign_name)) %>%
+  group_by(keyword, campaign_name, week) %>%
+  summarize(cost = sum(cost, na.rm = TRUE),
+            contribution = sum(money_in_the_bank_paid_to_us,na.rm=TRUE) *.25) %>%
+  mutate(cum_contribution = cumsum(contribution), 
+         cum_cost = cumsum(cost),
+         cum_ROI = cum_contribution - cum_cost) %>%
+  gather(type,value,cum_cost,cum_contribution,cum_ROI)
+
+#Profits over time by keyword and campaign
+plot(ggplot(keywords_campaigns_over_time %>% filter(keyword == "paleo meals" & grepl("Paleo Performers",campaign_name)), aes(week,value,group=type,col=type,fill=type)) + 
+       geom_line() + 
+       ggtitle("AdWords - Keyword Trends by Campaign") + 
+       facet_wrap(~keyword + campaign_name, ncol=2))
+
+###################################### CREATE Bing DATA FRAMES ##############################################
+# Note, number of transactions is NOT the same as number of orders
+bing_user_overview <- user_overview(bing_keywords_elog)
+
+BingUtilities::keywords_campaign_device_matchtype_report(bing_keywords_elog)
+
+keywords_weekly_conversion_metrics <- bing_keywords_elog %>%
+  group_by(keyword, campaign_name, week) %>%
+  BingUtilities::summarize_elog() %>%
+  #filter(grepl("Paleo Performers",campaign_name)) %>%
+  ungroup %>%
+  arrange(keyword, campaign_name, week) %>%
+  select(keyword, campaign_name, week, impressions, clicks, num_acquisitions, click_through_rate, conversion_rate, cost_per_click, contribution_per_click)
+  #All keywords impression share
+
+#All keywords Clickthrough Rate
+plot( 
+  ggplot(
+    keywords_weekly_conversion_metrics %>% 
+      # Filter by a single keyword, and only include the previous 4 weeks of data.
+      filter(week >= Sys.Date() - weeks(4), week <= Sys.Date(), keyword == "paleo meals"), 
+    aes(x=week, y=click_through_rate, fill=campaign_name)) +
+    geom_bar(stat="identity", position="dodge") +
+    ggtitle("Bing - Weekly CTR by Keyword") +
+    # ylim(0, 0.30) +
+    facet_wrap(~keyword, ncol=2)
+)
+
+bing_summary_overview <- bing_keywords_elog %>%
+                         BingUtilities::summarize_elog()
+
+bing_overall_performance_over_time <- BingUtilities::overall_performance_over_time(bing_keywords_elog, plot = TRUE)
+
+BingUtilities::contribution_per_click_report(bing_keywords_elog)
+
+bing_orders_per_week <- PowerSupplyUtilities::orders_per_week(bing_keywords_elog,
+                                                               keyword_filter="paleo meals")
+paleo_cohort_views(bing_keywords_elog)
+
+bing_customers_per_month_report <- PowerSupplyUtilities::customers_per_month_report(bing_keywords_elog, file="bing_customers_per_month.csv")
+
+total_customers_per_month_report <- merge(adwords_customers_per_month_report, 
+                                          bing_customers_per_month_report, 
+                                          by="first_transaction_month", 
+                                          all=TRUE, 
+                                          suffixes=c(".adwords",".bing")) %>% 
+                                      mutate_each(funs(ifelse(is.na(.),0,.))) %>% 
+                                      mutate(total_acquisitions=num_acquisitions.adwords+num_acquisitions.bing)
+write.excel.csv(total_customers_per_month_report)
+
+keywords_overview <- bing_keywords_elog %>%
+  group_by(keyword) %>%
+  BingUtilities::summarize_elog()
+
+keywords_with_earnings <- keywords_overview %>% 
+  filter(earnings > 0)
+
+devices_over_time <- bing_keywords_elog %>%
+                      group_by(keyword,device,week) %>%
+                      summarize(cost = sum(cost, na.rm = TRUE),
+                                contribution = sum(money_in_the_bank_paid_to_us,na.rm=TRUE) *.25) %>%
+                      mutate(cum_contribution = cumsum(contribution), 
+                             cum_cost = cumsum(cost),
+                             cum_ROI = cum_contribution - cum_cost) %>%
+                      gather(type,value,cum_cost,cum_contribution,cum_ROI)
+
+#Profits over time by keyword and device
+plot(ggplot(devices_over_time %>% 
+              filter(keyword %in% keywords_with_earnings$keyword) %>% 
+              filter(device == "mb"), 
+            aes(week,value,group=type,col=type,fill=type)) + 
+             geom_line() + 
+             ggtitle("Bing - Keyword Trends on Mobile") + 
+             ylim(-1000,1500) +
+             facet_wrap(~keyword + device, ncol=3))
+
+plot(ggplot(devices_over_time %>% 
+              filter(keyword == "paleo meals") %>% 
+              #filter(keyword %in% keywords_with_earnings$keyword) %>% 
+              filter(device == "dt"), 
+            aes(week,value,group=type,col=type,fill=type)) + 
+       geom_line() + 
+       ggtitle("Bing - Keyword Trends on Desktop") + 
+       facet_wrap(~keyword + device, ncol=3))
+
+
+
+keywords_over_time <- bing_keywords_elog %>%
+  filter(keyword %in% keywords_with_earnings$keyword) %>%
+  group_by(keyword,week) %>%
+  summarize(cost = sum(cost, na.rm = TRUE),
+            contribution = sum(money_in_the_bank_paid_to_us,na.rm=TRUE) *.25) %>%
+  mutate(cum_contribution = cumsum(contribution), 
+         cum_cost = cumsum(cost),
+         cum_ROI = cum_contribution - cum_cost) %>%
+  gather(type,value,cum_cost,cum_contribution,cum_ROI)
+
+#Profits over time by keyword
+plot(ggplot(keywords_over_time, aes(week,value,group=type,col=type,fill=type)) + 
+       geom_line() + 
+       ggtitle("Bing - Keyword Trends") + 
+       facet_wrap(~keyword, ncol=2))
+
+keywords_campaigns_over_time <- bing_keywords_elog %>%
   filter(keyword %in% keywords_with_earnings$keyword) %>%
   #filter(grepl("Paleo Performers",campaign_name)) %>%
   group_by(keyword, campaign_name, week) %>%
@@ -263,11 +302,6 @@ keywords_campaigns_over_time <- keywords_elog %>%
 #Profits over time by keyword and campaign
 plot(ggplot(keywords_campaigns_over_time %>% filter(keyword == "paleo meals"), aes(week,value,group=type,col=type,fill=type)) + 
        geom_line() + 
-       ggtitle("Keyword Trends by Campaign") + 
+       ggtitle("Bing - Keyword Trends by Campaign") + 
        facet_wrap(~keyword + campaign_name, ncol=2))
-
-
-
-
-
 
