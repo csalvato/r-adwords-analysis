@@ -14,7 +14,7 @@ overall_performance_over_time <- function(keywords_elog, plot = TRUE){
   require(dplyr)
   all_keyword_ROAS_over_time <- keywords_elog %>%
 															  group_by(week) %>%
-															  AdWordsUtilities::summarize_elog()
+															  AdWordsUtilities::summarize_elog() %>%
 															  mutate(cum_contribution = cumsum(contribution),
 															         cum_cost = cumsum(cost),
 															         cum_ROAS = cum_contribution - cum_cost) %>%
