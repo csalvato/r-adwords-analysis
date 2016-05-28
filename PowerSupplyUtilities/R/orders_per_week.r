@@ -29,12 +29,13 @@ orders_per_week <- function(keywords_elog,
                         summarize(cost = sum(cost, na.rm=TRUE), 
                                   contribution = sum(money_in_the_bank_paid_to_us, 
                                                      na.rm=TRUE)*0.25, 
-                                  num_orders=n_distinct(user_name))
+                                  num_orders=n_distinct(user_name, na.rm=TRUE))
 
 	if( plot ) {
 		plot( ggplot( num_orders_per_week ) + 
       aes(week,num_orders,group=campaign_name,col=campaign_name,fill=campaign_name) + 
       geom_line() +
+      ylim(0,max(num_orders_per_week$num_orders))+
       facet_wrap(~campaign_name, ncol=2))
 	 }
 
