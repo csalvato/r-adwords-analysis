@@ -178,5 +178,5 @@ To run the code within this project, you will need the following files. They can
 1. adwords_credentials.yml
 2. .google.auth.RData (for instant google Authentication)
 2. mixpanel_credentials.yml
-3. jdbc_heroku_string.txt
-4. jdbc_datawarehouse_string.txt
+3. jdbc_transactions_database_config.txt
+4. jdbc_data_warehouse_database_config.txt
