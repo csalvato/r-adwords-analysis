@@ -30,7 +30,7 @@ create_event_log <- function(from=Sys.Date(),
   db_influencer_metrics <- get_referrals_data(from=start_date, to=end_date)
 
   pgsql <- JDBC("org.postgresql.Driver", "database_drivers/postgresql-9.4.1208.jre6.jar", "`")
-  heroku_db <- dbConnect(pgsql, string_from_file("jdbc_heroku_string.txt"))
+  heroku_db <- dbConnect(pgsql, string_from_file("jdbc_transactions_database_config.txt"))
   db_first_transactions <- dbGetQuery(heroku_db, GetoptLong::qq(paste("SELECT 
                                                                           * 
                                                                        FROM
