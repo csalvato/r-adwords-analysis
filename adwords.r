@@ -44,10 +44,7 @@ to = end_date = paste(toString(Sys.Date() - days(0)), "03:59:59")
 adwords_keywords_elog <- create_adwords_event_log(from=start_date, to=end_date)
 bing_keywords_elog <- create_bing_event_log(from=start_date, to=end_date)
 
-###################################### END CREATE ELOGS ################################################
-
-
-###################################### CREATE AdWords Visualizations and Reports ##############################################
+###################################### CREATE AdWords Plots and CSVs ##############################################
 PowerSupplyUtilities::search_engine_marketing_report(adwords_keywords_elog)
 
 ###################################### CREATE Bing DATA FRAMES ##############################################
