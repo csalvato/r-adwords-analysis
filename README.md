@@ -118,6 +118,7 @@ The resulting data frame includes the following variables that can be grouped an
 1. orderId - The ID of the order in our orders application
 
 ** More Data Fields to be defined as they are needed.  For explanation, reach out to Chris Salvato (chris@mypowersupply.com) and then add the definition to the list below in README.md**
+
 1. utm_campaign
 1. utm_medium
 1. utm_source
@@ -175,6 +176,7 @@ Several functions within this project pull data from external APIs such as Mixpa
 To run the code within this project, you will need the following files. They can be obtained by reaching out to Chris (@chris on Slack; chris@mypowersupply.com via email):
 
 1. adwords_credentials.yml
+2. .google.auth.RData (for instant google Authentication)
 2. mixpanel_credentials.yml
 3. jdbc_transactions_database_config.txt
 4. jdbc_data_warehouse_database_config.txt
