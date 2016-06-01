@@ -1,6 +1,6 @@
 #' Keywords with Earnings
 #'
-#' Take in an adwords keyword event log and creates a data frame
+#' Take in a Bing keyword event log and creates a data frame
 #' containing only those keywords that have earnings.
 #'
 #' @param keywords_elog A data frame containing keywords and transaction event log data.
@@ -15,7 +15,7 @@
 keywords_with_earnings <- function(keywords_elog,
                                    campaign_filter=NULL,
                                    write_csv = TRUE,
-                                   file="adwords_keywords_with_earnings.csv"){
+                                   file="bing_keywords_with_earnings.csv"){
   require(plyr)
   require(dplyr)
   require(SalvatoUtilities)
@@ -23,9 +23,9 @@ keywords_with_earnings <- function(keywords_elog,
   	keywords_elog <-  keywords_elog %>% filter(grepl(campaign_filter,campaign_name))
   }
 
-  data <- AdWordsUtilities::keywords_report(keywords_elog, 
-                            campaign_filter=campaign_filter, 
-                            write_csv=FALSE) %>% 
+  data <- BingUtilities::keywords_report(keywords_elog, 
+                          campaign_filter=campaign_filter, 
+                          write_csv=FALSE) %>% 
           filter(earnings > 0)
 
 	if( write_csv ) {

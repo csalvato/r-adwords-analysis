@@ -24,7 +24,6 @@ mobile_performance_over_time <- function( keywords_elog,
   if( !is.null(campaign_filter) ) {
     keywords_elog <-  keywords_elog %>% filter(grepl(campaign_filter,campaign_name))
   }
-
   devices_over_time <- keywords_elog %>%
                       group_by(keyword,device,week) %>%
                       summarize(cost = sum(cost, na.rm = TRUE),

@@ -1,6 +1,6 @@
-#' Create plot of AdWords keyword performance over time, grouped by campaign
+#' Create plot of Bing keyword performance over time, grouped by campaign
 #'
-#' Takes in a AdWords event log and processes keyword and campaign summary data into a plot
+#' Takes in a Bing event log and processes keyword and campaign summary data into a plot
 #'
 #' @param keywords_elog A data frame containing keywords and transaction event log data.
 #' @param plot logical. If TRUE, creates a plot of the data.  If false, creates no plot, Defaults to \code{TRUE}.
@@ -28,9 +28,9 @@ keywords_campaign_performance_over_time <- function(keywords_elog, plot = TRUE){
 
 	if( plot ) {
 		require(ggplot2)
-		plot(ggplot(keywords_campaigns_over_time %>% filter(keyword == "paleo meals" & grepl("Paleo Performers",campaign_name)), aes(week,value,group=type,col=type,fill=type)) + 
+		plot(ggplot(keywords_campaigns_over_time %>% filter(keyword == "paleo meals"), aes(week,value,group=type,col=type,fill=type)) + 
        geom_line() + 
-       ggtitle("AdWords - Keyword Trends by Campaign") + 
+       ggtitle("Bing - Keyword Trends by Campaign") + 
        facet_wrap(~keyword + campaign_name, ncol=2))
 	 }
 

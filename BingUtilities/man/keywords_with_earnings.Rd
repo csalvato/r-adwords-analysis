@@ -5,7 +5,7 @@
 \title{Keywords with Earnings}
 \usage{
 keywords_with_earnings(keywords_elog, campaign_filter = NULL,
-  write_csv = TRUE, file = "adwords_keywords_with_earnings.csv")
+  write_csv = TRUE, file = "bing_keywords_with_earnings.csv")
 }
 \arguments{
 \item{keywords_elog}{A data frame containing keywords and transaction event log data.}
@@ -20,7 +20,7 @@ keywords_with_earnings(keywords_elog, campaign_filter = NULL,
 The data frame used to create the report.
 }
 \description{
-Take in an adwords keyword event log and creates a data frame
+Take in a Bing keyword event log and creates a data frame
 containing only those keywords that have earnings.
 }
 \examples{
