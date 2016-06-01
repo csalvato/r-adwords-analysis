@@ -50,69 +50,23 @@ bing_keywords_elog <- create_bing_event_log(from=start_date, to=end_date)
 ###################################### CREATE AdWords DATA FRAMES ##############################################
 # Note, number of transactions is NOT the same as number of orders
 adwords_user_overview <- user_overview(adwords_keywords_elog)
-
 AdWordsUtilities::keywords_campaign_device_matchtype_report(adwords_keywords_elog)
-
 keywords_weekly_conversion_metrics <- impression_share_over_time(adwords_keywords_elog)
 keywords_weekly_conversion_metrics <- click_through_rate_over_time(adwords_keywords_elog)
-
-adwords_summary_overview <- adwords_keywords_elog %>%
-                            AdWordsUtilities::summarize_elog()
-
 adwords_overall_performance_over_time <- AdWordsUtilities::overall_performance_over_time(adwords_keywords_elog, plot = TRUE)
-
 AdWordsUtilities::contribution_per_click_report(adwords_keywords_elog)
-
 adwords_order_per_week <- PowerSupplyUtilities::orders_per_week(adwords_keywords_elog, 
                                                                 keyword_filter="paleo meals", 
                                                                 campaign_filter="Paleo Performers")
-
 paleo_cohort_views(adwords_keywords_elog)
-
 adwords_customers_per_month_report <- PowerSupplyUtilities::customers_per_month_report(adwords_keywords_elog, file="adwords_customers_per_month.csv")
-
-keywords_overview <- adwords_keywords_elog %>%
-  group_by(keyword) %>%
-  AdWordsUtilities::summarize_elog()
-
 devices_over_time <- mobile_performance_over_time(adwords_keywords_elog, keyword_filter="paleo meals")
 devices_over_time <- desktop_performance_over_time(adwords_keywords_elog, keyword_filter="paleo meals")
-
-keywords_with_earnings <- keywords_overview %>% 
-  filter(earnings > 0)
-
-keywords_over_time <- adwords_keywords_elog %>%
-  filter(keyword %in% keywords_with_earnings$keyword) %>%
-  group_by(keyword,week) %>%
-  summarize(cost = sum(cost, na.rm = TRUE),
-            contribution = sum(money_in_the_bank_paid_to_us,na.rm=TRUE) *.25) %>%
-  mutate(cum_contribution = cumsum(contribution), 
-         cum_cost = cumsum(cost),
-         cum_ROI = cum_contribution - cum_cost) %>%
-  gather(type,value,cum_cost,cum_contribution,cum_ROI)
-
-#Profits over time by keyword
-plot(ggplot(keywords_over_time, aes(week,value,group=type,col=type,fill=type)) + 
-       geom_line() + 
-       ggtitle("AdWords - Keyword Trends") + 
-       facet_wrap(~keyword))
-
-keywords_campaigns_over_time <- adwords_keywords_elog %>%
-  filter(keyword %in% keywords_with_earnings$keyword) %>%
-  #filter(grepl("Paleo Performers",campaign_name)) %>%
-  group_by(keyword, campaign_name, week) %>%
-  summarize(cost = sum(cost, na.rm = TRUE),
-            contribution = sum(money_in_the_bank_paid_to_us,na.rm=TRUE) *.25) %>%
-  mutate(cum_contribution = cumsum(contribution), 
-         cum_cost = cumsum(cost),
-         cum_ROI = cum_contribution - cum_cost) %>%
-  gather(type,value,cum_cost,cum_contribution,cum_ROI)
-
-#Profits over time by keyword and campaign
-plot(ggplot(keywords_campaigns_over_time %>% filter(keyword == "paleo meals" & grepl("Paleo Performers",campaign_name)), aes(week,value,group=type,col=type,fill=type)) + 
-       geom_line() + 
-       ggtitle("AdWords - Keyword Trends by Campaign") + 
-       facet_wrap(~keyword + campaign_name, ncol=2))
+keywords_with_earnings <- keywords_with_earnings(adwords_keywords_elog)
+keywords_over_time <- keywords_performance_over_time(adwords_keywords_elog)
+keywords_campaigns_over_time <- keywords_campaign_performance_over_time(adwords_keywords_elog)
+adwords_summary_overview <- adwords_keywords_elog %>%
+                            AdWordsUtilities::summarize_elog()
 
 ###################################### CREATE Bing DATA FRAMES ##############################################
 # Note, number of transactions is NOT the same as number of orders
