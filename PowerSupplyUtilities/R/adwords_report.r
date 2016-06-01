@@ -8,6 +8,7 @@
 #' search_engine_marketing_report(adwords_keywords_elog)
 
 search_engine_marketing_report <- function(adwords_keywords_elog){
+  require(AdWordsUtilities)
   adwords_user_overview <- user_overview(adwords_keywords_elog)
   AdWordsUtilities::keywords_campaign_device_matchtype_report(adwords_keywords_elog)
   keywords_weekly_conversion_metrics <- impression_share_over_time(adwords_keywords_elog)
