@@ -3,6 +3,7 @@
 export(clean_transactions_data)
 export(create_adwords_event_log)
 export(create_bing_event_log)
+export(create_google_display_event_log)
 export(customers_per_month_report)
 export(get_first_transaction_dates_for_users)
 export(get_referrals_data)

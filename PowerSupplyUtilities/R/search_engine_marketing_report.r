@@ -53,4 +53,36 @@ search_engine_marketing_report <- function(adwords_keywords_elog){
                                     mutate(total_acquisitions=num_acquisitions.adwords+num_acquisitions.bing)
   write.excel.csv(total_customers_per_month_report)
 
+  #Hacky Solution to get GDN Performance Graphs
+  gdn_elog <- AdWordsUtilities::create_google_display_event_log(from, to)
+  gdn_elog <- gdn_elog %>% 
+                filter(grepl("Rmktg",campaign_name)) %>% 
+                mutate(quality_score=NA, 
+                       new_referred_users=NA, 
+                       referred_users_transaction_amount=NA)
+
+  AdWordsUtilities::overall_performance_over_time(gdn_elog)
+  
+  devices_over_time <- gdn_elog %>%
+                      group_by(device,week) %>%
+                      summarize(cost = sum(cost, na.rm = TRUE),
+                                contribution = sum(money_in_the_bank_paid_to_us,na.rm=TRUE) *.25) %>%
+                      mutate(cum_contribution = cumsum(contribution), 
+                             cum_cost = cumsum(cost),
+                             cum_ROI = cum_contribution - cum_cost) %>%
+                      gather(type,value,cum_cost,cum_contribution,cum_ROI)
+
+  plot(ggplot(devices_over_time %>% 
+              filter(device == "mb"), 
+          aes(week,value,group=type,col=type,fill=type)) + 
+           geom_line() + 
+           ggtitle("GDN Trends on Mobile"))
+
+  plot(ggplot(devices_over_time %>% 
+              filter(device == "dt"), 
+          aes(week,value,group=type,col=type,fill=type)) + 
+           geom_line() + 
+           ggtitle("GDN Trends on Desktop"))
+  
+
 }
