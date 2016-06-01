@@ -8,10 +8,10 @@ overall_performance_over_time(keywords_elog, plot = TRUE)
 }
 \arguments{
 \item{keywords_elog}{A data frame containing keywords and transaction event log data.}
+
+\item{plot}{logical. If TRUE, creates a plot of the data.  If false, creates no plot, Defaults to \code{TRUE}.}
 }
 \value{
-plot logical. If TRUE, creates a plot of the data.  If false, creates no plot, Defaults to \code{TRUE}.
-
 The data frame used to create a plot of performance over time.
 }
 \description{

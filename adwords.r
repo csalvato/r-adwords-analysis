@@ -53,52 +53,8 @@ adwords_user_overview <- user_overview(adwords_keywords_elog)
 
 AdWordsUtilities::keywords_campaign_device_matchtype_report(adwords_keywords_elog)
 
-keywords_weekly_conversion_metrics <- adwords_keywords_elog %>%
-                        group_by(keyword, campaign_name, week) %>%
-                        AdWordsUtilities::summarize_elog() %>%
-                        filter(grepl("Paleo Performers",campaign_name)) %>%
-                        mutate(est_search_impression_share = ifelse(!is.na(est_search_impression_share) & est_search_impression_share >= 1.0, 1.0, est_search_impression_share)) %>%
-                        ungroup %>%
-                        arrange(keyword, campaign_name, week) %>%
-                        select(keyword, campaign_name, week, est_search_impression_share, impressions, clicks, num_acquisitions, click_through_rate, conversion_rate, cost_per_click, contribution_per_click)
-#All keywords impression share
-plot( 
-  ggplot(
-    keywords_weekly_conversion_metrics %>% 
-      # Filter by a single keyword, and only include the previous 4 weeks of data.
-      filter(week >= Sys.Date() - weeks(4), week <= Sys.Date(), keyword == "paleo meals"), 
-    aes(x=week, y=est_search_impression_share, fill=campaign_name)) +
-    geom_bar(stat="identity", position="dodge") +
-    ggtitle("AdWords - Weekly Impression Share by Geo") + 
-    ylim(0, 1) +
-    facet_wrap(~keyword, ncol=2)
-  )
-
-#All keywords Clickthrough Rate
-plot( 
-  ggplot(
-    keywords_weekly_conversion_metrics %>% 
-      # Filter by a single keyword, and only include the previous 4 weeks of data.
-      filter(week >= Sys.Date() - weeks(4), week <= Sys.Date(), keyword == "paleo meals"), 
-    aes(x=week, y=click_through_rate, fill=campaign_name)) +
-    geom_bar(stat="identity", position="dodge") +
-    ggtitle("AdWords - Weekly CTR by Keyword") +
-    # ylim(0, 0.30) +
-    facet_wrap(~keyword, ncol=2)
-)
-
-#Three plots. All same keyword, one plot per campaign. Impression share.
-plot( 
-  ggplot(
-    keywords_weekly_conversion_metrics %>% 
-      # Filter by a single keyword, and only include the previous 4 weeks of data.
-      filter(keyword == "paleo meals", week >= Sys.Date() - weeks(4), week <= Sys.Date()), 
-    aes(x=week, y=est_search_impression_share)) +
-    geom_bar(stat="identity") +
-    ggtitle("AdWords - Weekly Impression Share by Geo") + 
-    ylim(0, 1) +
-    facet_wrap(~keyword + campaign_name, ncol=2)
-)
+keywords_weekly_conversion_metrics <- impression_share_over_time(adwords_keywords_elog)
+keywords_weekly_conversion_metrics <- click_through_rate_over_time(adwords_keywords_elog)
 
 adwords_summary_overview <- adwords_keywords_elog %>%
                             AdWordsUtilities::summarize_elog()
@@ -119,38 +75,11 @@ keywords_overview <- adwords_keywords_elog %>%
   group_by(keyword) %>%
   AdWordsUtilities::summarize_elog()
 
+devices_over_time <- mobile_performance_over_time(adwords_keywords_elog, keyword_filter="paleo meals")
+devices_over_time <- desktop_performance_over_time(adwords_keywords_elog, keyword_filter="paleo meals")
+
 keywords_with_earnings <- keywords_overview %>% 
   filter(earnings > 0)
-
-devices_over_time <- adwords_keywords_elog %>%
-                      group_by(keyword,device,week) %>%
-                      summarize(cost = sum(cost, na.rm = TRUE),
-                                contribution = sum(money_in_the_bank_paid_to_us,na.rm=TRUE) *.25) %>%
-                      mutate(cum_contribution = cumsum(contribution), 
-                             cum_cost = cumsum(cost),
-                             cum_ROI = cum_contribution - cum_cost) %>%
-                      gather(type,value,cum_cost,cum_contribution,cum_ROI)
-
-#Profits over time by keyword and device
-plot(ggplot(devices_over_time %>% 
-              filter(keyword %in% keywords_with_earnings$keyword) %>% 
-              filter(device == "mb"), 
-            aes(week,value,group=type,col=type,fill=type)) + 
-             geom_line() + 
-             ggtitle("AdWords - Keyword Trends on Mobile") + 
-             ylim(-1000,1500) +
-             facet_wrap(~keyword + device, ncol=3))
-
-plot(ggplot(devices_over_time %>% 
-              filter(keyword == "paleo meals") %>% 
-              #filter(keyword %in% keywords_with_earnings$keyword) %>% 
-              filter(device == "dt"), 
-            aes(week,value,group=type,col=type,fill=type)) + 
-       geom_line() + 
-       ggtitle("AdWords - Keyword Trends on Desktop") + 
-       facet_wrap(~keyword + device, ncol=3))
-
-
 
 keywords_over_time <- adwords_keywords_elog %>%
   filter(keyword %in% keywords_with_earnings$keyword) %>%

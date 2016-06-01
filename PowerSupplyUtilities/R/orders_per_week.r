@@ -32,6 +32,7 @@ orders_per_week <- function(keywords_elog,
                                   num_orders=n_distinct(user_name, na.rm=TRUE))
 
 	if( plot ) {
+    require(ggplot2)
 		plot( ggplot( num_orders_per_week ) + 
       aes(week,num_orders,group=campaign_name,col=campaign_name,fill=campaign_name) + 
       geom_line() +

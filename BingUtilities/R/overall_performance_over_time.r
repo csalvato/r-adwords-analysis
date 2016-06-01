@@ -22,6 +22,7 @@ overall_performance_over_time <- function(keywords_elog, plot = TRUE){
 															  select(week, type, value)
 
 	if( plot ) {
+		require(ggplot2)
 		plot(ggplot(all_keyword_ROAS_over_time, 
 		            aes(week,value,group=type,col=type,fill=type)) + 
 		     geom_line()

@@ -3,7 +3,7 @@
 #' Takes in a AdWords event log and processes all summary data
 #'
 #' @param keywords_elog A data frame containing keywords and transaction event log data.
-#' @return plot logical. If TRUE, creates a plot of the data.  If false, creates no plot, Defaults to \code{TRUE}.
+#' @param plot logical. If TRUE, creates a plot of the data.  If false, creates no plot, Defaults to \code{TRUE}.
 #' @return The data frame used to create a plot of performance over time.
 #' @export
 #' @examples
@@ -22,6 +22,7 @@ overall_performance_over_time <- function(keywords_elog, plot = TRUE){
 															  select(week, type, value)
 
 	if( plot ) {
+		require(ggplot2)
 		plot(ggplot(all_keyword_ROAS_over_time, 
 		            aes(week,value,group=type,col=type,fill=type)) + 
 		     geom_line()
