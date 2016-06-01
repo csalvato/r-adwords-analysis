@@ -43,4 +43,14 @@ search_engine_marketing_report <- function(adwords_keywords_elog){
   # Should this be made into a report function too?
   # bing_keywords_elog %>% BingUtilities::summarize_elog()
 
+  #TODO: Move to own function
+  total_customers_per_month_report <- merge(adwords_customers_per_month_report, 
+                                          bing_customers_per_month_report, 
+                                          by="first_transaction_month", 
+                                          all=TRUE, 
+                                          suffixes=c(".adwords",".bing")) %>% 
+                                    mutate_each(funs(ifelse(is.na(.),0,.))) %>% 
+                                    mutate(total_acquisitions=num_acquisitions.adwords+num_acquisitions.bing)
+  write.excel.csv(total_customers_per_month_report)
+
 }
