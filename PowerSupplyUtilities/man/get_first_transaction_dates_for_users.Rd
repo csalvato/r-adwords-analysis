@@ -7,7 +7,7 @@
 get_first_transaction_dates_for_users(from = Sys.Date(), to = Sys.Date(),
   users = NULL,
   database_driver = "database_drivers/postgresql-9.4.1208.jre6.jar",
-  jdbc_config_file = "jdbc_heroku_string.txt")
+  jdbc_config_file = "jdbc_data_warehouse_database_config.txt")
 }
 \arguments{
 \item{from}{Start date in either format <"yyyy-mm-dd"> or <yyyymmdd>. Inclusive.}
