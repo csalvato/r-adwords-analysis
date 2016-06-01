@@ -3,6 +3,7 @@
 export(as.adwords.keyword)
 export(as.device)
 export(as.match_type)
+export(campaign_lookup_table)
 export(campaign_performance_data)
 export(clean_raw_campaign_data)
 export(clean_raw_keyword_data)

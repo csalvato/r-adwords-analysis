@@ -30,55 +30,19 @@ create_adwords_event_log <- function(from=Sys.Date(),
   # Retrieve revenue data
   db_transactions <- get_transactions_data(from=from, to=to)
   db_influencer_metrics <- get_referrals_data(from=from, to=to)
-
-  pgsql <- JDBC("org.postgresql.Driver", "database_drivers/postgresql-9.4.1208.jre6.jar", "`")
-  heroku_db <- dbConnect(pgsql, string_from_file("jdbc_transactions_database_config.txt"))
-  db_first_transactions <- dbGetQuery(heroku_db, GetoptLong::qq(paste("SELECT 
-                                                                          * 
-                                                                       FROM
-                                                                         (select 
-                                                                         min(t.created_at) as first_transaction,
-                                                                         u.id,
-                                                                         u.name
-                                                                         from users u
-                                                                         inner join
-                                                                         transactions t on t.user_id = u.id
-                                                                         where
-                                                                         u.id IN (", paste(shQuote(db_transactions$app_user_id, type = "sh"), collapse=','),
-                                                                                  ")
-                                                                         group by u.id
-                                                                         ORDER BY first_transaction desc) first_transactions
-                                                                       WHERE
-                                                                       first_transaction between '@{start_date}' and '@{to}'")))
-  heroku_db <- dbDisconnect(heroku_db)
+  db_first_transactions  <- get_first_transaction_dates_for_users(from=from, to=to, users=db_transactions$app_user_id)
 
   # Join Mixpanel Conversion Data with transaction data
   unique_users <- distinct(mixpanel_adwords_conversions, app_user_id)
-
   db_transactions  <- db_transactions %>% inner_join(unique_users, by="app_user_id")
 
   #Filter out people where their first order was not in the specified start date and end date
   db_transactions <- db_transactions %>% filter(is.element(app_user_id, db_first_transactions$id))
 
-  # Format database transactions for future use
-  db_transactions <- db_transactions %>% rename(device=latest_ad_device, 
-                                                campaign_id=latest_ad_utm_campaign,
-                                                keyword=latest_ad_awkeyword,
-                                                ad_group_id=latest_ad_awadgroupid,
-                                                match_type=latest_ad_awmatchtype)
-  db_transactions$campaign_id <- as.integer(as.character(db_transactions$campaign_id))
-  db_transactions$date <- as.Date(db_transactions$transaction_date, format="%Y-%m-%d")
-  db_transactions$day_of_week <- weekdays(as.Date(db_transactions$date,'%Y-%m-%d'))
-  db_transactions$match_type <- as.match_type(db_transactions$match_type)
-  db_transactions$keyword <- as.adwords.keyword(db_transactions$keyword)
-  db_transactions <- db_transactions %>% date_filter(from, to)
-  db_transactions <- db_transactions %>% select(-user_id)
-  db_transactions <- db_transactions %>% mutate(user_id=as.integer(as.character(app_user_id)))
+  db_transactions <- clean_transactions_data(db_transactions)
 
   # Add campaign names to db_transactions log
-  db_transactions <- adwords_campaigns_data %>% 
-                       group_by(campaign_id)%>% 
-                       summarize(campaign_name = first(campaign_name)) %>%
+  db_transactions <- campaign_lookup_table(from=from, to=to) %>%
                        right_join(db_transactions, by=c(campaign_id = "campaign_id"))
 
 
@@ -99,13 +63,13 @@ create_adwords_event_log <- function(from=Sys.Date(),
                                               match_type=first(match_type))
 
   #Add influencer metrics to the event log
+  db_influencer_metrics <- get_referrals_data(from=from, to=to)
   influencer_metrics_with_user_data <- db_influencer_metrics %>%
                                       rename(week=week_start,
                                              user_id=influencer_id) %>%
                                       mutate(week = as.Date(week, format = '%Y-%m-%d')) %>%
-                                      inner_join(user_first_acquisition_metrics, by=c(user_id="user_id")) %>% 
+                                      inner_join(user_first_acquisition_metrics, by=c(user_id="user_id")) %>%
                                       filter(week >= from, week <= to)
-
   keywords_elog <- rbind.fill(keywords_elog, influencer_metrics_with_user_data)
 
   keywords_elog <- keywords_elog %>% 
@@ -129,8 +93,7 @@ create_adwords_event_log <- function(from=Sys.Date(),
                             -lastOrderedFrom,
                             -utm_content,
                             -mp_keyword,
-                            -traits,
-                            -app_user_id)
+                            -traits)
 
   return(keywords_elog)
 }

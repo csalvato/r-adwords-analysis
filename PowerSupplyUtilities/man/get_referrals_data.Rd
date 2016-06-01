@@ -28,6 +28,6 @@ Returns a data frame with information about the number of referees (people who p
 within a date range.  Data is pulled from cached data warehouse that is updated nightly.
 }
 \examples{
-get_transactions_data(from=20150101, to=20151231)
+get_referrals_data(from=20150101, to=20151231)
 }
 
