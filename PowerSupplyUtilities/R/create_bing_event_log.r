@@ -103,8 +103,7 @@ create_bing_event_log <- function(from=Sys.Date(),
                             -lastOrderedFrom,
                             -utm_content,
                             -mp_keyword,
-                            -traits,
-                            -app_user_id)
+                            -traits)
 
   return(keywords_elog)
 }
