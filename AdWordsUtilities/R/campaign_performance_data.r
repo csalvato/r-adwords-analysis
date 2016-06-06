@@ -15,6 +15,6 @@
 #' campaign_performance_data(from=20151216, to=20151219)
 campaign_performance_data <- function(from=Sys.Date(), to=Sys.Date()) {
   raw <- raw_campaign_performance_data(from, to)
-  cleaned  <- clean_raw_adwords_campaign_data(raw)
+  cleaned  <- AdWordsUtilities::clean_raw_campaign_data(raw)
   return(cleaned)
 }

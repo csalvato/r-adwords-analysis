@@ -6,7 +6,7 @@
 \usage{
 get_referrals_data(from = Sys.Date(), to = Sys.Date(),
   database_driver = "database_drivers/postgresql-9.4.1208.jre6.jar",
-  jdbc_config_file = "jdbc_datawarehouse_string.txt",
+  jdbc_config_file = "jdbc_data_warehouse_database_config.txt",
   transactions_query_file = "referrals_query.sql")
 }
 \arguments{
@@ -28,6 +28,6 @@ Returns a data frame with information about the number of referees (people who p
 within a date range.  Data is pulled from cached data warehouse that is updated nightly.
 }
 \examples{
-get_transactions_data(from=20150101, to=20151231)
+get_referrals_data(from=20150101, to=20151231)
 }
 

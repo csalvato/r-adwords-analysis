@@ -3,4 +3,4 @@
 export(adwords_raw_completed_order_events)
 export(all_ppc_raw_completed_order_events)
 export(bing_raw_completed_order_events)
-export(clean_adwords_raw_completed_order_events)
+export(clean_completed_order_events)

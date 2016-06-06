@@ -38,8 +38,8 @@ raw_keyword_performance_data <- function(from=Sys.Date(), to=Sys.Date()) {
                                    'PostClickQualityScore',
                                    'KeywordMatchType'),
                      report="KEYWORDS_PERFORMANCE_REPORT",
-                     start= format(from, format="%Y%m%d"),
-                     end=format(to, format="%Y%m%d"))
+                     start= format(as.Date(from), format="%Y%m%d"),
+                     end=format(as.Date(to), format="%Y%m%d"))
 
   # Make sure to use Adwords Account Id (MCC Id will not work)
   require(yaml)
