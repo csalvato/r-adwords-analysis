@@ -19,7 +19,7 @@ search_engine_marketing_report <- function(adwords_keywords_elog){
                                                                   keyword_filter="paleo meals", 
                                                                   campaign_filter="Paleo Performers")
   PowerSupplyUtilities::paleo_cohort_views(adwords_keywords_elog)
-  PowerSupplyUtilities::customers_per_month_report(adwords_keywords_elog, file="adwords_customers_per_month.csv")
+  adwords_customers_per_month_report <- PowerSupplyUtilities::customers_per_month_report(adwords_keywords_elog, file="adwords_customers_per_month.csv")
   AdWordsUtilities::mobile_performance_over_time(adwords_keywords_elog, keyword_filter="paleo meals")
   AdWordsUtilities::desktop_performance_over_time(adwords_keywords_elog, keyword_filter="paleo meals")
   AdWordsUtilities::keywords_performance_over_time(adwords_keywords_elog)
@@ -35,7 +35,7 @@ search_engine_marketing_report <- function(adwords_keywords_elog){
   BingUtilities::contribution_per_click_report(bing_keywords_elog)
   PowerSupplyUtilities::orders_per_week(bing_keywords_elog, keyword_filter="paleo meals")
   PowerSupplyUtilities::paleo_cohort_views(bing_keywords_elog)
-  PowerSupplyUtilities::customers_per_month_report(bing_keywords_elog, file="bing_customers_per_month.csv")
+  bing_customers_per_month_report <- PowerSupplyUtilities::customers_per_month_report(bing_keywords_elog, file="bing_customers_per_month.csv")
   BingUtilities::mobile_performance_over_time(bing_keywords_elog, keyword_filter="paleo meals")
   BingUtilities::desktop_performance_over_time(bing_keywords_elog, keyword_filter="paleo meals")
   BingUtilities::keywords_performance_over_time(bing_keywords_elog)

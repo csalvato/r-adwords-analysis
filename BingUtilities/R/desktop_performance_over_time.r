@@ -43,7 +43,7 @@ desktop_performance_over_time <- function( keywords_elog,
               filter(device == "dt"), 
             aes(week,value,group=type,col=type,fill=type)) + 
        geom_line() + 
-       ggtitle("AdWords - Keyword Trends on Desktop") + 
+       ggtitle("Bing - Keyword Trends on Desktop") + 
        facet_wrap(~keyword + device, ncol=3))
   }
 

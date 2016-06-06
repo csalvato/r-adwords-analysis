@@ -39,7 +39,7 @@ create_adwords_event_log <- function(from=Sys.Date(),
   #Filter out people where their first order was not in the specified start date and end date
   db_transactions <- db_transactions %>% filter(is.element(app_user_id, db_first_transactions$id))
 
-  db_transactions <- clean_transactions_data(db_transactions)
+  db_transactions <- clean_transactions_data_for_adwords(db_transactions)
 
   # Add campaign names to db_transactions log
   db_transactions <- campaign_lookup_table(from=from, to=to) %>%
