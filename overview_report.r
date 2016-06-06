@@ -41,18 +41,8 @@ to = end_date = paste(toString(Sys.Date() - days(0)), "03:59:59")
 #start_date = '2016-04-28, 04:00:00'
 #end_date = '2016-04-28, 03:59:59'
 
-adwords_keywords_elog <- create_adwords_event_log(from=start_date, to=end_date)
 bing_keywords_elog <- create_bing_event_log(from=start_date, to=end_date)
+adwords_keywords_elog <- create_adwords_event_log(from=start_date, to=end_date)
 
 ###################################### CREATE AdWords Plots and CSVs ##############################################
 PowerSupplyUtilities::search_engine_marketing_report(adwords_keywords_elog)
-
-############ Amalgamated Reports ###########
-total_customers_per_month_report <- merge(adwords_customers_per_month_report, 
-                                          bing_customers_per_month_report, 
-                                          by="first_transaction_month", 
-                                          all=TRUE, 
-                                          suffixes=c(".adwords",".bing")) %>% 
-                                    mutate_each(funs(ifelse(is.na(.),0,.))) %>% 
-                                    mutate(total_acquisitions=num_acquisitions.adwords+num_acquisitions.bing)
-write.excel.csv(total_customers_per_month_report)
