@@ -47,7 +47,7 @@ create_bing_event_log <- function(from=Sys.Date(),
   db_transactions <- db_transactions %>% filter(is.element(app_user_id, db_first_transactions$id))
 
   # Format database transactions for future use
-  db_transactions <- clean_transactions_data(db_transactions)
+  db_transactions <- clean_transactions_data_for_bing(db_transactions)
 
   # Add campaign names to db_transactions log
   db_transactions <- bing_keywords_data %>% 
