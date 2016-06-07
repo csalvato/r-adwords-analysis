@@ -4,10 +4,13 @@
 \alias{search_engine_marketing_report}
 \title{Generate Search Engine Marketing Report}
 \usage{
-search_engine_marketing_report(adwords_keywords_elog)
+search_engine_marketing_report(adwords_keywords_elog = NULL,
+  bing_keywords_elog = NULL)
 }
 \arguments{
-\item{adwords_keywords_elog}{A data frame containing keywords and transaction event log data.}
+\item{adwords_keywords_elog}{A data frame containing keywords and transaction event log data from AdWords.}
+
+\item{bing_keywords_elog}{A data frame containing keywords and transaction event log data from Bing.}
 }
 \description{
 Convenience Function that creates a comprehensive Search Engine Marketing report (viz and CSVs) with a single call.
