@@ -17,9 +17,10 @@ summarize_elog <- function(elog_data_frame,
                                    ){
   require(plyr)
   require(dplyr)
-  return (summarize(elog_data_frame, cost = sum(cost, na.rm = TRUE),
+  return (summarize(elog_data_frame, 
+                    cost = sum(cost, na.rm = TRUE),
                     average_position = weighted.mean(average_position,impressions, na.rm=TRUE),
-                    average_quality_score=mean(quality_score, na.rm=TRUE),
+                    average_quality_score=ifelse(is.null(elog_data_frame$quality_score), NA, mean(quality_score, na.rm=TRUE)) ,
                     estimated_available_impressions = sum(impressions/est_search_impression_share, na.rm=TRUE),
                     impressions = sum(impressions, na.rm = TRUE),
                     # imp share is not wholly accurate because of the way the numbers are reported, but close enough. 
@@ -35,8 +36,8 @@ summarize_elog <- function(elog_data_frame,
                     earnings_per_click = earnings/clicks,
                     contribution_per_click= contribution/clicks,
                     cpa = ifelse(num_acquisitions==0, cost, cost/num_acquisitions),
-                    referred_users=sum(new_referred_users, na.rm=TRUE),
-                    referred_earnings=sum(referred_users_transaction_amount,na.rm=TRUE),
+                    referred_users=ifelse(is.null(elog_data_frame$new_referred_users), NA, sum(new_referred_users, na.rm=TRUE)),
+                    referred_earnings=ifelse(is.null(elog_data_frame$referred_users_transaction_amount), NA, sum(referred_users_transaction_amount,na.rm=TRUE)),
                     estimated_ltv = num_acquisitions*average_num_orders_in_lifetime*average_value_per_order*margin,
                     estimated_lifetime_ROAS=(estimated_ltv-cost)/cost,
                     total_earnings = earnings + referred_earnings,
