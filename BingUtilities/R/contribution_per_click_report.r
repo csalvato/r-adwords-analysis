@@ -29,10 +29,10 @@ contribution_per_click_report <- function(keywords_elog,
   }
 
   data <- keywords_elog %>% 
-            group_by(keyword,campaign_name) %>% 
+            group_by(keyword,match_type,campaign_name) %>% 
             BingUtilities::summarize_elog() %>% 
-            filter(cost > 0 & earnings > 0) %>% 
-            group_by(keyword,campaign_name) %>% 
+            filter(cost > 0 & earnings > 0) %>%
+            group_by(keyword,match_type,campaign_name) %>%
             summarize(total_cost = sum(cost),
                       total_contribution = sum(contribution),
                       total_clicks = sum(clicks), 
