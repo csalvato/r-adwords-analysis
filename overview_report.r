@@ -45,4 +45,4 @@ bing_keywords_elog <- create_bing_event_log(from=start_date, to=end_date)
 adwords_keywords_elog <- create_adwords_event_log(from=start_date, to=end_date)
 
 ###################################### CREATE AdWords Plots and CSVs ##############################################
-PowerSupplyUtilities::search_engine_marketing_report(adwords_keywords_elog)
+PowerSupplyUtilities::search_engine_marketing_report(adwords_keywords_elog, bing_keywords_elog)
