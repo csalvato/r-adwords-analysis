@@ -4,12 +4,14 @@
 #'
 #' @param adwords_keywords_elog A data frame containing keywords and transaction event log data from AdWords.
 #' @param bing_keywords_elog A data frame containing keywords and transaction event log data from Bing.
+#' @param gdn_elog A data frame containing keywords and transaction event log data from Google Display Network.
 #' @export
 #' @examples
 #' search_engine_marketing_report(adwords_keywords_elog)
 
 search_engine_marketing_report <- function( adwords_keywords_elog=NULL, 
-                                            bing_keywords_elog=NULL){
+                                            bing_keywords_elog=NULL,
+                                            gdn_elog=NULL){
   
   if(!is.null(adwords_keywords_elog)) {
     require(AdWordsUtilities)
@@ -30,14 +32,6 @@ search_engine_marketing_report <- function( adwords_keywords_elog=NULL,
     AdWordsUtilities::keywords_campaign_performance_over_time(adwords_keywords_elog)  
     # Should this be made into a report function too?
     # adwords_keywords_elog %>% AdWordsUtilities::summarize_elog()
-
-    #Hacky Solution to get GDN Performance Graphs
-    gdn_elog <- PowerSupplyUtilities::create_google_display_event_log(from, to)
-
-    AdWordsUtilities::overall_performance_over_time(gdn_elog)
-    AdWordsUtilities::desktop_gdn_performance_over_time(gdn_elog)
-    AdWordsUtilities::mobile_gdn_performance_over_time(gdn_elog)
-
   }
 
   if(!is.null(bing_keywords_elog)) {
@@ -57,6 +51,14 @@ search_engine_marketing_report <- function( adwords_keywords_elog=NULL,
     # Should this be made into a report function too?
     # bing_keywords_elog %>% BingUtilities::summarize_elog()
   }
+
+    if(!is.null(gdn_elog)) {
+      require(AdWordsUtilities)
+      AdWordsUtilities::overall_performance_over_time(gdn_elog)
+      AdWordsUtilities::desktop_gdn_performance_over_time(gdn_elog)
+      AdWordsUtilities::mobile_gdn_performance_over_time(gdn_elog)
+
+    }
 
   if( !is.null(adwords_keywords_elog) && !is.null(bing_keywords_elog)) {
     total_customers_per_month_report <- merge(adwords_customers_per_month_report, 
