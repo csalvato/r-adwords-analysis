@@ -23,7 +23,7 @@ create_google_display_event_log <- function(from=Sys.Date(),
 
   # Retrieve revenue data
   db_transactions <- get_transactions_data(from=from, to=to)
-  #db_influencer_metrics <- get_referrals_data(from=from, to=to)
+  db_influencer_metrics <- get_referrals_data(from=from, to=to)
   db_first_transactions  <- get_first_transaction_dates_for_users(from=from, to=to, users=db_transactions$app_user_id)
 
   # Join Mixpanel Conversion Data with transaction data
