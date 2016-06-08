@@ -57,6 +57,8 @@ search_engine_marketing_report <- function( adwords_keywords_elog=NULL,
       AdWordsUtilities::overall_performance_over_time(gdn_elog)
       AdWordsUtilities::desktop_gdn_performance_over_time(gdn_elog)
       AdWordsUtilities::mobile_gdn_performance_over_time(gdn_elog)
+      PowerSupplyUtilities::orders_per_week(gdn_elog, 
+                                            campaign_filter="Rmktg")
 
     }
 
