@@ -6,6 +6,7 @@
 #' @param keyword_filter Optional. (e.g. "paleo meals") If provided, generates a data frame and plot only for the *exact* keyword provided. Default to NULL.
 #' @param campaign_filter Optional. (e.g. "Paleo Performers") If provided, generates a data frame and plot for campaigns where the string is included in the campaign name. Default to NULL.
 #' @param plot logical. If TRUE, creates a plot of the data.  If false, creates no plot, Defaults to \code{TRUE}.
+#' @param plot_png_file String with the path to the plot file that should be written. If NULL, no file is written. Defaults to \code{NULL}.
 #' @return The data frame used to create a plot of mobile performance over time.
 #' @export
 #' @examples
@@ -14,7 +15,8 @@
 mobile_performance_over_time <- function( keywords_elog, 
                                           keyword_filter=NULL,
                                           campaign_filter=NULL,
-                                          plot = TRUE){
+                                          plot = TRUE,
+                                          plot_png_file=NULL){
   require(plyr)
   require(dplyr)
   require(SalvatoUtilities)
@@ -38,14 +40,15 @@ mobile_performance_over_time <- function( keywords_elog,
 
 	if( plot ) {
 		require(ggplot2)
-		plot(ggplot(devices_over_time %>% 
+    the_plot  <- ggplot(devices_over_time %>% 
               filter(keyword %in% earnings_keywords$keyword) %>% 
               filter(device == "mb"), 
             aes(week,value,group=type,col=type,fill=type)) + 
              geom_line() + 
              ggtitle("Bing - Keyword Trends on Mobile") + 
              ylim(-1000,1500) +
-             facet_wrap(~keyword + device, ncol=3))
+             facet_wrap(~keyword + device, ncol=3)
+		report.plot( the_plot, plot_png_file )
 	}
 
 	return(devices_over_time)

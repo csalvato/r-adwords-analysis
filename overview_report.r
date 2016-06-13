@@ -49,3 +49,4 @@ gdn_elog <- create_google_display_event_log(from, to)
 PowerSupplyUtilities::search_engine_marketing_report( adwords_keywords_elog, 
 																											bing_keywords_elog, 
 																											gdn_elog)
+

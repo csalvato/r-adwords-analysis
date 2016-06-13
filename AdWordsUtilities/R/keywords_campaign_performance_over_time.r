@@ -4,12 +4,15 @@
 #'
 #' @param keywords_elog A data frame containing keywords and transaction event log data.
 #' @param plot logical. If TRUE, creates a plot of the data.  If false, creates no plot, Defaults to \code{TRUE}.
+#' @param plot_png_file String with the path to the plot file that should be written. If NULL, no file is written. Defaults to \code{NULL}.
 #' @return The data frame used to create a plot of performance over time.
 #' @export
 #' @examples
 #' keywords_campaign_performance_over_time(elog_data_frame)
 
-keywords_campaign_performance_over_time <- function(keywords_elog, plot = TRUE){
+keywords_campaign_performance_over_time <- function(keywords_elog, 
+																										plot = TRUE, 
+																										plot_png_file=NULL){
   require(plyr)
   require(dplyr)
   
@@ -28,10 +31,11 @@ keywords_campaign_performance_over_time <- function(keywords_elog, plot = TRUE){
 
 	if( plot ) {
 		require(ggplot2)
-		plot(ggplot(keywords_campaigns_over_time %>% filter(keyword == "paleo meals" & grepl("Paleo Performers",campaign_name)), aes(week,value,group=type,col=type,fill=type)) + 
+		the_plot <- ggplot(keywords_campaigns_over_time %>% filter(keyword == "paleo meals" & grepl("Paleo Performers",campaign_name)), aes(week,value,group=type,col=type,fill=type)) + 
        geom_line() + 
        ggtitle("AdWords - Keyword Trends by Campaign") + 
-       facet_wrap(~keyword + campaign_name, ncol=2))
+       facet_wrap(~keyword + campaign_name, ncol=2)
+		report.plot(the_plot, plot_png_file)
 	 }
 
 	return(keywords_campaigns_over_time)

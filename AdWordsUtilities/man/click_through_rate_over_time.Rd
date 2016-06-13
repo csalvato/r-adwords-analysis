@@ -4,12 +4,15 @@
 \alias{click_through_rate_over_time}
 \title{Create plot of AdWords click through rate over time}
 \usage{
-click_through_rate_over_time(keywords_elog, plot = TRUE)
+click_through_rate_over_time(keywords_elog, plot = TRUE,
+  plot_png_file = NULL)
 }
 \arguments{
 \item{keywords_elog}{A data frame containing keywords and transaction event log data.}
 
 \item{plot}{logical. If TRUE, creates a plot of the data.  If false, creates no plot, Defaults to \code{TRUE}.}
+
+\item{plot_png_file}{String with the path to the plot file that should be written. If NULL, no file is written. Defaults to \code{NULL}.}
 }
 \value{
 The data frame used to create a plot of clickthrough rate over time.

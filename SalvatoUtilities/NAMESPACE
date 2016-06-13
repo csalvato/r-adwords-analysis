@@ -3,5 +3,6 @@
 export(as.week)
 export(date_filter)
 export(detach_all_packages)
+export(report.plot)
 export(string_from_file)
 export(write.excel.csv)

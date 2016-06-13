@@ -4,12 +4,13 @@
 #'
 #' @param keywords_elog A data frame containing keywords and transaction event log data.
 #' @param plot logical. If TRUE, creates a plot of the data.  If false, creates no plot, Defaults to \code{TRUE}.
+#' @param plot_png_file String with the path to the plot file that should be written. If NULL, no file is written. Defaults to \code{NULL}.
 #' @return The data frame used to create a plot of impression share over time over time.
 #' @export
 #' @examples
 #' overall_performance_over_time(elog_data_frame)
 
-impression_share_over_time <- function(keywords_elog, plot = TRUE){
+impression_share_over_time <- function(keywords_elog, plot = TRUE, plot_png_file=NULL){
   require(plyr)
   require(dplyr)
   keywords_weekly_conversion_metrics <- keywords_elog %>%
@@ -23,17 +24,18 @@ impression_share_over_time <- function(keywords_elog, plot = TRUE){
 
 	if( plot ) {
 		require(ggplot2)
-		plot( 
-	  ggplot(
-	    keywords_weekly_conversion_metrics %>% 
-	      # Filter by a single keyword, and only include the previous 4 weeks of data.
-	      filter(week >= Sys.Date() - weeks(4), week <= Sys.Date(), keyword == "paleo meals"), 
-	    aes(x=week, y=est_search_impression_share, fill=campaign_name)) +
-	    geom_bar(stat="identity", position="dodge") +
-	    ggtitle("AdWords - Weekly Impression Share by Geo") + 
-	    ylim(0, 1) +
-	    facet_wrap(~keyword, ncol=2)
-	  )
+
+		the_plot <-  ggplot(
+		    keywords_weekly_conversion_metrics %>% 
+		      # Filter by a single keyword, and only include the previous 4 weeks of data.
+		      filter(week >= Sys.Date() - weeks(4), week <= Sys.Date(), keyword == "paleo meals"), 
+		    aes(x=week, y=est_search_impression_share, fill=campaign_name)) +
+		    geom_bar(stat="identity", position="dodge") +
+		    ggtitle("AdWords - Weekly Impression Share by Geo") + 
+		    ylim(0, 1) +
+		    facet_wrap(~keyword, ncol=2)
+
+		report.plot(the_plot, file=plot_png_file)
 	}
 
 	return(keywords_weekly_conversion_metrics)

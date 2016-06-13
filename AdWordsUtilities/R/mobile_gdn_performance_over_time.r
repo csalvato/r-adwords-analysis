@@ -4,6 +4,7 @@
 #'
 #' @param gdn_elog A data frame containing keywords and transaction event log data.
 #' @param campaign_filter Optional. (e.g. "Paleo Performers") If provided, generates a data frame and plot for campaigns where the string is included in the campaign name. Default to NULL.
+#' @param plot_png_file String with the path to the plot file that should be written. If NULL, no file is written. Defaults to \code{NULL}.
 #' @param plot logical. If TRUE, creates a plot of the data.  If false, creates no plot, Defaults to \code{TRUE}.
 #' @return The data frame used to create a plot of mobile performance over time.
 #' @export
@@ -12,7 +13,8 @@
 
 mobile_gdn_performance_over_time <- function( gdn_elog, 
                                               campaign_filter=NULL,
-                                              plot = TRUE){
+                                              plot = TRUE,
+                                              plot_png_file=NULL){
   require(plyr)
   require(dplyr)
   require(SalvatoUtilities)
@@ -30,11 +32,12 @@ mobile_gdn_performance_over_time <- function( gdn_elog,
 
 	if( plot ) {
 		require(ggplot2)
-		plot(ggplot(devices_over_time %>% 
+    the_plot  <- ggplot(devices_over_time %>% 
                 filter(device == "mb"), 
             aes(week,value,group=type,col=type,fill=type)) + 
              geom_line() + 
-             ggtitle("GDN Trends on Mobile"))
+             ggtitle("GDN Trends on Mobile")
+		report.plot( the_plot, plot_png_file )
 	}
 
 	return(devices_over_time)

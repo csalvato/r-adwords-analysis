@@ -5,7 +5,7 @@
 \title{Create plot of AdWords desktop performance over time}
 \usage{
 desktop_performance_over_time(keywords_elog, keyword_filter = NULL,
-  campaign_filter = NULL, plot = TRUE)
+  campaign_filter = NULL, plot = TRUE, plot_png_file = NULL)
 }
 \arguments{
 \item{keywords_elog}{A data frame containing keywords and transaction event log data.}
@@ -15,6 +15,8 @@ desktop_performance_over_time(keywords_elog, keyword_filter = NULL,
 \item{campaign_filter}{Optional. (e.g. "Paleo Performers") If provided, generates a data frame and plot for campaigns where the string is included in the campaign name. Default to NULL.}
 
 \item{plot}{logical. If TRUE, creates a plot of the data.  If false, creates no plot, Defaults to \code{TRUE}.}
+
+\item{plot_png_file}{String with the path to the plot file that should be written. If NULL, no file is written. Defaults to \code{NULL}.}
 }
 \value{
 The data frame used to create a plot of desktop performance rate over time.

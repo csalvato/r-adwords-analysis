@@ -19,7 +19,6 @@ raw_keyword_performance_data <- function(from=Sys.Date(), to=Sys.Date()) {
 
   statement <- statement(select=c( 'Date',
                                    'DayOfWeek',
-                                   # 'HourOfDay',
                                    'Criteria',
                                    'Status',
                                    'CampaignId', 
