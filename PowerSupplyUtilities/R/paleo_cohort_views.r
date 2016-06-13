@@ -8,6 +8,10 @@
 #' paleo_cohort_views(keywords_elog)
 
 paleo_cohort_views <- function(keywords_elog) {
+    elog_name <- deparse(substitute(keywords_elog)) #gets variable name as string
+    file_prefix <- if(grepl("adwords",elog_name))  "adwords" else "bing"
+
+
     paleo_meals_cohort <- filter(keywords_elog,keyword == "paleo meals")
 
     ##assign ordinal number to weeks
@@ -132,8 +136,7 @@ paleo_cohort_views <- function(keywords_elog) {
     ymax <- ceiling(signif(max(paleo_meals_cohorts_total_ROI$value.x,paleo_meals_cohorts_total_ROI$value.y),2))
     ymin <- floor(signif(min(paleo_meals_cohorts_total_ROI$value.x,paleo_meals_cohorts_total_ROI$value.y),2))
 
-    plot( 
-            ggplot(
+    plot1 <- ggplot(
                     paleo_meals_cohorts_total_ROI, 
                     aes(x=cohort_week,y=value.x, fill=type.x)) +
                     geom_bar(stat="identity", position="identity") +
@@ -143,19 +146,19 @@ paleo_cohort_views <- function(keywords_elog) {
                     scale_y_continuous(breaks=seq(ymin,ymax,500),labels=scales::dollar) + 
                     scale_fill_manual(values=c("springgreen4","red2")) +
                     guides(fill=guide_legend(title=NULL)) +
-                    labs(title="Contribution, Cost, and ROI by Cohort Week",x="Cohort Week",y="") 
-    )
+                    labs(title="Contribution, Cost, and ROI by Cohort Week",x="Cohort Week",y="")
+    report.plot( plot1, file=paste0("output/",file_prefix,"_cohorts_breakdown.png"))
+             
 
     ##Weekly Cohort Plot 2: Number of weeks it took each cohort to break even
 
     max_be <- max(paleo_meals_cohort_breakeven$weeks_until_breakeven,na.rm=TRUE)
-    plot(
-            ggplot(
-                    paleo_meals_cohort_breakeven, 
+    
+    plot2 <- ggplot(paleo_meals_cohort_breakeven, 
                     aes(x=cohort_week,y=weeks_until_breakeven)) +
                     geom_bar(stat="identity", position="dodge") +
                     scale_x_continuous(breaks=seq(1,max_cw,1)) +
                     scale_y_continuous(breaks=seq(0,max_be,1)) +
                     labs(title="Weeks to Break Even per Cohort Week",x="Cohort Week",y="Number of Weeks")
-    )
+    report.plot( plot2, file=paste0("output/",file_prefix,"_cohorts_time_to_break_even.png"))
 }

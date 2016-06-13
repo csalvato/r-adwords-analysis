@@ -4,14 +4,17 @@
 \alias{overall_performance_over_time}
 \title{Create plot of Bing performance over time}
 \usage{
-overall_performance_over_time(keywords_elog, plot = TRUE)
+overall_performance_over_time(keywords_elog, plot = TRUE,
+  plot_png_file = NULL)
 }
 \arguments{
 \item{keywords_elog}{A data frame containing keywords and transaction event log data.}
+
+\item{plot}{logical. If TRUE, creates a plot of the data.  If false, creates no plot, Defaults to \code{TRUE}.}
+
+\item{plot_png_file}{String with the path to the plot file that should be written. If NULL, no file is written. Defaults to \code{NULL}.}
 }
 \value{
-plot logical. If TRUE, creates a plot of the data.  If false, creates no plot, Defaults to \code{TRUE}.
-
 The data frame used to create a plot of performance over time.
 }
 \description{
