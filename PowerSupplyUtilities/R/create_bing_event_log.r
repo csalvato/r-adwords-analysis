@@ -40,7 +40,7 @@ create_bing_event_log <- function(from=Sys.Date(),
   db_first_transactions  <- get_first_transaction_dates_for_users(from=from, to=to, users=db_transactions$app_user_id)
   
   # Join Mixpanel Conversion Data with transaction data
-  unique_users <- distinct(mixpanel_bing_conversions, app_user_id)
+  unique_users <- distinct(mixpanel_bing_conversions, app_user_id, .keep_all=TRUE)
   db_transactions  <- db_transactions %>% inner_join(unique_users, by="app_user_id")
 
   #Filter out people where their first order was not in the specified start date and end date

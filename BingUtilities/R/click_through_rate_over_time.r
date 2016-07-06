@@ -31,7 +31,7 @@ click_through_rate_over_time <- function(keywords_elog, plot = TRUE, plot_png_fi
 		    geom_bar(stat="identity", position="dodge") +
 		    ggtitle("Bing - Weekly CTR by Keyword") +
 		    # ylim(0, 0.30) +
-		    facet_wrap(~keyword, ncol=2)
+		    facet_grid(~keyword)
 		report.plot( the_plot, plot_png_file )
 	}
 
