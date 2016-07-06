@@ -19,12 +19,12 @@ search_engine_marketing_report <- function( adwords_keywords_elog=NULL,
     AdWordsUtilities::keywords_campaign_device_matchtype_report(adwords_keywords_elog, file="output/adwords_keyword_campaign_device_matchtype_report.csv")
     AdWordsUtilities::impression_share_over_time(adwords_keywords_elog, plot_png_file="output/adwords_impression_share_over_time.png")
     AdWordsUtilities::click_through_rate_over_time(adwords_keywords_elog, plot_png_file="output/adwords_click_through_rate_over_time.png")
-    AdWordsUtilities::overall_performance_over_time(adwords_keywords_elog, plot_png_file="output/adwords_overall_performance_over_time.png")
+    AdWordsUtilities::overall_performance_over_time(adwords_keywords_elog, plot_png_file="output/!adwords_overall_performance_over_time.png")
     AdWordsUtilities::contribution_per_click_report(adwords_keywords_elog, file="output/adwords_contribution_per_click_report.csv")
     PowerSupplyUtilities::orders_per_week(adwords_keywords_elog, 
                                           keyword_filter="paleo meals", 
                                           campaign_filter="Paleo Performers",
-                                          plot_png_file="output/adwords_orders_per_week.png")
+                                          plot_png_file="output/@adwords_orders_per_week.png")
     PowerSupplyUtilities::paleo_cohort_views(adwords_keywords_elog)
     adwords_customers_per_month_report <- PowerSupplyUtilities::customers_per_month_report( adwords_keywords_elog, 
                                                                                             file="output/adwords_customers_per_month.csv")
@@ -41,9 +41,9 @@ search_engine_marketing_report <- function( adwords_keywords_elog=NULL,
     PowerSupplyUtilities::user_overview(bing_keywords_elog)
     BingUtilities::keywords_campaign_device_matchtype_report(bing_keywords_elog, file="output/bing_keywords_campaign_device_matchtype_report.csv")
     BingUtilities::click_through_rate_over_time(bing_keywords_elog, plot_png_file="output/bing_click_through_rate_over_time.png")
-    BingUtilities::overall_performance_over_time(bing_keywords_elog, plot_png_file="output/bing_overall_performance_over_time.png")
+    BingUtilities::overall_performance_over_time(bing_keywords_elog, plot_png_file="output/!bing_overall_performance_over_time.png")
     BingUtilities::contribution_per_click_report(bing_keywords_elog, file="output/bing_contribution_per_click_report.csv")
-    PowerSupplyUtilities::orders_per_week(bing_keywords_elog, keyword_filter="paleo meals", plot_png_file="output/bing_orders_per_week.png")
+    PowerSupplyUtilities::orders_per_week(bing_keywords_elog, keyword_filter="paleo meals", plot_png_file="output/@bing_orders_per_week.png")
     PowerSupplyUtilities::paleo_cohort_views(bing_keywords_elog)
     bing_customers_per_month_report <- PowerSupplyUtilities::customers_per_month_report(bing_keywords_elog, file="output/bing_customers_per_month.csv")
     BingUtilities::mobile_performance_over_time(bing_keywords_elog, keyword_filter="paleo meals", plot_png_file="output/bing_mobile_performance_over_time.png")
@@ -56,12 +56,12 @@ search_engine_marketing_report <- function( adwords_keywords_elog=NULL,
 
     if(!is.null(gdn_elog)) {
       require(AdWordsUtilities)
-      AdWordsUtilities::overall_performance_over_time(gdn_elog, plot_png_file="output/gdn_overall_performance_over_time.png")
+      AdWordsUtilities::overall_performance_over_time(gdn_elog, plot_png_file="output/!gdn_overall_performance_over_time.png")
       AdWordsUtilities::desktop_gdn_performance_over_time(gdn_elog, plot_png_file="output/gdn_desktop_performance_over_time.png")
       AdWordsUtilities::mobile_gdn_performance_over_time(gdn_elog,, plot_png_file="output/gdn_mobile_performance_over_time.png")
       PowerSupplyUtilities::orders_per_week(gdn_elog, 
                                             campaign_filter="Rmktg",
-                                            plot_png_file="output/gdn_orders_per_week.png")
+                                            plot_png_file="output/@gdn_orders_per_week.png")
 
     }
 
