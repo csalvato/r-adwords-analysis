@@ -20,7 +20,7 @@ summarize_elog <- function(elog_data_frame,
   return (summarize(elog_data_frame, 
                     cost = sum(cost, na.rm = TRUE),
                     average_position = weighted.mean(average_position,impressions, na.rm=TRUE),
-                    average_quality_score=ifelse(is.null(elog_data_frame$quality_score), NA, mean(quality_score, na.rm=TRUE)) ,
+                    #average_quality_score=ifelse(is.null(elog_data_frame$quality_score), NA, mean(quality_score, na.rm=TRUE)) ,
                     estimated_available_impressions = sum(impressions/est_search_impression_share, na.rm=TRUE),
                     impressions = sum(impressions, na.rm = TRUE),
                     # imp share is not wholly accurate because of the way the numbers are reported, but close enough. 

@@ -19,7 +19,7 @@ summarize_elog <- function(elog_data_frame,
   require(dplyr)
   return (summarize(elog_data_frame, cost = sum(cost, na.rm = TRUE),
                     average_position = weighted.mean(average_position,impressions, na.rm=TRUE),
-                    average_quality_score=mean(quality_score, na.rm=TRUE),
+                    #average_quality_score=mean(quality_score, na.rm=TRUE),
                     impressions = sum(impressions, na.rm = TRUE),
                     #### Can't get impression share info from Bing (at least not in a way that CVS understands...?)
                     #estimated_available_impressions = sum(impressions/est_search_impression_share, na.rm=TRUE), 
