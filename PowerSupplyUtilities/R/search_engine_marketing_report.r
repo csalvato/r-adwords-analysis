@@ -40,7 +40,7 @@ search_engine_marketing_report <- function( adwords_keywords_elog=NULL,
     require(BingUtilities)
     PowerSupplyUtilities::user_overview(bing_keywords_elog)
     BingUtilities::keywords_campaign_device_matchtype_report(bing_keywords_elog, file="output/bing_keywords_campaign_device_matchtype_report.csv")
-    BingUtilities::click_through_rate_over_time(bing_keywords_elog, plot_png_file="output/bing_click_through_rate_over_time.png")
+    #BingUtilities::click_through_rate_over_time(bing_keywords_elog, plot_png_file="output/bing_click_through_rate_over_time.png")
     BingUtilities::overall_performance_over_time(bing_keywords_elog, plot_png_file="output/!bing_overall_performance_over_time.png")
     BingUtilities::contribution_per_click_report(bing_keywords_elog, file="output/bing_contribution_per_click_report.csv")
     PowerSupplyUtilities::orders_per_week(bing_keywords_elog, keyword_filter="paleo meals", plot_png_file="output/@bing_orders_per_week.png")
